@@ -1,0 +1,19 @@
+## MOP
+- [x] correct solution in AMPL
+- [~] branch and price
+- [x] master
+- [~] lagrange dual
+- [x] heuristic pricing
+- [x] exact pricing
+- [x] better exact pricing
+- [x] ILP solution
+- [~] pricing preprocessing
+- [ ] better heuristic pricing
+- [~] heuristic full
+- [x] B&B solution
+- [ ] generator
+- [ ] checker
+- [ ] benchmarker
+- [ ] SAT solution
+- [~] stabilization techniques for master problem
+- [ ] clean things up and optimize

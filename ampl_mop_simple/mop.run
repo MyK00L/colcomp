@@ -1,0 +1,11 @@
+option solver gurobi;
+
+model mop.mod;
+data mop.dat;
+
+solve;
+
+display z;
+display x;
+display c;
+
