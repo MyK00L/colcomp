@@ -2,8 +2,8 @@
 #include "common.cpp"
 
 void ilp(problem p) {
-    int n = p.n();
-    int m = p.edges.size();
+    int n = (int)p.n();
+    int m = (int)p.edges.size();
     int nvar_part = n+m;
     Highs highs;
     highs.setOptionValue("output_flag", false);

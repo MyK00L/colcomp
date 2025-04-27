@@ -1,4 +1,4 @@
 *.out
-*.vgcore
+vgcore.*
 *.dat
 

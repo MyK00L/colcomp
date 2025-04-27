@@ -13,20 +13,21 @@ struct pricing_problem {
         for(auto &[v,w]:g.g[u]) if(!nu[v] && !eu[u][v]) ma[g.c[v][0]]=std::max(ma[g.c[v][0]],w);
         double x = -cost[u];
         for(auto &y:ma)x+=y;
-        return x<=0;
+        return x<0;
     }
     bool is_edge_useless(int u, int v, const std::vector<bool>& nu, const std::vector<std::vector<bool> >& eu) {
         std::vector<int> ma(g.C(),0);
         for(auto &[j,w]:g.g[u]) if(!nu[j] && ! eu[u][j]) ma[g.c[j][0]]=std::max(ma[g.c[j][0]],w);
-        for(auto &[j,w]:g.g[v]) if(!nu[j] && ! eu[u][j]) ma[g.c[j][0]]=std::max(ma[g.c[j][0]],w);
+        for(auto &[j,w]:g.g[v]) if(!nu[j] && ! eu[v][j]) ma[g.c[j][0]]=std::max(ma[g.c[j][0]],w);
         int uvw=0;
         for(auto &[j,w]: g.g[u]) if(j==v) uvw=w;
         for(auto &cu: g.c[u]) ma[cu]=0;
         for(auto &cv: g.c[v]) ma[cv]=0;
         double x = -cost[u]-cost[v]+uvw;
         for(auto &y:ma) x+=y;
-        return x<=0;
+        return x<0;
     }
+    // this might be wrong...
     void preprocess() {
         std::vector<bool> nu(g.n(),0); // 1 if node is useless
         std::vector<std::vector<bool> > eu(g.n(), std::vector<bool>(g.n(),0)); // 1 if edge is useless
@@ -68,16 +69,14 @@ struct pricing_problem {
             }
         }
         for(int i=0; i<g.n(); ++i) {
-            for(auto &[j,w]: g.g[i]) if(eu[i][j]) w=-g.orig_n*g.orig_n-1;
+            for(auto &[j,w]: g.g[i]) if(eu[i][j]) w=0;
             if(nu[i]) cost[i] += g.orig_n+1;
         }
-
         int e0=0,e1=0;
         for(int i=0; i<g.n(); ++i) for(auto &[j,w]: g.g[i]) if(j>i) {
             e0++;
             e1+=!eu[i][j];
         }
-        // std::cerr<<"|V| |E|: "<<g.n()<<' '<<e0<<"  ->  "<<g.n()-nuseless<<' '<<e1<<std::endl;
     }
     pricing_problem(mgraph _g, std::vector<double> duals): g(_g), cost(duals) {
         preprocess();

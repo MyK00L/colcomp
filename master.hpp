@@ -12,6 +12,7 @@ class Master {
     mgraph g;
     std::vector<mcolumn> columns; // nodes in each column
     Highs highs; // lp
+    vector<double> stab;
     double lagrange;
     Master(mgraph, std::vector<mcolumn>);
     // Master(const Master& o);

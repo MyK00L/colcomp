@@ -6,6 +6,8 @@
 #include <algorithm>
 #include "common.cpp"
 
+#include <iostream>
+
 /// graph where nodes can be merged and have colors
 struct mgraph {
     /// original n
@@ -20,7 +22,7 @@ struct mgraph {
     std::vector<std::vector<int> > c;
     /// edges of each node
     std::vector<std::vector<std::array<int,2> > > g;
-    mgraph(problem p) : orig_n(p.n()), value(0), _C(0), final_groups(0), groups(p.n()), c(p.n()), g(p.n()) {
+    mgraph(problem p) : orig_n((int)p.n()), value(0), _C(0), final_groups(0), groups(p.n()), c(p.n()), g(p.n()) {
         for(auto [u,v] : p.edges) if(p.color[u]!=p.color[v]) {
             g[u].push_back({(int)v,1});
             g[v].push_back({(int)u,1});
@@ -35,14 +37,14 @@ struct mgraph {
     }
     /// returns the size of the graph
     int n() const {
-        return c.size();
+        return (int)c.size();
     }
     /// returns the number of colors
     int C() const {
         return _C;
     }
     /// returns the weight of the edge between u and v, 0 if there is no such edge
-    int edge_val(int u, int v) {
+    int edge_val(int u, int v) const {
         auto it = std::lower_bound(g[u].begin(),g[u].end(),std::array<int,2>({v,0}),[](const auto&a, const auto&b){return a[0]<b[0];});
         if(it==g[u].end() || it->at(0)!=v) return 0;
         return it->at(1);
@@ -71,7 +73,7 @@ struct mgraph {
         c.erase(c.begin()+ni, c.end());
         groups.erase(groups.begin()+ni, groups.end());
         for(auto &gi: g) {
-            N=gi.size();
+            N=(int)gi.size();
             ni=0;
             for(int i=0; i<N; ++i) {
                 if(newi[gi[i][0]]==-1) continue;
@@ -150,7 +152,7 @@ struct mgraph {
             }
         }
         g.push_back(std::move(ngi));
-        for(auto [v,w]: g.back()) g[v].push_back({(int)g.size()-1,w});
+        for(auto [j,w]: g.back()) g[j].push_back({(int)g.size()-1,w});
 
         std::vector<int> nc; nc.reserve(c[u].size()+c[v].size());
         std::merge(std::move_iterator(c[u].begin()),std::move_iterator(c[u].end()),std::move_iterator(c[v].begin()),std::move_iterator(c[v].end()),std::back_insert_iterator(nc));
@@ -175,6 +177,22 @@ struct mgraph {
         if(itvu!=g[v].end() && itvu->at(0)==u) g[v].erase(itvu);
         simplify();
         return ret;
+    }
+    bool has_edge(int u, int v) const {
+        if(g[u].size()>g[v].size()) return has_edge(v, u);
+        return std::binary_search(g[u].begin(),g[u].end(),std::array<int,2>{v,0},[](const std::array<int,2>& a, const std::array<int,2>& b){
+            return a[0]<b[0];
+        });
+    }
+    int value_for_col(const std::vector<int>& col) const {
+        int wsum=0;
+        for(int i=0; i<(int)col.size(); ++i) {
+            for(int j=i+1; j<(int)col.size(); ++j) {
+                wsum += edge_val(col[i],col[j]);
+            }
+        }
+
+        return wsum;
     }
 };
 

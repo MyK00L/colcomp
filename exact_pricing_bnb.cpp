@@ -105,7 +105,6 @@ struct epbnb_state {
 };
 
 void epbnb(const pricing_problem& p, const epbnb_state state, const double dual, double& primal, bitvec& ans) {
-    // std::cerr<<"dual: "<<dual<<" primal:"<<primal<<std::endl;
     if(state.score>primal) {
         primal=state.score;
         ans=state.nodes;
@@ -123,7 +122,7 @@ void epbnb(const pricing_problem& p, const epbnb_state state, const double dual,
     }
 }
 
-std::vector<column> exact_pricing_bnb(pricing_problem p) {
+std::vector<mcolumn> exact_pricing_bnb(pricing_problem p) {
     // add dummy node
     p.g.g.push_back({});
     p.g.c.push_back({});
@@ -140,15 +139,20 @@ std::vector<column> exact_pricing_bnb(pricing_problem p) {
     bitvec ans = s0.nodes;
     epbnb(p,s0,dual,primal,ans);
     if(primal>1e-6) {
-        column c;
-        c.value = primal;
-        for(int i=0; i<p.g.n()-1; ++i) if(ans[i]) c.nz.push_back(i);
+        mcolumn c;
+        double val = primal;
+        for(int i=0; i<p.g.n()-1; ++i) if(ans[i]) {
+            c.nodes.push_back(i);
+            val+=p.cost[i];
+        }
+        c.value = int(round(val));
         return {c};
     }
     return {};
 }
 
-std::vector<column> hot_start_cols(pricing_problem p) {
+std::vector<mcolumn> hot_start_cols(mgraph mg) {
+    pricing_problem p(mg,std::vector<double>(mg.n(),0));
     // add dummy node
     p.g.g.push_back({});
     p.g.c.push_back({});
@@ -162,7 +166,7 @@ std::vector<column> hot_start_cols(pricing_problem p) {
     s0.untakeable.set1(p.g.n()-1);
 
     for(int i=0; i<p.g.n(); ++i) assert(p.cost[i]==0);
-    std::vector<column> res;
+    std::vector<mcolumn> res;
     while(1) {
         epbnb_state si = s0;
         double primal=0;
@@ -171,12 +175,12 @@ std::vector<column> hot_start_cols(pricing_problem p) {
         epbnb(p,si,dual,primal,ans);
 
         if(primal<0.5) break;
-        column c;
+        mcolumn c;
         for(int u=0; u<p.g.n()-1; ++u) if(ans[u]) {
-            c.nz.push_back(u);
+            c.nodes.push_back(u);
             s0.forbid(u);
         }
-        c.value = primal;
+        c.value = int(round(primal));
         res.push_back(c);
     } // TODO: check duplicates
     return res;

@@ -127,7 +127,7 @@ subgraph merge(subgraph& a, const subgraph& b, const std::vector<double>& duals)
 // keepa all edges and check for colors incrementally
 // only choose nodes bigger than the first one to avoid doubles
 /// beam search O(extneigh * beam_width * depth)
-std::vector<column> heuristic_pricing_beamsearch(const pricing_problem& pp) {
+std::vector<mcolumn> heuristic_pricing_beamsearch(const pricing_problem& pp) {
     const std::vector<double>& duals = pp.cost;
     const size_t beam_width = 200;
     std::vector<subgraph> singles;
@@ -166,6 +166,6 @@ std::vector<column> heuristic_pricing_beamsearch(const pricing_problem& pp) {
     //std::cerr<<std::endl;
     //for(size_t i=0; i<max_nz.size(); ++i) std::cerr<<duals[max_nz[i]]<<' ';
     //std::cerr<<std::endl;
-    if(max_v>1e-3) return {column{max_v,max_nz}};
+    if(max_v>1e-3) return {mcolumn{pp.g.value_for_col(max_nz),max_nz}};
     return {};
 }

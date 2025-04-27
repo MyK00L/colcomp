@@ -15,11 +15,6 @@ struct problem {
 	}
 };
 
-struct column {
-    double value;
-    std::vector<int> nz;
-};
-
 struct mcolumn {
     int value=0;
     std::vector<int> nodes;
@@ -36,7 +31,7 @@ struct Rng {
         return z ^ (z >> 31);
 	}
 	double f01() {
-		return operator()()/double(std::numeric_limits<uint64_t>::max());
+		return double((long double)(operator()())/(long double)(std::numeric_limits<uint64_t>::max()));
 	}
 };
 

@@ -6,7 +6,7 @@
 #include "heuristic_pricing_ls.cpp"
 #include "pricing.hpp"
 
-std::vector<column> heuristic_pricing_annealing(const pricing_problem& pp) {
+std::vector<mcolumn> heuristic_pricing_annealing(const pricing_problem& pp) {
     int C=pp.g.C();
     const std::vector<double>& duals = pp.cost;
     const int n = pp.g.n();
@@ -18,7 +18,7 @@ std::vector<column> heuristic_pricing_annealing(const pricing_problem& pp) {
     double temp = 64;
     Rng rng(4);
     while(temp>=0.1) {
-        int i = rng()%n;
+        int i = int(rng()%n);
         double new_val = val;
         std::vector<int> to_switch;
         to_switch.push_back(i);
@@ -43,5 +43,5 @@ std::vector<column> heuristic_pricing_annealing(const pricing_problem& pp) {
     if(best_val<=0.0001) return {};
     std::vector<int> nz;
     for(int i=0; i<n; ++i) if(best_ans[i]) nz.push_back(i);
-    return {column{best_val,nz}};
+    return {mcolumn{pp.g.value_for_col(nz),nz}};
 }
