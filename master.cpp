@@ -12,6 +12,7 @@
 #include "heuristic_pricing_beamsearch.cpp"
 #include "heuristic_pricing_annealing.cpp"
 #include "exact_pricing_bnb.cpp"
+#include "exact_pricing.cpp"
 
 #include "pricing.hpp"
 
@@ -86,6 +87,7 @@ bool Master::generate_columns() {
         }
         pricing_problem pp(g,duals);
         pricing_columns = exact_pricing_bnb(pp);
+        // pricing_columns = exact_pricing(pp);
         /*
         auto check = exact_pricing(pp);
         std::cerr<<check[0].value<<' '<<pricing_columns[0].value<<'\n';

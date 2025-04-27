@@ -16,7 +16,7 @@ max z = sum_j /\_i(x[i,j])
 doable with SAT, I guess
 but that's not the problem with what I'm doing anyway...
 */
-std::vector<column> exact_pricing(const pricing_problem& p) {
+std::vector<mcolumn> exact_pricing(const pricing_problem& p) {
     Highs h;
     // h.setOptionValue("seed",42); // TODO seed
     h.setOptionValue("output_flag", false);
@@ -64,6 +64,6 @@ std::vector<column> exact_pricing(const pricing_problem& p) {
     for(size_t i=0; i<p.cost.size(); ++i) {
         if(cv[i]>0.8) nz.push_back(i);
     }
-    return {column{obj,nz}};
+    return {mcolumn{p.g.value_for_col(nz),nz}};
 
 }
