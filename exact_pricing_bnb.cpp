@@ -1,6 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 #include <vector>
 #include <queue>
 #include <array>
@@ -29,9 +31,10 @@ struct epbnb_state {
     }
     std::array<epbnb_state,2> branch(const pricing_problem& p) const {
         int minv=p.g.n();
-        for(int u=0; u<p.g.n(); ++u) if(nodes[u]) {
+        for(int u=0; u<p.g.n()&&minv==p.g.n(); ++u) if(nodes[u]) {
             for(auto &[v,w]:p.g.g[u]) if(!untakeable[v]) {
-                minv = std::min(minv,v);
+                minv = v;
+                break;
             }
         }
         epbnb_state take_node(*this);
@@ -41,6 +44,7 @@ struct epbnb_state {
         return {take_node,forbid_node};
     }
     double upper_bound(const pricing_problem& p) const {
+
         int cl = 0; // colors left to take
         {
             bitvec cvis(p.g.C());
@@ -84,12 +88,13 @@ struct epbnb_state {
             cl=newcl;
         }
         if(cl==0) return score;
-        std::vector<double> bbc(p.g.n(),0); // best reachable value by color
+        std::vector<double> bbc(p.g.C(),0); // best reachable value by color
+        std::vector<int> bc(p.g.C(), 0); // best connection by color, for internal loop
         for(int u=0; u<p.g.n(); ++u) if(reach[u]) {
-            std::vector<int> bc(p.g.n(), 0); // best connection by color
-            for(auto &[v,w]: p.g.g[u]) if(w>=0) {
+            fill(bc.begin(),bc.end(),0);
+            for(auto &[v,w]: p.g.g[u]) {
                 if(nodes[v]) {
-                    bc[p.g.c[v][0]]=w;
+                    bc[p.g.c[v][0]] = w;
                 } else if (reach[v]) {
                     bc[p.g.c[v][0]] = std::max(bc[p.g.c[v][0]],w); // TODO: better bound
                 }
@@ -112,7 +117,7 @@ void epbnb(const pricing_problem& p, const epbnb_state state, const double dual,
     if(primal>=dual) return;
     auto [s1,s2] = state.branch(p);
     const double d1 = std::min(dual,s1.upper_bound(p));
-    const double d2 = std::min(dual, s2.upper_bound(p));
+    const double d2 = std::min(dual,s2.upper_bound(p));
     if(d2>d1) {
         epbnb(p,s2,d2,primal,ans);
         epbnb(p,s1,d1,primal,ans);

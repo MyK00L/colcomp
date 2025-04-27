@@ -85,7 +85,7 @@ struct bitvec {
 		assert(n==o.n);
 		for(size_t i=0; i<data.size(); ++i) data[i]^=o.data[i];
 	}
-	bool operator[](const size_t i) const {
+	inline bool operator[](const size_t i) const {
 		assert(i<n);
 		return (data[i/WS]>>(i%WS))&1;
 	}

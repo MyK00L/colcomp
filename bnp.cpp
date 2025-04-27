@@ -70,20 +70,10 @@ std::vector<int> intersect(const std::vector<std::array<int,2> > gu, const std::
     return ans;
 }
 
-std::vector<mcolumn> columns; // TODO: fill this with columns
+// TODO: get a primal bound even when solution is not integer
+std::vector<mcolumn> columns; // TODO: fill this with columns and pass them to children
 int primal_bound=0;
 void bnp(mgraph mg) {
-    /*std::cerr<<"!!!!!!!!!! mg:\n";
-    for(int i=0; i<mg.n(); ++i) {
-        std::cerr<<"col["<<i<<"]: ";
-        for(auto &j: mg.c[i]) std::cerr<<j<<' ';
-        std::cerr<<'\n';
-    }
-    for(int i=0; i<mg.n(); ++i) {
-        std::cerr<<"g["<<i<<"]: ";
-        for(auto &[j,w]: mg.g[i]) std::cerr<<"("<<j<<","<<w<<") ";
-        std::cerr<<'\n';
-    }*/
     Master m(mg, columns_for(columns, mg));
     m.setup_highs();
     // m.hot_start();

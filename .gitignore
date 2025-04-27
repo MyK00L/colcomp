@@ -1,4 +1,6 @@
 *.out
 vgcore.*
 *.dat
+*.data
+*.folded
 

@@ -62,5 +62,3 @@ int main() {
 }
 
 // heuristic idea: keep cutting in the min-cut between two nodes with the same color
-
-// BBS11035C1.graph first ub = 276(?)
