@@ -35,7 +35,7 @@ Master::Master(mgraph _mg, std::vector<mcolumn> _columns): g(_mg), columns(_colu
 void Master::setup_highs() {
     highs.clear();
     highs.setOptionValue("output_flag", false);
-    highs.setOptionValue("solver", "ipm");
+    // highs.setOptionValue("solver", "ipm");
     // highs.setOptionValue("seed",42); // TODO seed
     // highs.setMatrixFormat(MatrixFormat::kColwise);
     highs.changeObjectiveSense(ObjSense::kMaximize);
