@@ -43,15 +43,37 @@ problem input() {
 	return problem{col,edg};
 }
 
+int ccs(mgraph mg) {
+	vector<bool> vis(mg.n(),0);
+	int res=0;
+	for(int i=0; i<mg.n(); ++i) if(!vis[i]) {
+		res+=1;
+		queue<int> q;
+		q.push(i);
+		vis[i]=1;
+		while(!q.empty()) {
+			int u = q.front();
+			q.pop();
+			for(auto &[v,_w]:mg.g[u]) if(!vis[v]) {
+				vis[v]=1;
+				q.push(v);
+			}
+		}
+	}
+	return res;
+}
+
 int main() {
 	cin.tie(0);
 	ios_base::sync_with_stdio(0);
-	
+
 	problem p = input();
+	std::cerr<<"|E|="<<p.edges.size()<<std::endl;
+	std::cerr<<"ccs="<<ccs(mgraph(p))<<std::endl;
 	// Master m(p);
 	// m.run();
 	clock_t t0 = clock();
-	//ilp(p);
+	// ilp(p);
 	clock_t t1 = clock();
 	bnp_main(p);
 	clock_t t2 = clock();

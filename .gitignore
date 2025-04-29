@@ -3,4 +3,5 @@ vgcore.*
 *.dat
 *.data
 *.folded
+*.graph
 

@@ -14,7 +14,8 @@ struct mgraph {
     int orig_n;
     /// number of edges taken until now
     int value;
-    int _C;
+    /// number of colors
+	int _C;
     std::vector<std::vector<int> > final_groups;
     /// original nodes grouped in each node
     std::vector<std::vector<int> > groups;

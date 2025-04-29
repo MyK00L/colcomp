@@ -1,6 +1,9 @@
 ## MOP
 - [x] correct solution in AMPL
 - [~] branch and price
+- [ ] pass columns
+- [ ] optimization with rule 2 by Bruckner et al (cuts)
+- [ ] solve ccs separately
 - [x] master
 - [~] lagrange dual
 - [x] heuristic pricing
@@ -17,3 +20,4 @@
 - [ ] SAT solution
 - [~] stabilization techniques for master problem
 - [ ] clean things up and optimize
+

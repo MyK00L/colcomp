@@ -25,6 +25,7 @@ int main(int argv, char** args) {
     }
     shuffle(edg.begin(),edg.end(),rng);
     int m = min(int(ceil(edg.size()*density)),int(edg.size()));
+	std::cerr<<"|E| = "<<m<<" / "<<edg.size()<<std::endl;
     for(int i=0; i<n; ++i) {
         cout<<"v "<<i<<' '<<color[i]<<'\n';
     }

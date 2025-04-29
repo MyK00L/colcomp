@@ -70,6 +70,7 @@ std::vector<int> intersect(const std::vector<std::array<int,2> > gu, const std::
     return ans;
 }
 
+// TODO: separate ccs
 // TODO: get a primal bound even when solution is not integer
 std::vector<mcolumn> columns; // TODO: fill this with columns and pass them to children
 int primal_bound=0;
@@ -125,5 +126,6 @@ void bnp(mgraph mg) {
 
 void bnp_main(problem p) {
     mgraph mg0(p);
+	mg0.simplify();
     bnp(mg0);
 }
