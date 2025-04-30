@@ -105,7 +105,9 @@ bool Master::generate_columns() {
                 // update lagrangean dual TODO: check
                 double tmp=col.value;
                 for(auto &i: col.nodes) tmp-=duals[i];
-                tmp*=g.n(); // should be * number of partitions (?)
+                // tmp*=g.n(); // should be * number of partitions (?)
+                // tmp*=(g.n()+col.nodes.size()-1)/col.nodes.size();
+                tmp*=double(g.n())/col.nodes.size();
                 tmp+=dual_sum;
                 tmp+=g.value;
                 // std::cerr<<"curr lagrange: "<<tmp<<'\n';
