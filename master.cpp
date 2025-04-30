@@ -158,3 +158,14 @@ std::pair<int, std::vector<std::vector<int> > > Master::primal_ilp() {
 	return {obj,ans};
 }
 
+std::vector<std::vector<int> > Master::get_columns() const {
+	std::vector<std::vector<int> > ans;
+	for(auto& [_v,col]: columns) {
+		std::vector<int> ocol;
+		for(auto &u:col) for(auto &ou: g.groups[u]) ocol.push_back(ou);
+		std::sort(ocol.begin(), ocol.end());
+		ans.push_back(ocol);
+	}
+	return ans;
+}
+

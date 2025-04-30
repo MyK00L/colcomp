@@ -28,4 +28,5 @@ class Master {
     double run();
     /// returns the best partitioning with the current columns
     std::pair<int, std::vector<std::vector<int> > > primal_ilp();
+	std::vector<std::vector<int> > get_columns() const;
 };

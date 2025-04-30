@@ -131,6 +131,7 @@ struct mgraph {
                     q.push(v);
                 }
             }
+			sort(ccs.back().begin(),ccs.back().end());
     	}
 		std::vector<int> newi(n());
 		std::vector<mgraph> ans;

@@ -2,20 +2,23 @@
 
 #include <map>
 #include <iostream>
+#include <set>
 #include "common.cpp"
 #include "mgraph.cpp"
 #include "master.hpp"
 #include "master.cpp"
 
-std::vector<mcolumn> columns_for(const std::vector<mcolumn>& cols, const mgraph& mg) {
+/// global set of columns
+std::set<std::vector<int> > columns; // TODO: fill this with columns and pass them to children
+std::vector<mcolumn> columns_for(const mgraph& mg) {
 	std::vector<mcolumn> ans;
 	// single-element columns for feasibility
-	for(int i=0; i<mg.n(); ++i) ans.push_back({0,{i}});
+	// for(int i=0; i<mg.n(); ++i) ans.push_back({0,{i}});
 
 	std::vector<int> group_of_node(mg.orig_n,-1); // what group each node is in in the subproblem, -1 if finalized
 	for(int i=0; i<(int)mg.groups.size(); ++i) for(auto &u: mg.groups[i]) group_of_node[u]=i;
 	std::vector<int> ng(mg.groups.size(),0);
-	for(const auto& [_v,col]: cols) {
+	for(const auto& col: columns) {
 		bool ok=1; // if column is compatible with subproblem
 		for(auto &u:col) {
 			if(group_of_node[u]<0) {
@@ -75,8 +78,6 @@ std::vector<int> intersect(const std::vector<std::array<int,2> > gu, const std::
 // (exp in dense graphs) ?
 
 // TODO: separate ccs
-// TODO: get a primal bound even when solution is not integer
-std::vector<mcolumn> columns; // TODO: fill this with columns and pass them to children
 
 
 /*struct bnp_state {
@@ -106,13 +107,17 @@ void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<st
 		return;
 	}
 
-	Master m(mg, columns_for(columns, mg));
+	Master m(mg, columns_for(mg));
 	m.setup_highs();
-	double dv = m.run();
+	double dv = base + m.run();
+	for(auto col: m.get_columns()) {
+		columns.insert(col);
+	}
 	const std::vector<double> cv = m.highs.getSolution().col_value;
 	assert(cv.size()==m.columns.size());
-	dual = std::min(dual,int(base+dv+1e-4));
+	dual = std::min(dual,int(dv+1e-4));
 	auto [pv, pcols] = m.primal_ilp();
+	pv += base;
 	if(pv>primal) {
 		primal=pv;
 		best=pcols;
@@ -124,7 +129,7 @@ void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<st
     std::map<std::array<int,2>, double> tmp;
     for(int i=0; i<(int)cv.size(); ++i) if(cv[i]>0.0001) {
         for(auto &u: m.columns[i].nodes) {
-            for(auto &v: intersect(m.g.g[u], m.columns[i].nodes, u+1)) {
+            for(auto &v: intersect(mg.g[u], m.columns[i].nodes, u+1)) {
                 tmp[{u,v}]+=cv[i];
             }
         }
@@ -137,18 +142,27 @@ void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<st
 			split=uv;
 		}
 	}
+	assert(split[0]!=-1);
 	std::cerr<<"branch on ("<<split[0]<<","<<split[1]<<")"<<std::endl;
 	// TODO: split components
 	mgraph mg1(mg);
 	mgraph mg2(mg);
 	int w = mg1.merge_edge(split[0],split[1]);
-	mg2.remove_edge(split[0], split[1]);
+	for(auto &[v,w]:mg.g[split[0]]) std::cerr<<"("<<v<<","<<w<<") ";
+	std::cerr<<std::endl;
+	assert(w);
+	assert(mg2.remove_edge(split[0], split[1]));
 	bnp(mg1, base+w, dual, primal, best);
 	bnp(mg2, base, dual, primal, best);
 }
 
 void bnp_main(problem p) {
+	// single-element columns for feasibility
+	columns = std::set<std::vector<int> >();
+	for(int i=0; i<(int)p.n(); ++i) columns.insert({i});
+	
 	mgraph mg0(p);
+
 	std::vector<std::vector<int> > ans;
 	auto ccs = mg0.split_components();
 	int sol=0;
