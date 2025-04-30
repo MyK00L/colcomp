@@ -28,8 +28,7 @@ struct epbnb_state {
         untakeable.set1(u);
     }
     std::array<epbnb_state,2> branch(const pricing_problem& p) const {
-        int minv=p.g.n();
-        
+        int minv=p.g.n(); 
 		for(int u=0; u<p.g.n()&&minv==p.g.n(); ++u) if(nodes[u]) {
             for(auto &[v,w]:p.g.g[u]) if(!untakeable[v]) {
                 minv = v;
@@ -51,67 +50,76 @@ struct epbnb_state {
 			break;
 		}
 		*/
-
         epbnb_state take_node(*this);
         epbnb_state forbid_node(*this);
         take_node.take(minv, p);
         forbid_node.forbid(minv);
         return {take_node,forbid_node};
     }
-    double upper_bound(const pricing_problem& p) const {
-        int cl = 0; // colors left to take
-        {
-            bitvec cvis(p.g.C());
-            for(int i=0; i<p.g.n(); ++i) if(!untakeable[i] && !cvis[p.g.c[i][0]]) {
-                cl+=1;
-                cvis.set1(p.g.c[i][0]);
-            }
-        }
+	void update_untakeable_reach(const pricing_problem& p) {
         bitvec reach(p.g.n());
-        while(cl) {
-            int newcl=0;
-            bitvec newreach(p.g.n());
-            bitvec cvis(p.g.C());
+		bool updated=0;
+        do {
+        	int cl = 0; // colors left to take
+        	{
+            	bitvec cvis(p.g.C());
+            	for(int i=0; i<p.g.n(); ++i) if(!untakeable[i] && !cvis[p.g.c[i][0]]) {
+                	cl+=1;
+                	cvis.set1(p.g.c[i][0]);
+            	}
+        	}
+			updated=0;
+			reach.zero();
             std::queue<std::array<int,2> > q;
             for(int u=0; u<p.g.n(); ++u) if(nodes[u]) {
-                for(auto &[v,w]:p.g.g[u]) if(!untakeable[v] && !newreach[v]) {
+                for(auto &[v,w]:p.g.g[u]) if(!untakeable[v] && !reach[v]) {
                     q.push({v,1});
-                    newreach.set1(v);
-                    if(!cvis[p.g.c[v][0]]) {
-                        cvis.set1(p.g.c[v][0]);
-                        newcl+=1;
-                    }
+                    reach.set1(v);
                 }
             }
             while(!q.empty()) {
                 auto [u,d] = q.front();
                 q.pop();
                 if(d==cl) continue;
-                for(auto &[v,w]:p.g.g[u]) if(!untakeable[v] && !newreach[v]) {
+                for(auto &[v,w]:p.g.g[u]) if(!untakeable[v] && !reach[v]) {
                     q.push({v,d+1});
-                    newreach.set1(v);
-                    if(!cvis[p.g.c[v][0]]) {
-                        cvis.set1(p.g.c[v][0]);
-                        newcl+=1;
-                    }
+                    reach.set1(v);
                 }
             }
-            reach=newreach;
-            assert(newcl<=cl);
-            if(newcl==cl) break;
-            cl=newcl;
-        }
-        if(cl==0) return score;
-        std::vector<double> bbc(p.g.C(),0); // best reachable value by color
+			std::vector<int> bc(p.g.C(), 0);
+			for(int u=0; u<p.g.n(); ++u) if(reach[u]) {
+				fill(bc.begin(),bc.end(),0);
+           		for(auto &[v,w]: p.g.g[u]) {
+               		if(nodes[v]) {
+                   		bc[p.g.c[v][0]] = w;
+					} else if (reach[v]) {
+                   		bc[p.g.c[v][0]] = std::max(bc[p.g.c[v][0]],w);
+					}
+           		}
+				int wsum=0;
+				for(auto &sc:bc) wsum+=sc;
+				if(wsum<p.cost[u]) {
+					reach.set0(u);
+				}
+			}
+        	for(int u=0; u<p.g.n(); ++u) if(!untakeable[u] && !reach[u]) {
+				updated=1;
+				untakeable.set1(u);
+			}    
+        } while(updated);
+	}
+    double upper_bound(const pricing_problem& p) {
+		update_untakeable_reach(p);
+		std::vector<double> bbc(p.g.C(),0); // best reachable value by color
         std::vector<double> bc(p.g.C(), 0); // best connection by color, for internal loop
 		// TODO: better bound
 		// TODO: for each color save best even and best odd so that you can floor after dividing sum of wsum by 2(?)
-		for(int u=0; u<p.g.n(); ++u) if(reach[u]) {
+		for(int u=0; u<p.g.n(); ++u) if(!untakeable[u]) {
            	fill(bc.begin(),bc.end(),0);
            	for(auto &[v,w]: p.g.g[u]) {
                	if(nodes[v]) {
                    	bc[p.g.c[v][0]] = w;
-               	} else if (reach[v]) {
+               	} else if (!untakeable[v]) {
                    	bc[p.g.c[v][0]] = std::max(bc[p.g.c[v][0]],w/2.0);
 				}
            	}
@@ -136,7 +144,7 @@ void epbnb(const pricing_problem& p, const epbnb_state state, const double dual,
 	auto [s1,s2] = state.branch(p);
     const double d1 = std::min(dual,s1.upper_bound(p));
     const double d2 = std::min(dual,s2.upper_bound(p));
-    if(d2>d1 /*s2.score>s1.score*/ ) {
+    if(d2>d1/*s2.score>s1.score*/) {
         epbnb(p,s2,d2,primal,ans);
         epbnb(p,s1,d1,primal,ans);
     } else {
@@ -147,7 +155,7 @@ void epbnb(const pricing_problem& p, const epbnb_state state, const double dual,
 void epbnb0(const pricing_problem& p, epbnb_state state, const double dual, double& primal, bitvec& ans) {
 	vector<int> ord(p.g.n(),0);
 	std::iota(ord.begin(),ord.end(),0);
-	// std::sort(ord.begin(),ord.end(),[&](int i, int j){return p.cost[i]<p.cost[j];});
+	//std::sort(ord.begin(),ord.end(),[&](int i, int j){return p.cost[i]<p.cost[j];});
 	for(auto &i:ord) {
 		epbnb_state s1 = state;
 		s1.take(i,p);
