@@ -12,8 +12,8 @@ class Master {
     mgraph g;
     std::vector<mcolumn> columns; // nodes in each column
     Highs highs; // lp
-    vector<double> stab;
-    double lagrange;
+    vector<double> stab; // single-parameter satbilization stability center
+    double lagrange; // lagrangean dual value
     Master(mgraph, std::vector<mcolumn>);
     // Master(const Master& o);
     void update_lp();
@@ -26,4 +26,6 @@ class Master {
     /// keeps generating columns until optimality
     /// (TODO: or some condition is met, like lagrange passing the primal bound or being close to cg)
     double run();
+    /// returns the best partitioning with the current columns
+    std::pair<int, std::vector<std::vector<int> > > primal_ilp();
 };

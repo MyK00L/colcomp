@@ -6,24 +6,19 @@
 #include <algorithm>
 #include "common.cpp"
 
-#include <iostream>
-
 /// graph where nodes can be merged and have colors
 struct mgraph {
-    /// original n
+    /// original number of nodes in the whole graph
     int orig_n;
-    /// number of edges taken until now
-    int value;
-    /// number of colors
+    /// number of colors in this component
 	int _C;
-    std::vector<std::vector<int> > final_groups;
     /// original nodes grouped in each node
     std::vector<std::vector<int> > groups;
-    /// colors of each node
+    /// colors of each node (may be remapped)
     std::vector<std::vector<int> > c;
     /// edges of each node
     std::vector<std::vector<std::array<int,2> > > g;
-    mgraph(problem p) : orig_n((int)p.n()), value(0), _C(0), final_groups(0), groups(p.n()), c(p.n()), g(p.n()) {
+    mgraph(const problem& p) : orig_n((int)p.n()), _C(0), groups(p.n()), c(p.n()), g(p.n()) {
         for(auto [u,v] : p.edges) if(p.color[u]!=p.color[v]) {
             g[u].push_back({(int)v,1});
             g[v].push_back({(int)u,1});
@@ -36,6 +31,7 @@ struct mgraph {
         }
         assert(g.size()==c.size());
     }
+	mgraph(){}
     /// returns the size of the graph
     int n() const {
         return (int)c.size();
@@ -44,6 +40,18 @@ struct mgraph {
     int C() const {
         return _C;
     }
+	/// returns the number of edges in O(m)
+	int m() const {
+		int ans = 0;
+		for(auto &gu:g) for(auto &[_v,w]:gu) ans+=w;
+		return ans/2;
+	}
+	/// returns indeces original nodes that are in this component
+	std::vector<int> orig_nodes() const {
+		std::vector<int> ans;
+		for(auto &grp: groups) for(auto &ou: grp) ans.push_back(ou);
+		return ans;
+	}
     /// returns the weight of the edge between u and v, 0 if there is no such edge
     int edge_val(int u, int v) const {
         auto it = std::lower_bound(g[u].begin(),g[u].end(),std::array<int,2>({v,0}),[](const auto&a, const auto&b){return a[0]<b[0];});
@@ -87,51 +95,73 @@ struct mgraph {
             gi.erase(gi.begin()+ni,gi.end());
         }
     }
-    /// removes components that can be completely merged
-    void simplify() {
+	/// remaps colors in [0,#colors)
+	void simplify_colors() {
+		// TODO
+	}
+	/// applies rule 2 to remove edges of some cuts
+	void rule2() {
+		// TODO
+	}
+	bool is_colorful() const {
+		std::vector<bool> visc(C(),0);
+		for(auto &cu: c) {
+			for(auto &cui: cu) {
+				if(visc[cui]) return 0;
+				visc[cui]=1;
+			}
+		}
+		return 1;
+	}
+    /// splits the graph into connected components
+    std::vector<mgraph> split_components() const {
+		std::vector<std::vector<int> > ccs;
         std::vector<bool> vis(n(),0);
-        std::vector<int> to_delete;
         for(int u0=0; u0<n(); ++u0) if(!vis[u0]) {
-            std::queue<int> q;
+            ccs.push_back({});
+			std::queue<int> q;
             q.push(u0);
             vis[u0]=1;
-            std::vector<bool> visc(n(),0);
-            std::vector<int> nodes;
-            bool del=1;
             while(!q.empty()) {
                 int u = q.front();
                 q.pop();
-                nodes.push_back(u);
+				ccs.back().push_back(u);
                 for(auto &[v,_w]: g[u]) if(!vis[v]) {
                     vis[v]=1;
                     q.push(v);
                 }
-                for(auto col: c[u]) {
-                    if(col>=(int)visc.size()) visc.resize(col+1,0);
-                    if(visc[col]) del=0;
-                    visc[col]=1;
-                }
             }
-            if(del==1) {
-                std::vector<int> ng;
-                for(auto u: nodes) {
-                    to_delete.push_back(u);
-                    for(auto &[v,w]: g[u]) if(v>u) value+=w;
-                    std::vector<int> tng;
-                    tng.swap(ng);
-                    std::merge(std::move_iterator(tng.begin()),std::move_iterator(tng.end()),std::move_iterator(groups[u].begin()),std::move_iterator(groups[u].end()),std::back_insert_iterator(ng));
-                }
-                final_groups.push_back(ng);
-            }
-        }
-        delete_nodes(to_delete);
-    }
+    	}
+		std::vector<int> newi(n());
+		std::vector<mgraph> ans;
+		for(auto& cc:ccs) {
+			mgraph mg;
+			int newn=0;
+			for(auto &u:cc) newi[u]=newn++;
+			mg.g.resize(newn);
+			mg.c.resize(newn);
+			mg.groups.resize(newn);
+			mg.orig_n=orig_n;
+			mg._C = _C;
+			for(auto &u:cc) {
+				mg.c[newi[u]] = c[u];
+				mg.g[newi[u]].reserve(g[u].size());
+				for(auto &[v,w]:g[u]) {
+					mg.g[newi[u]].push_back({newi[v],w});
+				}
+				mg.groups[newi[u]] = groups[u];
+			}
+			mg.simplify_colors();
+			ans.push_back(mg);
+		}
+		return ans;
+	}
     /// merges edge between u and v into a new node at the end of the graph
     /// returns the number of edges between u and v
     int merge_edge(int u, int v) {
         if(u>v) std::swap(u,v);
         const int ret = edge_val(u, v);
-        value+=ret;
+        
         std::sort(g[u].begin(),g[u].end());
         std::sort(g[v].begin(),g[v].end());
         auto pu = std::move_iterator(g[u].begin());
@@ -165,7 +195,7 @@ struct mgraph {
 
         delete_nodes({u,v});
 
-        simplify();
+        // simplify();
 
         return ret;
     }
@@ -176,7 +206,7 @@ struct mgraph {
         if(ituv!=g[u].end() && ituv->at(0)==v) g[u].erase(ituv);
         auto itvu = std::lower_bound(g[v].begin(),g[v].end(),std::array<int,2>({u,0}),[](const auto&a, const auto&b){return a[0]<b[0];});
         if(itvu!=g[v].end() && itvu->at(0)==u) g[v].erase(itvu);
-        simplify();
+        // simplify();
         return ret;
     }
     bool has_edge(int u, int v) const {

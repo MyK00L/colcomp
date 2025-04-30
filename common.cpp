@@ -10,7 +10,7 @@
 struct problem {
 	std::vector<uint32_t> color;
 	std::vector<std::array<uint32_t,2> > edges;
-	size_t n() {
+	size_t n() const {
 		return color.size();
 	}
 };

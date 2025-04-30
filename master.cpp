@@ -105,11 +105,11 @@ bool Master::generate_columns() {
                 // update lagrangean dual TODO: check
                 double tmp=col.value;
                 for(auto &i: col.nodes) tmp-=duals[i];
-                // tmp*=g.n(); // should be * number of partitions (?)
-                // tmp*=(g.n()+col.nodes.size()-1)/col.nodes.size();
-                tmp*=double(g.n())/col.nodes.size();
+                tmp*=g.n(); // should be * number of partitions (?)
+                // tmp*=(g.n()+col.nodes.size()-1)/col.nodes.size(); // <- prob wrong, check
+                // tmp*=double(g.n())/col.nodes.size();
                 tmp+=dual_sum;
-                tmp+=g.value;
+                // tmp+=g.value;
                 // std::cerr<<"curr lagrange: "<<tmp<<'\n';
                 if(tmp<lagrange) {
                     lagrange=tmp;
@@ -130,10 +130,31 @@ double Master::run() {
     int it=0;
     do {
         update_lp();
-        if(it%10==0) std::cerr<<it<<": "<<g.value+highs.getObjectiveValue()<<" | "<<lagrange<<std::endl;
+        if(it%10==0) std::cerr<<it<<": "<<highs.getObjectiveValue()<<" | "<<lagrange<<std::endl;
         // if(int(lagrange) == int(g.value+highs.getObjectiveValue()+1e-6)) break;
         ++it;
     } while(generate_columns());
-    std::cerr<<it<<": "<<g.value+highs.getObjectiveValue()<<" | "<<lagrange<<std::endl;
-    return highs.getObjectiveValue()+g.value;
+    std::cerr<<it<<": "<<highs.getObjectiveValue()<<" | "<<lagrange<<std::endl;
+    // return highs.getObjectiveValue()+g.value;
+	return lagrange;
 }
+
+// TODO: heuristic primal?
+std::pair<int, std::vector<std::vector<int> > > Master::primal_ilp() {
+    // set integrality constraints for columns
+	for(int i=0; i<(int) columns.size(); ++i) highs.changeColIntegrality(i,HighsVarType::kInteger);
+	highs.run();
+	int obj = int(highs.getObjectiveValue()+0.1);
+	const std::vector<double>& cv = highs.getSolution().col_value;
+	std::vector<std::vector<int> > ans;
+	for(int i=0; i<(int) columns.size(); ++i) if(cv[i]>0.5) {
+		ans.push_back({});
+		for(auto &u: columns[i].nodes) for(auto &ou: g.groups[u]) ans.back().push_back(ou);
+	}
+
+	// reset integrality constraints just in case
+    for(int i=0; i<(int) columns.size(); ++i) highs.changeColIntegrality(i,HighsVarType::kContinuous);
+	
+	return {obj,ans};
+}
+

@@ -2,11 +2,12 @@
 #include "mgraph.cpp"
 #include <algorithm>
 #include <stack>
+#include <iostream>
 
 struct bnbstate {
     bnbstate(mgraph _mg): mg(_mg), dual_bound(0) {
         std::vector<int> cfreq(1,0);
-        dual_bound=mg.value;
+        dual_bound=0;
         for(int i=0; i<mg.n(); ++i) {
             for(auto &col: mg.c[i]) {
                 if(col>=(int)cfreq.size()) cfreq.resize(col+1,0);

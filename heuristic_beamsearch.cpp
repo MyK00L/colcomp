@@ -4,10 +4,12 @@
 #include "mgraph.cpp"
 #include <algorithm>
 
+// FIXME
+/*
 struct beamsearchstate {
     beamsearchstate(mgraph _mg): mg(_mg), dual_bound(0) {
         std::vector<int> cfreq(1,0);
-        dual_bound=mg.value;
+        dual_bound=0;
         for(int i=0; i<mg.n(); ++i) {
             for(auto &col: mg.c[i]) {
                 if(col>=(int)cfreq.size()) cfreq.resize(col+1,0);
@@ -57,3 +59,4 @@ std::vector<std::vector<int> > beamsearch(problem p, size_t beamsize=128) {
     std::cerr<<"beamsearch: "<<primal_bound<<std::endl;
     return best.final_groups;
 }
+*/

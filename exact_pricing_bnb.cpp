@@ -153,7 +153,7 @@ void epbnb(const pricing_problem& p, const epbnb_state state, const double dual,
     }
 }
 void epbnb0(const pricing_problem& p, epbnb_state state, const double dual, double& primal, bitvec& ans) {
-	vector<int> ord(p.g.n(),0);
+	std::vector<int> ord(p.g.n(),0);
 	std::iota(ord.begin(),ord.end(),0);
 	//std::sort(ord.begin(),ord.end(),[&](int i, int j){return p.cost[i]<p.cost[j];});
 	for(auto &i:ord) {
