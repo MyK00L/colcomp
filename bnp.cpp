@@ -148,8 +148,6 @@ void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<st
 	mgraph mg1(mg);
 	mgraph mg2(mg);
 	int w = mg1.merge_edge(split[0],split[1]);
-	for(auto &[v,w]:mg.g[split[0]]) std::cerr<<"("<<v<<","<<w<<") ";
-	std::cerr<<std::endl;
 	assert(w);
 	assert(mg2.remove_edge(split[0], split[1]));
 	bnp(mg1, base+w, dual, primal, best);

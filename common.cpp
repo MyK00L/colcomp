@@ -47,7 +47,7 @@ struct bitvec {
 	size_t count_ones() const {
 		size_t ans=0;
 		for(size_t i=0; i<data.size()-1; ++i) ans+=__builtin_popcountll(data[i]);
-		ans+=__builtin_popcountll(data.back()&((1<<(n%WS))-1));
+		ans+=__builtin_popcountll(data.back()&((uint64_t(1)<<(n%WS))-1));
 		return ans;
 	}
 	bitvec operator&(const bitvec& o) const {
@@ -84,6 +84,11 @@ struct bitvec {
 	void operator^=(const bitvec& o) {
 		assert(n==o.n);
 		for(size_t i=0; i<data.size(); ++i) data[i]^=o.data[i];
+	}
+	bool has_intersection(const bitvec& o) const {
+		for(size_t i=0; i<data.size()-1; ++i) if(data[i]&o.data[i]) return 1;
+		if( (data.back()&((uint64_t(1)<<(n%WS))-1)) & (o.data.back()&((uint64_t(1)<<(n%WS))-1) ) ) return 1;
+		return 0;
 	}
 	inline bool operator[](const size_t i) const {
 		assert(i<n);

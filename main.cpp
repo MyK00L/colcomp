@@ -4,6 +4,8 @@
 
 #include "common.cpp"
 #include "heuristic_beamsearch.cpp"
+#include "heuristic_karger.cpp"
+#include "heuristic_merge.cpp"
 #include "bnb.cpp"
 #include "bnp.cpp"
 #include "ilp.cpp"
@@ -74,6 +76,8 @@ int main() {
 	// m.run();
 	clock_t t0 = clock();
 	// ilp(p);
+	heuristic_merge(p);
+	// heuristic_karger(p);
 	clock_t t1 = clock();
 	bnp_main(p);
 	clock_t t2 = clock();
