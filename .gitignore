@@ -1,7 +1,9 @@
 *.out
+*.o
 vgcore.*
 *.dat
 *.data
 *.folded
 *.graph
+*.svg
 

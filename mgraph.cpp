@@ -31,7 +31,7 @@ struct mgraph {
         }
         assert(g.size()==c.size());
     }
-	mgraph(){}
+	mgraph(): orig_n(0), _C(0) {}
     /// returns the size of the graph
     int n() const {
         return (int)c.size();

@@ -83,7 +83,7 @@ bool Master::generate_columns() {
     }
     if(pricing_columns.empty()) {
         for(int i=0; i<g.n(); ++i) { // single parameter stabilization
-            duals[i]=duals[i]*0.6+stab[i]*0.4;
+            duals[i]=duals[i]*0.8+stab[i]*0.2;
         }
         pricing_problem pp(g,duals);
         pricing_columns = exact_pricing_bnb(pp);
@@ -128,7 +128,7 @@ bool Master::generate_columns() {
 /// (TODO: or some condition is met, like lagrange passing the primal bound or being close to cg)
 double Master::run() {
     int it=0;
-    do {
+	do {
         update_lp();
         if(it%10==0) std::cerr<<it<<": "<<highs.getObjectiveValue()<<" | "<<lagrange<<std::endl;
         // if(int(lagrange) == int(g.value+highs.getObjectiveValue()+1e-6)) break;

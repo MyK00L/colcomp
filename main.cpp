@@ -76,13 +76,15 @@ int main() {
 	// m.run();
 	clock_t t0 = clock();
 	// ilp(p);
+	heuristic_karger(p);
 	heuristic_merge(p);
-	// heuristic_karger(p);
 	clock_t t1 = clock();
 	bnp_main(p);
 	clock_t t2 = clock();
 	std::cerr<<"ilp time: "<<double(t1-t0)/CLOCKS_PER_SEC<<'\n';
 	std::cerr<<"bnp time: "<<double(t2-t1)/CLOCKS_PER_SEC<<'\n';
+
+	std::cerr<<"nnodes: "<<nnodes<<std::endl;
 	
 	return 0;
 }

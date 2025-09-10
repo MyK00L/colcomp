@@ -7,6 +7,7 @@
 #include "mgraph.cpp"
 #include "master.hpp"
 #include "master.cpp"
+#include "heuristic_karger.cpp"
 
 /// global set of columns
 std::set<std::vector<int> > columns; // TODO: fill this with columns and pass them to children
@@ -158,6 +159,8 @@ void bnp_main(problem p) {
 	// single-element columns for feasibility
 	columns = std::set<std::vector<int> >();
 	for(int i=0; i<(int)p.n(); ++i) columns.insert({i});
+	// hot start columns
+	for(auto col: heuristic_karger(p)) columns.insert(col);
 	
 	mgraph mg0(p);
 

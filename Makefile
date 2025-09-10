@@ -1,0 +1,27 @@
+CXX = clang++
+CXXFLAGS = -Wall -Wextra -O2 -g
+LDFLAGS = -lhighs
+
+.DEFAULT_GOAL := all
+
+.PHONY: all
+all: main.out generator.out graph_to_ampl.out
+
+main.out: main.o
+	$(CXX) main.o -o main.out $(LDFLAGS)
+main.o: main.cpp
+	$(CXX) $(CXXFLAGS) -c main.cpp -o main.o
+
+generator.out: generator.o
+	$(CXX) generator.o -o generator.out $(LDFLAGS)
+generator.o: generator.cpp
+	$(CXX) $(CXXFLAGS) -c generator.cpp -o generator.o
+
+graph_to_ampl.out: graph_to_ampl.o
+	$(CXX) graph_to_ampl.o -o graph_to_ampl.out $(LDFLAGS)
+graph_to_ampl.o: graph_to_ampl.cpp
+	$(CXX) $(CXXFLAGS) -c graph_to_ampl.cpp -o graph_to_ampl.o
+
+.PHONY: clean
+clean:
+	rm -f *.out *.o

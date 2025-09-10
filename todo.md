@@ -8,6 +8,7 @@
 - [~] lagrange dual
 - [x] heuristic pricing
 - [x] exact pricing
+- [ ] surrogate dual for exact pricing
 - [x] better exact pricing
 - [x] ILP solution
 - [~] pricing preprocessing
