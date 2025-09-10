@@ -8,7 +8,7 @@
 #include <queue>
 #include <array>
 #include "common.cpp"
-#include "pricing.hpp"
+#include "bnp/pricing/pricing.hpp"
 
 // TODO: optimize
 int nnodes=0;

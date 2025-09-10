@@ -3,11 +3,11 @@
 #include <iostream>
 
 #include "common.cpp"
-#include "heuristic_beamsearch.cpp"
-#include "heuristic_karger.cpp"
-#include "heuristic_merge.cpp"
+#include "heuristic/heuristic_beamsearch.cpp"
+#include "heuristic/heuristic_karger.cpp"
+#include "heuristic/heuristic_merge.cpp"
 #include "bnb.cpp"
-#include "bnp.cpp"
+#include "bnp/bnp.cpp"
 #include "ilp.cpp"
 
 using namespace std;

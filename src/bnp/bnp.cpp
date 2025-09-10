@@ -5,9 +5,9 @@
 #include <set>
 #include "common.cpp"
 #include "mgraph.cpp"
-#include "master.hpp"
-#include "master.cpp"
-#include "heuristic_karger.cpp"
+#include "bnp/master.hpp"
+#include "bnp/master.cpp"
+#include "heuristic/heuristic_karger.cpp"
 
 /// global set of columns
 std::set<std::vector<int> > columns; // TODO: fill this with columns and pass them to children

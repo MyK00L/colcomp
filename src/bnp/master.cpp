@@ -7,14 +7,14 @@
 #include <vector>
 #include <iostream>
 #include <Highs.h>
-#include "master.hpp"
+#include "bnp/master.hpp"
 
-#include "heuristic_pricing_beamsearch.cpp"
-#include "heuristic_pricing_annealing.cpp"
-#include "exact_pricing_bnb.cpp"
-#include "exact_pricing.cpp"
+#include "bnp/pricing/heuristic_pricing_beamsearch.cpp"
+#include "pricing/heuristic_pricing_annealing.cpp"
+#include "pricing/exact_pricing_bnb.cpp"
+#include "pricing/exact_pricing.cpp"
 
-#include "pricing.hpp"
+#include "pricing/pricing.hpp"
 
 /*
 idea: columns always have all colors, but master can choose which to actually use?
@@ -76,7 +76,7 @@ bool Master::generate_columns() {
     
     bool is_exact=0;
     std::vector<mcolumn> pricing_columns;
-    if(false) {
+    if(true) {
         pricing_problem pp(g,duals);
         pricing_columns = heuristic_pricing_beamsearch(pp);
         if(pricing_columns.empty()) pricing_columns = heuristic_pricing_annealing(pp);
