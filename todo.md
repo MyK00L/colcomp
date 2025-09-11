@@ -21,5 +21,5 @@
 - [ ] SAT solution
 - [~] stabilization techniques for master problem
 - [ ] clean things up and optimize
-- [ ] fix wrong.graph example !!!
+- [ ] fix sa pricing heuristic
 

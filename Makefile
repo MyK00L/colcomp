@@ -9,7 +9,7 @@ all: main.out generator.out graph_to_ampl.out
 
 main.out: main.o
 	$(CXX) main.o -o main.out $(LDFLAGS)
-main.o: src/main.cpp
+main.o: $(wildcard src/*.cpp) $(wildcard src/*.hpp) $(wildcard src/*/*.cpp) $(wildcard src/*/*.hpp) $(wildcard src/*/*/*.cpp) $(wildcard src/*/*/*.hpp)
 	$(CXX) $(CXXFLAGS) -c src/main.cpp -o main.o
 
 generator.out: generator.o

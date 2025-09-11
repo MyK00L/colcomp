@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <limits>
 #include <lp_data/HConst.h>
 #include <lp_data/HighsOptions.h>
@@ -79,7 +80,8 @@ bool Master::generate_columns() {
     if(true) {
         pricing_problem pp(g,duals);
         pricing_columns = heuristic_pricing_beamsearch(pp);
-        if(pricing_columns.empty()) pricing_columns = heuristic_pricing_annealing(pp);
+        // SA pricing heuristic is currently bugged, don't use
+        // if(false && pricing_columns.empty()) pricing_columns = heuristic_pricing_annealing(pp);
     }
     if(pricing_columns.empty()) {
         for(int i=0; i<g.n(); ++i) { // single parameter stabilization
@@ -130,6 +132,7 @@ double Master::run() {
     int it=0;
 	do {
         update_lp();
+        assert(highs.getObjectiveValue() <= lagrange+1e-7);
         if(it%10==0) std::cerr<<it<<": "<<highs.getObjectiveValue()<<" | "<<lagrange<<std::endl;
         // if(int(lagrange) == int(g.value+highs.getObjectiveValue()+1e-6)) break;
         ++it;

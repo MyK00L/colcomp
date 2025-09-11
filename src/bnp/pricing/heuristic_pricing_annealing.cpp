@@ -7,6 +7,8 @@
 #include "pricing.hpp"
 
 std::vector<mcolumn> heuristic_pricing_annealing(const pricing_problem& pp) {
+    // BUGGED, TOFIX
+    assert(false);
     int C=pp.g.C();
     const std::vector<double>& duals = pp.cost;
     const int n = pp.g.n();
