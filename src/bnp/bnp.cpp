@@ -110,21 +110,22 @@ void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<st
 
 	Master m(mg, columns_for(mg));
 	m.setup_highs();
-	double dv = base + m.run();
+	double dv = base + m.run(primal);
 	for(auto col: m.get_columns()) {
 		columns.insert(col);
 	}
 	const std::vector<double> cv = m.highs.getSolution().col_value;
 	assert(cv.size()==m.columns.size());
 	dual = std::min(dual,int(dv+1e-4));
+	if(primal>=dual) return;
+	std::cerr<<"PRIMAL:"<<primal<<" DUAL:"<<dual<<std::endl;
 	auto [pv, pcols] = m.primal_ilp();
 	pv += base;
 	if(pv>primal) {
 		primal=pv;
 		best=pcols;
+		std::cerr<<"NEW PRIMAL: "<<primal<<std::endl;
 	}
-	std::cerr<<"PRIMAL:"<<primal<<" DUAL:"<<dual<<std::endl;
-	if(primal>=dual) return;
 
 	// find where to split
     std::map<std::array<int,2>, double> tmp;
@@ -143,6 +144,7 @@ void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<st
 			split=uv;
 		}
 	}
+	// rn this can fail because I'm not splitting into components
 	assert(split[0]!=-1);
 	std::cerr<<"branch on ("<<split[0]<<","<<split[1]<<")"<<std::endl;
 	// TODO: split components

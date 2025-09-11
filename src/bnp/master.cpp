@@ -128,13 +128,16 @@ bool Master::generate_columns() {
 }
 /// keeps generating columns until optimality
 /// (TODO: or some condition is met, like lagrange passing the primal bound or being close to cg)
-double Master::run() {
+double Master::run(int global_primal) {
     int it=0;
 	do {
         update_lp();
         assert(highs.getObjectiveValue() <= lagrange+1e-7);
         if(it%10==0) std::cerr<<it<<": "<<highs.getObjectiveValue()<<" | "<<lagrange<<std::endl;
-        // if(int(lagrange) == int(g.value+highs.getObjectiveValue()+1e-6)) break;
+        if(std::isfinite(lagrange)) {
+            if(int(lagrange) == int(highs.getObjectiveValue()+1e-6)) break;
+            if(int(lagrange) <= global_primal) break;
+        }
         ++it;
     } while(generate_columns());
     std::cerr<<it<<": "<<highs.getObjectiveValue()<<" | "<<lagrange<<std::endl;

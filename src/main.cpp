@@ -29,6 +29,7 @@ problem input() {
 	while(!cin.eof()) {
 		char c=0;
 		cin>>c;
+		if(cin.eof()) break;
 		if(c=='v') {
 			uint32_t a,b;
 			cin>>a>>b;
@@ -38,8 +39,11 @@ problem input() {
 			uint32_t a,b;
 			cin>>a>>b;
 			edg.push_back({a,b});
+		} else if(c=='#') {
+			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		} else {
-			break;
+			cerr<<"error reading input on character "<<int(c)<<endl;
+			exit(1);
 		}
 	}
 	return problem{col,edg};
