@@ -102,9 +102,11 @@ int dv = int(m.run()+1e-5);
 
 /// mg already is a single component
 void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<std::vector<int> >& best) {
+	std::cerr<<"\n[[ "<<primal<<' '<<dual<<'\n';
 	if(mg.is_colorful()) { // base case: the component is colorful
 		primal = base+mg.m();
 		best = {mg.orig_nodes()};
+		std::cerr<<"\n]]\n";
 		return;
 	}
 
@@ -117,7 +119,10 @@ void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<st
 	const std::vector<double> cv = m.highs.getSolution().col_value;
 	assert(cv.size()==m.columns.size());
 	dual = std::min(dual,int(dv+1e-4));
-	if(primal>=dual) return;
+	if(primal>=dual) {
+		std::cerr<<"\n]]\n";
+		return;
+	}
 	std::cerr<<"PRIMAL:"<<primal<<" DUAL:"<<dual<<std::endl;
 	auto [pv, pcols] = m.primal_ilp();
 	pv += base;
@@ -125,6 +130,10 @@ void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<st
 		primal=pv;
 		best=pcols;
 		std::cerr<<"NEW PRIMAL: "<<primal<<std::endl;
+	}
+	if(primal>=dual) {
+		std::cerr<<"\n]]\n";
+		return;
 	}
 
 	// find where to split
@@ -155,6 +164,7 @@ void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<st
 	assert(mg2.remove_edge(split[0], split[1]));
 	bnp(mg1, base+w, dual, primal, best);
 	bnp(mg2, base, dual, primal, best);
+	std::cerr<<"\n]]\n";
 }
 
 void bnp_main(problem p) {
