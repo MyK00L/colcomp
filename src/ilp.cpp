@@ -2,8 +2,10 @@
 #include "common.cpp"
 
 void ilp(problem p) {
+    const double inf = kHighsInf;
     int n = (int)p.n();
     int m = (int)p.edges.size();
+    int C = 1+*std::max_element(p.color.begin(),p.color.end());
     int nvar_part = n+m;
     Highs highs;
     highs.setOptionValue("output_flag", false);
@@ -22,26 +24,38 @@ void ilp(problem p) {
     }
     // add constraints
     for(int parti=0; parti<n; ++parti) {
+        /*
         for(int i=0; i<n; ++i) for(int j=i+1; j<n; ++j) if(p.color[i]==p.color[j]) { // color constraints
             int ind[2] = {parti*nvar_part+i,parti*nvar_part+j};
             double val[2] = {1,1};
-            highs.addRow(0,1,2,ind,val);
+            highs.addRow(-inf,1,2,ind,val); // (-inf <=) i+j <= 1
+        }
+        */
+        for(int c=0; c<C; ++c) { // color constraints
+            vector<int> ind;
+            vector<double> val;
+            for(int i=0; i<n; ++i) if(p.color[i]==c) {
+                ind.push_back(parti*nvar_part+i);
+                val.push_back(1);
+            }
+            if(ind.size()<=1) continue;
+            highs.addRow(-inf,1,ind.size(),ind.data(),val.data()); // (-inf <=) i+j+k+... <= 1
         }
         for(int ei=0; ei<m; ++ei) { // edge objective constraints
             int i = p.edges[ei][0];
             int j = p.edges[ei][1];
             int nz[2] = {parti*nvar_part+i,nvar_part*parti+n+ei};
             double val[2] = {-1,1};
-            highs.addRow(-1,0,2,nz,val);
+            highs.addRow(-inf,0,2,nz,val); // (-inf <=) e - i <= 0
             nz[0]=parti*nvar_part+j;
-            highs.addRow(-1,0,2,nz,val);
+            highs.addRow(-inf,0,2,nz,val); // (-inf <=) e - j <= 0
         }
     }
     for(int i=0; i<n; ++i) { // partition constraints
         vector<int> ind(n);
         vector<double> val(n,1);
         for(int parti=0; parti<n; ++parti) ind[parti]=parti*nvar_part+i;
-        highs.addRow(0,1,n,ind.data(),val.data());
+        highs.addRow(-inf,1,n,ind.data(),val.data()); // (-inf <=) i+i+...+i <= 1
     }
     highs.run();
     std::cerr<<"ilp solution: "<<highs.getObjectiveValue()<<std::endl;

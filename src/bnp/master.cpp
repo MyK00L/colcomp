@@ -77,7 +77,7 @@ bool Master::generate_columns() {
     
     bool is_exact=0;
     std::vector<mcolumn> pricing_columns;
-    if(true) {
+    if(false) {
         pricing_problem pp(g,duals);
         pricing_columns = heuristic_pricing_beamsearch(pp);
         // SA pricing heuristic is currently bugged, don't use
@@ -104,15 +104,26 @@ bool Master::generate_columns() {
     if(pricing_columns.size()) {
         for(auto& col: pricing_columns) {
             if(is_exact) {
+                int n_partitions = g.n();
+                {   // compute bound on max useful number of partitions
+                    // TODO: bring out of here, as it is constant for the whole graph
+                    vector<int> nc;
+                    for(auto&v: g.c) for(auto &c: v) {
+                        if(c>=nc.size()) nc.resize(c+1,0);
+                        nc[c]+=1;
+                    }
+                    int max_edges = 0;
+                    for(auto &c: nc) {
+                        max_edges += c*(c-1)/2;
+                    }
+                    n_partitions = std::min(n_partitions, int(sqrt(max_edges*2+0.25)+0.5+0.001));
+                }
                 // update lagrangean dual TODO: check
+                // LR obj: max sum_{i}{lambda_i} + |P| * ( sum_{ei}{e(ei)} - sum_{i}{lamda_i * x_i} )
                 double tmp=col.value;
                 for(auto &i: col.nodes) tmp-=duals[i];
-                tmp*=g.n(); // should be * number of partitions (?)
-                // tmp*=(g.n()+col.nodes.size()-1)/col.nodes.size(); // <- prob wrong, check
-                // tmp*=double(g.n())/col.nodes.size();
+                tmp*=n_partitions;
                 tmp+=dual_sum;
-                // tmp+=g.value;
-                // std::cerr<<"curr lagrange: "<<tmp<<'\n';
                 if(tmp<lagrange) {
                     lagrange=tmp;
                     stab=duals;
