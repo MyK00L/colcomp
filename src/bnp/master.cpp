@@ -105,7 +105,6 @@ bool Master::generate_columns() {
         for(auto& col: pricing_columns) {
             if(is_exact) {
                 int n_partitions = g.n(); // TODO: better bound
-                // update lagrangean dual TODO: check
                 // LR obj: max sum_{i}{lambda_i} + |P| * ( sum_{ei}{e(ei)} - sum_{i}{lamda_i * x_i} )
                 double tmp=col.value;
                 for(auto &i: col.nodes) tmp-=duals[i];

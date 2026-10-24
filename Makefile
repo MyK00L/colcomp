@@ -1,6 +1,6 @@
 CXX = clang++
-CXXFLAGS = -Wall -Wextra -O2 -g -I src
-LDFLAGS = -lhighs
+CXXFLAGS = -Wall -Wextra -O2 -g -I src # -fsanitize=address,undefined
+LDFLAGS = -lhighs # -fsanitize=address,undefined
 
 .DEFAULT_GOAL := all
 

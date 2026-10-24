@@ -1,4 +1,5 @@
 # pragma once
+#include <cmath>
 #include <iterator>
 #include <queue>
 #include <vector>
@@ -113,6 +114,29 @@ struct mgraph {
 		}
 		return 1;
 	}
+    /// returns true if all connected components are colorful
+    bool is_trivial() const {
+        std::vector<bool> visn(n(), 0);
+        for(int i=0; i<n(); ++i) if(!visn[i]) {
+            visn[i] = 1;
+            std::vector<bool> visc(C(), 0);
+            std::queue<int> q;
+            q.push(i);
+            while(!q.empty()) {
+                int u = q.front();
+                q.pop();
+                for(auto &cu: c[u]) {
+                    if(visc[cu]) return 0;
+                    visc[cu] = 1;
+                }
+                for(auto &[v,_w]: g[u]) if(!visn[v]) {
+                    visn[v]=1;
+                    q.push(v);
+                }
+            }
+        }
+        return 1;
+    }
     /// splits the graph into connected components
     std::vector<mgraph> split_components() const {
 		std::vector<std::vector<int> > ccs;
@@ -225,6 +249,18 @@ struct mgraph {
         }
 
         return wsum;
+    }
+    int tight_partition_bound() {
+        std::vector<int> nc;
+        for(auto&cs: c) for(auto &ci: cs) {
+            if(ci >= (int)nc.size()) nc.resize(ci+1,0);
+            nc[ci]+=1;
+        }
+        int max_edges = 0;
+        for(auto &c: nc) {
+            max_edges += c*(c-1)/2;
+        }
+        return std::min((int)n(), int(sqrt(max_edges*2+0.25)+0.5+0.001));
     }
 };
 

@@ -103,9 +103,16 @@ int dv = int(m.run()+1e-5);
 /// mg already is a single component
 void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<std::vector<int> >& best) {
 	std::cerr<<"\n[[ "<<primal<<' '<<dual<<'\n';
-	if(mg.is_colorful()) { // base case: the component is colorful
-		primal = base+mg.m();
-		best = {mg.orig_nodes()};
+	if(mg.is_trivial()) { // base case: all components are colorful
+		int pv = base+mg.m();
+		if(pv>primal) {
+			primal = pv;
+			auto comps = mg.split_components();
+			best = std::vector<std::vector<int>>();
+			for(auto &comp: comps) {
+				best.push_back(comp.orig_nodes());
+			}
+		}
 		std::cerr<<"\n]]\n";
 		return;
 	}
@@ -153,17 +160,18 @@ void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<st
 			split=uv;
 		}
 	}
-	// rn this can fail because I'm not splitting into components
 	assert(split[0]!=-1);
 	std::cerr<<"branch on ("<<split[0]<<","<<split[1]<<")"<<std::endl;
 	// TODO: split components
 	mgraph mg1(mg);
-	mgraph mg2(mg);
 	int w = mg1.merge_edge(split[0],split[1]);
 	assert(w);
-	assert(mg2.remove_edge(split[0], split[1]));
 	bnp(mg1, base+w, dual, primal, best);
+
+	mgraph mg2(mg);
+	assert(mg2.remove_edge(split[0], split[1]));
 	bnp(mg2, base, dual, primal, best);
+
 	std::cerr<<"\n]]\n";
 }
 
@@ -180,6 +188,7 @@ void bnp_main(problem p) {
 	auto ccs = mg0.split_components();
 	int sol=0;
 	for(auto& cc: ccs) {
+		std::cerr<<"component: n="<<cc.n()<<" partitoins_bound="<<cc.tight_partition_bound()<<std::endl;
 		std::vector<std::vector<int> > ansi;
 		int primal = -1;
 		bnp(cc, 0, cc.m(), primal, ansi);
