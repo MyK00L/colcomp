@@ -1,9 +1,24 @@
 #include <Highs.h>
 #include "common.cpp"
 
+int max_useful_partitions(const problem& p) {
+    // compute bound on max useful number of partitions
+    vector<int> nc;
+    for(auto&c: p.color) {
+        if(c >= nc.size()) nc.resize(c+1,0);
+        nc[c]+=1;
+    }
+    int max_edges = 0;
+    for(auto &c: nc) {
+        max_edges += c*(c-1)/2;
+    }
+    return std::min((int)p.n(), int(sqrt(max_edges*2+0.25)+0.5+0.001));
+}
+
 void ilp(problem p) {
     const double inf = kHighsInf;
     int n = (int)p.n();
+    int P = max_useful_partitions(p);
     int m = (int)p.edges.size();
     int C = 1+*std::max_element(p.color.begin(),p.color.end());
     int nvar_part = n+m;
@@ -12,7 +27,7 @@ void ilp(problem p) {
     highs.setOptionValue("seed",42); // TODO seed
     highs.changeObjectiveSense(ObjSense::kMaximize);
     // add variables
-    for(int parti=0; parti<n; ++parti) {
+    for(int parti=0; parti<P; ++parti) {
         for(int ni=0; ni<n; ++ni) {
             highs.addVar(0,1);
             highs.changeColIntegrality(parti*nvar_part+ni, HighsVarType::kInteger);
@@ -23,7 +38,7 @@ void ilp(problem p) {
         }
     }
     // add constraints
-    for(int parti=0; parti<n; ++parti) {
+    for(int parti=0; parti<P; ++parti) {
         /*
         for(int i=0; i<n; ++i) for(int j=i+1; j<n; ++j) if(p.color[i]==p.color[j]) { // color constraints
             int ind[2] = {parti*nvar_part+i,parti*nvar_part+j};
@@ -34,7 +49,7 @@ void ilp(problem p) {
         for(int c=0; c<C; ++c) { // color constraints
             vector<int> ind;
             vector<double> val;
-            for(int i=0; i<n; ++i) if(p.color[i]==c) {
+            for(int i=0; i<n; ++i) if((int)p.color[i]==c) {
                 ind.push_back(parti*nvar_part+i);
                 val.push_back(1);
             }
@@ -52,10 +67,10 @@ void ilp(problem p) {
         }
     }
     for(int i=0; i<n; ++i) { // partition constraints
-        vector<int> ind(n);
-        vector<double> val(n,1);
-        for(int parti=0; parti<n; ++parti) ind[parti]=parti*nvar_part+i;
-        highs.addRow(-inf,1,n,ind.data(),val.data()); // (-inf <=) i+i+...+i <= 1
+        vector<int> ind(P);
+        vector<double> val(P,1);
+        for(int parti=0; parti<P; ++parti) ind[parti]=parti*nvar_part+i;
+        highs.addRow(-inf,1,P,ind.data(),val.data()); // (-inf <=) i+i+...+i <= 1
     }
     highs.run();
     std::cerr<<"ilp solution: "<<highs.getObjectiveValue()<<std::endl;
