@@ -1,5 +1,6 @@
 # pragma once
 #include <cmath>
+#include <iostream>
 #include <iterator>
 #include <queue>
 #include <vector>
@@ -250,7 +251,7 @@ struct mgraph {
 
         return wsum;
     }
-    int tight_partition_bound() {
+    int tight_partition_bound() const {
         std::vector<int> nc;
         for(auto&cs: c) for(auto &ci: cs) {
             if(ci >= (int)nc.size()) nc.resize(ci+1,0);
@@ -261,6 +262,21 @@ struct mgraph {
             max_edges += c*(c-1)/2;
         }
         return std::min((int)n(), int(sqrt(max_edges*2+0.25)+0.5+0.001));
+    }
+    void debug_print() const {
+        std::cerr<<"mgraph:"<<std::endl;
+        for(int u=0; u<n(); ++u) {
+            std::cerr<<u<<"(";
+            for(auto &uc: c[u])std::cerr<<uc<<",";
+            std::cerr<<")[";
+            for(auto &uo: groups[u])std::cerr<<uo<<",";
+            std::cerr<<"]\n";
+        }
+        for(int u=0; u<n(); ++u) for(const auto &[v,w]: g[u]) {
+            if(v>u) {
+                std::cerr<<u<<"-"<<v<<" "<<w<<std::endl;
+            }
+        }
     }
 };
 

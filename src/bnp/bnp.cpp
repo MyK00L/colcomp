@@ -56,13 +56,13 @@ std::vector<mcolumn> columns_for(const mgraph& mg) {
 }
 
 
-std::vector<int> intersect(const std::vector<std::array<int,2> > gu, const std::vector<int> ci, const int minv) {
+std::vector<int> intersect(const std::vector<std::array<int,2> > gu, const std::vector<int> ci, const int exupto) {
 	auto i = gu.begin();
 	auto ie = gu.end();
 	auto j = ci.begin();
 	auto je = ci.end();
-	while(i!=ie && i->at(0)<=minv) ++i;
-	while(j!=je && *j<=minv) ++j;
+	while(i!=ie && i->at(0)<=exupto) ++i;
+	while(j!=je && *j<=exupto) ++j;
 	std::vector<int> ans;
 	while(i!=ie && j!=je) {
 		if(i->at(0)<*j) ++i;
@@ -124,14 +124,15 @@ void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<st
 	}
 
 	// find where to split
-    std::map<std::array<int,2>, double> tmp;
-    for(int i=0; i<(int)cv.size(); ++i) if(cv[i]>0.0001) {
-        for(auto &u: m.columns[i].nodes) {
-            for(auto &v: intersect(mg.g[u], m.columns[i].nodes, u+1)) {
-                tmp[{u,v}]+=cv[i];
-            }
-        }
-    }
+	std::map<std::array<int,2>, double> tmp;
+	for(int i=0; i<(int)cv.size(); ++i) if(cv[i]>0.0001) {
+		sort(m.columns[i].nodes.begin(),m.columns[i].nodes.end()); // to call intersect
+		for(auto &u: m.columns[i].nodes) {
+			for(auto &v: intersect(mg.g[u], m.columns[i].nodes, u)) {
+				tmp[{u,v}]+=cv[i];
+			}
+		}
+	}
 	double md=2;
 	std::array<int,2> split={-1,-1};
 	for(auto &[uv,w]: tmp) {
