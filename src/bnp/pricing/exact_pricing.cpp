@@ -58,7 +58,6 @@ std::vector<mcolumn> exact_pricing(const pricing_problem& p) {
         h.changeColCost((int)i, -p.cost[i]);
     h.run();
     if(h.getObjectiveValue()<=0) return {};
-    double obj = h.getObjectiveValue();
     std::vector<int> nz;
     std::vector<double> cv = h.getSolution().col_value;
     for(size_t i=0; i<p.cost.size(); ++i) {

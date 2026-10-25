@@ -18,8 +18,6 @@ class Master {
     // Master(const Master& o);
     void update_lp();
     void setup_highs();
-    /// generates an initial set of columns
-    void hot_start();
     /// tries to generate new columns
     /// returns true if new columns were generated
     bool generate_columns();

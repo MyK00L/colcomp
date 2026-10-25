@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <vector>
 #include <array>
 #include "mgraph.cpp"
@@ -17,8 +18,35 @@ struct pricing_problem {
     }
     bool is_edge_useless(int u, int v, const std::vector<bool>& nu, const std::vector<std::vector<bool> >& eu) {
         std::vector<int> ma(g.C(),0);
-        for(auto &[j,w]:g.g[u]) if(!nu[j] && ! eu[u][j]) ma[g.c[j][0]]=std::max(ma[g.c[j][0]],w);
-        for(auto &[j,w]:g.g[v]) if(!nu[j] && ! eu[v][j]) ma[g.c[j][0]]=std::max(ma[g.c[j][0]],w);
+        {
+            auto ui = g.g[u].begin();
+            auto vi = g.g[v].begin();
+            while(ui!=g.g[u].end() || vi!=g.g[v].end()) {
+                if(vi!=g.g[v].end() && (ui == g.g[u].end() || (*ui)[0] > (*vi)[0])) {
+                    int j = (*vi)[0];
+                    if(!nu[j] && !eu[v][j]) {
+                        int w = (*vi)[1];
+                        ma[g.c[j][0]]=std::max(ma[g.c[j][0]],w);
+                    }
+                    ++vi;
+                } else if(ui!=g.g[u].end() && (vi == g.g[v].end() || (*vi)[0] > (*ui)[0])) {
+                    int j = (*ui)[0];
+                    if(!nu[j] && !eu[u][j]) {
+                        int w = (*ui)[1];
+                        ma[g.c[j][0]]=std::max(ma[g.c[j][0]],w);
+                    }
+                    ++ui;
+                } else {
+                    int j = (*ui)[0];
+                    if(!nu[j] && !eu[u][j] && !eu[v][j]) {
+                        int w = (*ui)[1] + (*vi)[1];
+                        ma[g.c[j][0]]=std::max(ma[g.c[j][0]],w);
+                    }
+                    ++ui;
+                    ++vi;
+                }
+            }
+        }
         int uvw=0;
         for(auto &[j,w]: g.g[u]) if(j==v) uvw=w;
         for(auto &cu: g.c[u]) ma[cu]=0;
@@ -34,7 +62,6 @@ struct pricing_problem {
         std::vector<bool> inq(g.n(),1);
         std::queue<int> q;
         for(int i=0; i<g.n(); ++i) q.push(i);
-        int nuseless=0;
         bool upd=1;
         while(upd) {
             while(!q.empty()) {
@@ -42,7 +69,6 @@ struct pricing_problem {
                 q.pop();
                 if(is_node_useless(u,nu,eu)) {
                     nu[u]=1;
-                    ++nuseless;
                     std::vector<std::array<int,2> > tredg;
                     for(auto &[v,_w]: g.g[u]) {
                         eu[u][v] = eu[v][u] = 1;
@@ -69,16 +95,39 @@ struct pricing_problem {
             }
         }
         for(int i=0; i<g.n(); ++i) {
-            for(auto &[j,w]: g.g[i]) if(eu[i][j]) w=0;
-            if(nu[i]) cost[i] += g.orig_n+1;
-        }
-        int e0=0,e1=0;
-        for(int i=0; i<g.n(); ++i) for(auto &[j,w]: g.g[i]) if(j>i) {
-            e0++;
-            e1+=!eu[i][j];
+            for(auto &[j,w]: g.g[i]) if(eu[i][j]) w=-g.orig_n*g.orig_n-1;
+            if(nu[i]) cost[i] = g.orig_n+1;
         }
     }
     pricing_problem(mgraph _g, std::vector<double> duals): g(_g), cost(duals) {
-        // preprocess();
+        preprocess();
     }
 };
+
+inline void checkcolumn(const mcolumn& col, const pricing_problem& pp) {
+    std::vector<bool> visc(pp.g.C(),0);
+    for(const auto &u: col.nodes) {
+        for(const auto &c: pp.g.c[u]) {
+            assert(!visc[c]);
+            visc[c]=1;
+        }
+    }
+}
+inline void debugcolumn(const mcolumn& col, const pricing_problem& pp) {
+    double val = col.value;
+    for(const auto&u: col.nodes) val-=pp.cost[u];
+    std::cerr<<"colval: "<<val<<std::endl;
+    std::vector<bool> inc(pp.g.n());
+    for(const auto &u: col.nodes) {
+        inc[u]=1;
+        std::cerr<<u<<"[-"<<pp.cost[u]<<"](";
+        for(const auto &c: pp.g.c[u]) std::cerr<<c<<",";
+        std::cerr<<") ";
+    }
+    std::cerr<<std::endl;
+    for(const auto &u: col.nodes) {
+        for(const auto &v: col.nodes) if(v>u) {
+            std::cerr<<u<<"-"<<v<<": "<<pp.g.edge_val(u, v)<<std::endl;
+        }
+    }
+}

@@ -6,7 +6,6 @@
 #include "common.cpp"
 #include "mgraph.cpp"
 #include "bnp/master.hpp"
-#include "bnp/master.cpp"
 #include "heuristic/heuristic_karger.cpp"
 #include "scorer.cpp"
 
@@ -170,7 +169,7 @@ std::vector<std::vector<int>> bnp_main(problem p, bool hot_start = 1) {
 	auto ccs = mg0.split_components();
 	int sol=0;
 	for(auto& cc: ccs) {
-		std::cerr<<"component: n="<<cc.n()<<" partitoins_bound="<<cc.tight_partition_bound()<<std::endl;
+		std::cerr<<"component: n="<<cc.n()<<" partitions_bound="<<cc.tight_partition_bound()<<std::endl;
 		std::vector<std::vector<int> > ansi;
 		int primal = -1;
 		bnp(cc, 0, cc.m(), primal, ansi);

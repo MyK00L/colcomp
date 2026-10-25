@@ -1,17 +1,15 @@
-#include <algorithm>
 #include <array>
 #include <fstream>
 #include <iostream>
 
 #include "bnp/pricing/exact_pricing_bnb.cpp"
 #include "common.cpp"
-#include "heuristic/heuristic_beamsearch.cpp"
 #include "heuristic/heuristic_karger.cpp"
-#include "heuristic/heuristic_merge.cpp"
 #include "bnb.cpp"
 #include "bnp/bnp.cpp"
 #include "ilp.cpp"
 #include "scorer.cpp"
+#include "bnp/master.cpp"
 
 using namespace std;
 
@@ -79,12 +77,27 @@ void reset_globals() {
 	use_heuristic_pricing = 0;
 }
 
-
+void print_stats(const problem& p) {
+	std::cout<<"N "<<p.n()<<std::endl;
+	std::cout<<"M "<<p.edges.size()<<std::endl;
+	std::cout<<"Pbound "<<max_useful_partitions(p)<<std::endl;
+	mgraph mg(p);
+	std::cout<<"C "<<mg.C()<<std::endl;
+	auto ccs = mg.split_components();
+	std::cout<<"ccs "<<ccs.size()<<std::endl;
+	int maxn=0,maxm=0;
+	for(auto &cc: ccs) {
+		if(cc.n() > maxn) maxn=cc.n();
+		if(cc.m() > maxm) maxm=cc.m();
+	}
+	std::cout<<"maxN "<<maxn<<std::endl;
+	std::cout<<"maxM "<<maxm<<std::endl;
+}
 
 int main(int argc, char** argv) {
 	cin.tie(0);
 	ios_base::sync_with_stdio(0);
-	if(argc<3) {
+	if(argc!=3) {
 		std::string pname(argv[0]);
 		std::cerr<<"Usage: "<<argv[0]<<" [filename] [mode]"<<std::endl;
 		return 1;
@@ -93,7 +106,9 @@ int main(int argc, char** argv) {
 	problem p = input(filename);
 	string mode(argv[2]);
 	clock_t t0 = clock();
-	if (mode == "karger") {
+	if(mode == "stats") {
+		print_stats(p);
+	} else if (mode == "karger") {
 		auto sol = heuristic_karger(p);
 		std::cout<<"score "<<score(p,sol)<<std::endl;
 	} else if (mode == "ilp") {
@@ -115,6 +130,9 @@ int main(int argc, char** argv) {
 		std::cout<<"score "<<score(p,sol)<<std::endl;
 		std::cout<<"bnp_nodes "<<bnp_nodes<<std::endl;
 		std::cout<<"pricing_bnb_nodes "<<pricing_bnb_nodes<<std::endl;
+	} else {
+		std::cerr<<"unknown mode "<<mode<<std::endl;
+		return 1;
 	}
 	clock_t t1 = clock();
 	std::cout<<"time_millis "<<1000*uint64_t(t1-t0)/CLOCKS_PER_SEC<<std::endl;

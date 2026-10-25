@@ -6,7 +6,7 @@ for var in "$@"
 do
 	echo "startgraph $var"
 
-	for mode in karger ilp bnp bnp_nohot bnp_hp
+	for mode in stats karger ilp bnp bnp_nohot bnp_hp
 	do
 		echo "start $mode"
 		$COMMAND "$var" "$mode"

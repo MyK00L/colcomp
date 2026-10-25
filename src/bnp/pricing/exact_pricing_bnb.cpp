@@ -141,7 +141,7 @@ void epbnb(const pricing_problem& p, const epbnb_state state, const double dual,
 		epbnb(p,s2,d2,primal,ans);
     }
 }
-void epbnb0(const pricing_problem& p, epbnb_state state, const double dual, double& primal, bitvec& ans) {
+void epbnb0(const pricing_problem& p, epbnb_state state, double& primal, bitvec& ans) {
 	pricing_bnb_nodes += 1;
 	std::vector<int> ord(p.g.n(),0);
 	std::iota(ord.begin(),ord.end(),0);
@@ -158,9 +158,8 @@ void epbnb0(const pricing_problem& p, epbnb_state state, const double dual, doub
 std::vector<mcolumn> exact_pricing_bnb(pricing_problem p) {
 	epbnb_state s0(p);
 	double primal=0;
-    double dual = p.g.orig_n*p.g.orig_n;
     bitvec ans = s0.nodes;
-    epbnb0(p,s0,dual,primal,ans);
+    epbnb0(p,s0,primal,ans);
     if(primal>1e-6) {
         mcolumn c;
         double val = primal;
@@ -173,9 +172,3 @@ std::vector<mcolumn> exact_pricing_bnb(pricing_problem p) {
     }
     return {};
 }
-
-std::vector<mcolumn> hot_start_cols(mgraph mg) {
-    // TODO
-    return {};
-}
-

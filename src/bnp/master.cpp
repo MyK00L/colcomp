@@ -10,10 +10,9 @@
 #include <Highs.h>
 #include "bnp/master.hpp"
 
+#include "bnp/pricing/exact_pricing.cpp"
 #include "bnp/pricing/heuristic_pricing_beamsearch.cpp"
-#include "pricing/heuristic_pricing_annealing.cpp"
 #include "pricing/exact_pricing_bnb.cpp"
-#include "pricing/exact_pricing.cpp"
 
 #include "pricing/pricing.hpp"
 
@@ -61,15 +60,6 @@ void Master::update_lp() {
     }
 }
 
-void Master::hot_start() {
-    vector<double> ones(g.n(),1);
-    auto cols = hot_start_cols(g);
-    for(auto & col: cols) {
-        columns.push_back({col.value, col.nodes});
-        highs.addCol(col.value, 0, 1, (int)col.nodes.size(), col.nodes.data(), ones.data());
-    }
-}
-
 bool use_heuristic_pricing = 0;
 // TODO: clean everything, better exact pricing
 /// tries to generate new columns
@@ -106,7 +96,7 @@ bool Master::generate_columns() {
     if(pricing_columns.size()) {
         for(auto& col: pricing_columns) {
             if(is_exact) {
-                int n_partitions = g.n(); // TODO: better bound
+                const int n_partitions = g.n(); // TODO: better bound
                 // LR obj: max sum_{i}{lambda_i} + |P| * ( sum_{ei}{e(ei)} - sum_{i}{lamda_i * x_i} )
                 double tmp=col.value;
                 for(auto &i: col.nodes) tmp-=duals[i];
@@ -131,6 +121,9 @@ double Master::run(int global_primal) {
     int it=0;
 	do {
         update_lp();
+        if(highs.getObjectiveValue() > lagrange+1e-7) {
+            std::cerr<<"OHNO "<<highs.getObjectiveValue()<<' '<<lagrange<<std::endl;
+        }
         assert(highs.getObjectiveValue() <= lagrange+1e-7);
         if(it%16==0) std::cerr<<it<<": "<<highs.getObjectiveValue()<<" | "<<lagrange<<std::endl;
         if(std::isfinite(lagrange)) {
