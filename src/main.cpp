@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <array>
-#include <ctime>
+#include <fstream>
 #include <iostream>
 
+#include "bnp/pricing/exact_pricing_bnb.cpp"
 #include "common.cpp"
 #include "heuristic/heuristic_beamsearch.cpp"
 #include "heuristic/heuristic_karger.cpp"
@@ -9,6 +11,7 @@
 #include "bnb.cpp"
 #include "bnp/bnp.cpp"
 #include "ilp.cpp"
+#include "scorer.cpp"
 
 using namespace std;
 
@@ -23,26 +26,27 @@ using namespace std;
  *
  */
 
-problem input() {
+problem input(string filename) {
+	ifstream fin(filename);
 	vector<uint32_t> col;
 	vector<array<uint32_t,2> > edg;
-	while(!cin.eof()) {
+	while(!fin.eof()) {
 		char c=0;
-		cin>>c;
-		if(cin.eof()) break;
+		fin>>c;
+		if(fin.eof()) break;
 		if(c=='v') {
 			uint32_t a,b;
-			cin>>a>>b;
+			fin>>a>>b;
 			if(a+1>col.size()) col.resize(a+1);
 			col[a]=b;
 		} else if(c=='e') {
 			uint32_t a,b;
-			cin>>a>>b;
+			fin>>a>>b;
 			edg.push_back({a,b});
 		} else if(c=='#') {
-			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		} else {
-			cerr<<"error reading input on character "<<int(c)<<endl;
+			cerr<<"error reading input on character "<<int(c)<<" for file "<<filename<<endl;
 			exit(1);
 		}
 	}
@@ -68,27 +72,52 @@ int ccs(mgraph mg) {
 	}
 	return res;
 }
+void reset_globals() {
+	columns.clear();
+	pricing_bnb_nodes = 0;
+	bnp_nodes = 0;
+	use_heuristic_pricing = 0;
+}
 
-int main() {
+
+
+int main(int argc, char** argv) {
 	cin.tie(0);
 	ios_base::sync_with_stdio(0);
-
-	problem p = input();
-	std::cerr<<"|E|="<<p.edges.size()<<std::endl;
-	std::cerr<<"ccs="<<ccs(mgraph(p))<<std::endl;
-	// Master m(p);
-	// m.run();
+	if(argc<3) {
+		std::string pname(argv[0]);
+		std::cerr<<"Usage: "<<argv[0]<<" [filename] [mode]"<<std::endl;
+		return 1;
+	}
+	string filename(argv[1]);
+	problem p = input(filename);
+	string mode(argv[2]);
 	clock_t t0 = clock();
-	// ilp(p);
-	heuristic_karger(p);
-	heuristic_merge(p);
+	if (mode == "karger") {
+		auto sol = heuristic_karger(p);
+		std::cout<<"score "<<score(p,sol)<<std::endl;
+	} else if (mode == "ilp") {
+		auto sol = ilp(p);
+		std::cout<<"score "<<score(p,sol)<<std::endl;
+	} else if(mode == "bnp") {
+		auto sol = bnp_main(p);
+		std::cout<<"score "<<score(p,sol)<<std::endl;
+		std::cout<<"bnp_nodes "<<bnp_nodes<<std::endl;
+		std::cout<<"pricing_bnb_nodes "<<pricing_bnb_nodes<<std::endl;
+	} else if(mode == "bnp_nohot") {
+		auto sol = bnp_main(p,0);
+		std::cout<<"score "<<score(p,sol)<<std::endl;
+		std::cout<<"bnp_nodes "<<bnp_nodes<<std::endl;
+		std::cout<<"pricing_bnb_nodes "<<pricing_bnb_nodes<<std::endl;
+	} else if(mode == "bnp_hp") {
+		use_heuristic_pricing = 1;
+		auto sol = bnp_main(p);
+		std::cout<<"score "<<score(p,sol)<<std::endl;
+		std::cout<<"bnp_nodes "<<bnp_nodes<<std::endl;
+		std::cout<<"pricing_bnb_nodes "<<pricing_bnb_nodes<<std::endl;
+	}
 	clock_t t1 = clock();
-	bnp_main(p);
-	clock_t t2 = clock();
-	std::cerr<<"ilp time: "<<double(t1-t0)/CLOCKS_PER_SEC<<'\n';
-	std::cerr<<"bnp time: "<<double(t2-t1)/CLOCKS_PER_SEC<<'\n';
-
-	std::cerr<<"nnodes: "<<nnodes<<std::endl;
+	std::cout<<"time_millis "<<1000*uint64_t(t1-t0)/CLOCKS_PER_SEC<<std::endl;
 	
 	return 0;
 }

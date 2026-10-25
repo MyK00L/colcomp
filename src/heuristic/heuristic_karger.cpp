@@ -91,7 +91,7 @@ std::vector<std::vector<int> > heuristic_karger(const problem& p) {
 		score+=sc;
 		std::move(sol.begin(),sol.end(),std::back_inserter(ans));
 	}
-	std::cerr<<"karger heuristic: "<<score<<std::endl;
+	std::cerr<<"karger_heuristic_score "<<score<<std::endl;
 	return ans;
 }
 

@@ -1,5 +1,6 @@
 #include <Highs.h>
 #include "common.cpp"
+#include "scorer.cpp"
 
 int max_useful_partitions(const problem& p) {
     // compute bound on max useful number of partitions
@@ -15,7 +16,7 @@ int max_useful_partitions(const problem& p) {
     return std::min((int)p.n(), int(sqrt(max_edges*2+0.25)+0.5+0.001));
 }
 
-void ilp(problem p) {
+std::vector<std::vector<int>> ilp(problem p) {
     const double inf = kHighsInf;
     int n = (int)p.n();
     int P = max_useful_partitions(p);
@@ -74,4 +75,25 @@ void ilp(problem p) {
     }
     highs.run();
     std::cerr<<"ilp solution: "<<highs.getObjectiveValue()<<std::endl;
+
+    std::vector<std::vector<int>> ans(P);
+    {
+        auto& cv = highs.getSolution().col_value;
+        for(int parti=0; parti<P; ++parti) {
+            for(int ni=0; ni<n; ++ni) {
+                if(cv[parti*nvar_part+ni]>0.5) {
+                    ans[parti].push_back(ni);
+                }
+            }
+        }
+        for(int i=0; i<(int)ans.size(); ++i) {
+            if(ans[i].empty()) {
+                ans[i].swap(ans.back());
+                ans.pop_back();
+                --i;
+            }
+        }
+    }
+    assert(int(highs.getObjectiveValue()+0.1)==score(p,ans));
+    return ans;
 }

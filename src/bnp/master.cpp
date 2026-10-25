@@ -69,6 +69,8 @@ void Master::hot_start() {
         highs.addCol(col.value, 0, 1, (int)col.nodes.size(), col.nodes.data(), ones.data());
     }
 }
+
+bool use_heuristic_pricing = 0;
 // TODO: clean everything, better exact pricing
 /// tries to generate new columns
 /// returns true if new columns were generated
@@ -77,7 +79,7 @@ bool Master::generate_columns() {
     
     bool is_exact=0;
     std::vector<mcolumn> pricing_columns;
-    if(false) {
+    if(use_heuristic_pricing) {
         pricing_problem pp(g,duals);
         pricing_columns = heuristic_pricing_beamsearch(pp);
         // SA pricing heuristic is currently bugged, don't use
@@ -130,7 +132,7 @@ double Master::run(int global_primal) {
 	do {
         update_lp();
         assert(highs.getObjectiveValue() <= lagrange+1e-7);
-        if(it%10==0) std::cerr<<it<<": "<<highs.getObjectiveValue()<<" | "<<lagrange<<std::endl;
+        if(it%16==0) std::cerr<<it<<": "<<highs.getObjectiveValue()<<" | "<<lagrange<<std::endl;
         if(std::isfinite(lagrange)) {
             if(int(lagrange) == int(highs.getObjectiveValue()+1e-6)) break;
             if(int(lagrange) <= global_primal) break;

@@ -8,9 +8,10 @@
 #include "bnp/master.hpp"
 #include "bnp/master.cpp"
 #include "heuristic/heuristic_karger.cpp"
+#include "scorer.cpp"
 
 /// global set of columns
-std::set<std::vector<int> > columns; // TODO: fill this with columns and pass them to children
+std::set<std::vector<int> > columns;
 std::vector<mcolumn> columns_for(const mgraph& mg) {
 	std::vector<mcolumn> ans;
 	// single-element columns for feasibility
@@ -78,30 +79,10 @@ std::vector<int> intersect(const std::vector<std::array<int,2> > gu, const std::
 // TODO: limit pricing time to branch more in bnp if necessary
 // (exp in dense graphs) ?
 
-// TODO: separate ccs
-
-
-/*struct bnp_state {
-/// number of edges merged or in finalized groups
-int value;
-/// groups that have already been finalized
-std::vector<std::vector<int> > final_groups;
-/// graph divided into connected components
-std::vector<mgraph> ccs;
-bnp_state(const problem& p): value(0), final_groups({}), ccs({mgraph(p).split_components()}) {
-
-}
-/// returns dual bound, and updates primal
-int run(int& primal, std::vector<std::vector<int> >& best) {
-for(auto &cc: ccs) {
-Master m(mg, columns_for(columns, cc));
-int dv = int(m.run()+1e-5);
-}
-}
-};*/
-
+int bnp_nodes=0;
 /// mg already is a single component
 void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<std::vector<int> >& best) {
+	bnp_nodes += 1;
 	std::cerr<<"\n[[ "<<primal<<' '<<dual<<'\n';
 	if(mg.is_trivial()) { // base case: all components are colorful
 		int pv = base+mg.m();
@@ -175,13 +156,14 @@ void bnp(const mgraph& mg, const int base, int dual, int& primal, std::vector<st
 	std::cerr<<"\n]]\n";
 }
 
-void bnp_main(problem p) {
+std::vector<std::vector<int>> bnp_main(problem p, bool hot_start = 1) {
 	// single-element columns for feasibility
 	columns = std::set<std::vector<int> >();
 	for(int i=0; i<(int)p.n(); ++i) columns.insert({i});
 	// hot start columns
-	for(auto col: heuristic_karger(p)) columns.insert(col);
-	
+	if(hot_start) {
+		for(auto col: heuristic_karger(p)) columns.insert(col);
+	}
 	mgraph mg0(p);
 
 	std::vector<std::vector<int> > ans;
@@ -195,5 +177,6 @@ void bnp_main(problem p) {
 		sol+=primal;
 		std::move(ansi.begin(),ansi.end(),std::back_inserter(ans));
 	}
-	std::cerr<<"BNP SOL:"<<sol<<std::endl;
+	assert(score(p, ans) == sol);
+	return ans;
 }
