@@ -2,7 +2,6 @@
 
 #include <cmath>
 #include <vector>
-#include <algorithm>
 #include "heuristic_pricing_ls.cpp"
 #include "pricing.hpp"
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cmath>
 #include <vector>
 #include <Highs.h>
 #include "mgraph.cpp"

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cmath>
 #include <iterator>
 #include <limits>
 #include <numeric>

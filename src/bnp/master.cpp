@@ -10,7 +10,6 @@
 #include <Highs.h>
 #include "bnp/master.hpp"
 
-#include "bnp/pricing/exact_pricing.cpp"
 #include "bnp/pricing/heuristic_pricing_beamsearch.cpp"
 #include "pricing/exact_pricing_bnb.cpp"
 
