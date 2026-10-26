@@ -132,11 +132,19 @@ std::pair<int, std::vector<std::vector<int>>> Master::primal_ilp() {
 	int obj = int(highs.getObjectiveValue()+0.1);
 	const std::vector<double> &cv = highs.getSolution().col_value;
 	std::vector<std::vector<int>> ans;
+	vector<bool> taken(g.n());
 	for(int i = 0; i<(int)columns.size(); ++i)
 		if(cv[i]>0.5) {
 			ans.push_back({});
-			for(auto &u : columns[i].nodes)
-				for(auto &ou : g.groups[u]) ans.back().push_back(ou);
+			for(auto &u : columns[i].nodes) {
+				taken[u] = 1;
+				for(auto &ou : g.groups[u]) { ans.back().push_back(ou); }
+			}
+		}
+	for(int u = 0; u<g.n(); ++u)
+		if(!taken[u]) {
+			ans.push_back({});
+			for(auto &ou : g.groups[u]) { ans.back().push_back(ou); }
 		}
 
 	// reset integrality constraints just in case
