@@ -1,0 +1,101 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\graphicspath{{../out/}}
+
+\title{Colorful Components: MOP \\
+\large Operations Research Complements
+}
+\author{Michael Chelli}
+\date{\today}
+
+\begin{document}
+\raggedright
+\maketitle
+\newpage
+\tableofcontents
+\newpage
+\section{Introduction}
+Given a graph, where to each node is associated a color,
+a colorful component of that graph is a connected subgraph such that no two nodes have the same color.
+
+The "Minimum Orthogonal Partition" (MOP) problem consists in deleting the minimum number of edges from a graph
+so that the remaining graph consists only of colorful components.
+
+In (2024) is given an introduction to MOP, "Maximum Edges in transitive Closure" (MEC) and "Minimum Colorful Components" problems,
+with their applications (mainly in biology and networks) and solutions based on branch and cut.
+
+In particular, MOP was introduced in (2000), where an approximation algorithm was given, and an exact algorithm was first given in (2012)
+
+\section{Mathematical formulation}
+\subsection{Definitions}
+In the MOP problem there is a graph
+$G = (V,E,C)$ where $V$ is the set of nodes, $E$ the set of edges, and $C$ the set of colors.
+
+$c : V \to C$ is a function giving the color of each node: for a node $u \in V$ its color is $c(u)$.
+
+The problem consists in removing the minimum number of edges $E' \subset E$ such that in the resulting graph $G' = (V, E', C)$,
+all connected components are colorful.
+
+It is equivalent to find a way to partition the graph in $Q$ colorful subgraphs,
+such that the sum of edges in each of them is maximized.
+Note that with this formulation the subgraphs do not necessarly need to be connected.
+
+\subsection{Integer Linear Programming formulation}
+given the last definition, MOP can be formulized as follows:
+$$
+\begin{cases}
+	\case x \in \{0,1\}^{ Q \times |V| }
+	\case e \in \[0,1\]^{ Q \times |E| }
+	\case 1 \forall i \in V \sum_{p=1}^{P}{x_{p,i} \le 1}
+	\case 2 \forall p \in Q \forall k \in C \sum_{i : c(i) = k}{ x_{p,i} \le 1}
+	\case 3 \forall p \in Q \forall (ei,u,v) \in E e_{p,ei} \le x_{p,u} \land e_{p,ei} \le x_{p,v}
+	\case \max \sum_{p \in Q}{\sum_{ei \in |E|}{e_{p,ei}}}
+\end{cases}
+$$
+where in (3) $ei$ is an index associated to the edges ranging from $1$ to $|E|$.
+And $Q$ is a bound on the number of subgraphs, since the exact number is hard to know.
+
+\subsection{Bound on Q}
+A simple upper bound to $Q$ would be $N$, in (2024) better bounds are shown for when the subgraphs need to be connected.
+
+If, like in the above formulation, the subgraphs need not be connected, we can do better:\\
+define $nc : C \to N$ where $nc(k) = | u \in V : c(u) = k |$.\\
+Call a partitioning to be minimal if all pairs of subgraphs have at least one color in common.\\
+There is always an optimal solution that is minimal: if it is not you can merge two subgraphs that have no color in common.\\
+Consider the graph of a partition, where each node is a subgraph and there is an edge between two subgraphs if they have at least one color in common.\\
+In a minimal solution, such graph is a clique, so it has $\frac{p \cdot (p-1)}{2}$ edges if $p$ is the number of subgraphs.\\
+Each color $k$ in the original graph can make at most $\frac{nc(k) \cdot (nc(k)-1)}{2}$ edges.\\
+So there are at most $K = \sum_{k \in C}{\frac{nc(k) \cdot (nc(k)-1)}{2}}$ edges.\\
+thus a minimal solution always has at most $Q = \lfloor \sqrt{2K + \frac{1}{4}} + \frac{1}{2} \rfloor$ subgraphs.
+
+\section{Branch and price algorithm}
+In the ILP formulation, (1) are linking constraints, we can separate these from the others obtaining a dantzig-wolfe decomposition(?).
+
+If we convexify constraints (2) and (3), we can do column generation, where constrains in (1) remain in the master problem and the other go in the pricing subproblem.
+
+The master problem is:
+%%TODO
+
+The pricing subproblems becomes:
+$$
+\begin{cases}
+	\case \forall k \in C \sum_{i : c(i) = k} x_i \le 1
+	\case \forall (ei,u,v) \in E e_{ei} \le x_u \land e_{ei} \le x_v
+	\case max \sum_{i \in V} \lambda_i + \sum_{ei \in |E|}{e_{ei}} - \sum_{i \in V}{\lambda_i x_i} %%TODO: check
+\end{cases}
+$$
+
+%% Lagrange
+%% bnb solution for pricing subproblem
+%% heuristics
+%% hotstart columns, karger and merge heuristics
+
+%% data analysis
+
+%% Aknowledgments (highs, graphs), link repo
+
+\end{document}
