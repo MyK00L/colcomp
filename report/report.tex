@@ -5,7 +5,7 @@
 \usepackage{graphicx}
 \usepackage{amssymb}
 \usepackage{amsmath}
-%% \graphicspath{{../out/}}
+\graphicspath{{./res/}}
 
 \title{Colorful Components: MOP \\
 \large Operations Research Complements
@@ -233,8 +233,41 @@ It contains 135 graphs, each with several connected components. When there are m
 
 \subsection{Dataset 2}
 2024 data
+\def\svgwidth{\columnwidth}
+\input{./res/f2024.pdf_tex}
+Number of optima with respect to time
 
-\subsection{Analysis}
+\subsection{Random graphs}
+
+I also tested the solution on random graphs. The code used for generating them can be found in \texttt{src/utils/generator.cpp}.
+
+In the following table I show the total number of nodes for pricing BnB,
+all on graphs with 30 nodes, with varying density (column) and number of colors (row).
+Each entry is an average between 5 different graphs generated with the same parameters.
+
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c|c| }
+\hline
+c \textbackslash d & 0.1 & 0.2 & 0.3 & 0.4 & 0.5 & 0.6 & 0.7 & 0.8 & 0.9 \\
+\hline
+3 & 274 & 573 & 640 & 671 & 566 & 1127 & 994 & 1031 & 1275 \\
+\hline
+6 & 1053 & 6697 & 8281 & 7391 & 18634 & 12695 & 6964 & 27989 & 10297 \\
+\hline
+9 & 3698 & 21487 & 37308 & 30164 & 53630 & 48984 & 32462 & 39338 & 71382 \\
+\hline
+12 & 6860 & 53279 & 82110 & 116848 & 122786 & 169424 & 121719 & 81097 & 289346 \\
+\hline
+15 & 14423 & 101473 & 212302 & 221085 & 244455 & 271075 & 248919 & 263013 & 207646 \\
+\hline
+18 & 17142 & 157576 & 176105 & 320521 & 339844 & 258944 & 382696 & 350921 & 191873 \\
+\hline
+21 & 20390 & 170051 & 295625 & 340622 & 340280 & 325748 & 370755 & 345187 & 104549 \\
+\hline
+24 & 26617 & 217733 & 404090 & 589747 & 616473 & 383444 & 250796 & 219174 & 202491 \\
+\hline
+27 & 35178 & 306726 & 440203 & 673426 & 621840 & 747201 & 774985 & 414004 & 420081 \\
+\hline
+\end{tabular}
 %% analyze changing N, density, C
 
 %% Aknowledgments (highs, graphs), link repo

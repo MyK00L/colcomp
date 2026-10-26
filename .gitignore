@@ -6,4 +6,4 @@ vgcore.*
 *.folded
 *.svg
 *.pdf
-
+report/res/
