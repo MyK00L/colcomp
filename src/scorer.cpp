@@ -41,6 +41,6 @@ int score(const problem &p, const std::vector<std::vector<int>> &sol) {
 		for(auto &u : sol[pi]) part[u] = pi;
 	}
 	int ans = 0;
-	for(auto &[u, v] : p.edges) { ans += part[u]==part[v]; }
+	for(auto &[u, v] : p.edges) if(part[u]!=-1) { ans += part[u]==part[v]; }
 	return ans;
 }
