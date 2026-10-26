@@ -99,7 +99,7 @@ void bnp(const mgraph &mg, const int base, int dual, int &primal, std::vector<st
 
 	Master m(mg, columns_for(mg));
 	m.setup_highs();
-	double dv = base+m.run(primal);
+	double dv = base+m.run(primal-base);
 	for(auto col : m.get_columns()) { columns.insert(col); }
 	const std::vector<double> cv = m.highs.getSolution().col_value;
 	assert(cv.size()==m.columns.size());
@@ -145,6 +145,11 @@ void bnp(const mgraph &mg, const int base, int dual, int &primal, std::vector<st
 	int w = mg1.merge_edge(split[0], split[1]);
 	assert(w);
 	bnp(mg1, base+w, dual, primal, best);
+
+	if(primal>=dual) {
+		std::cerr<<"\n]]\n";
+		return;
+	}
 
 	mgraph mg2(mg);
 	assert(mg2.remove_edge(split[0], split[1]));

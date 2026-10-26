@@ -110,9 +110,6 @@ double Master::run(int global_primal) {
 	int it = 0;
 	do {
 		update_lp();
-		if(highs.getObjectiveValue()>lagrange+1e-7) {
-			std::cerr<<"OHNO "<<highs.getObjectiveValue()<<' '<<lagrange<<std::endl;
-		}
 		assert(highs.getObjectiveValue()<=lagrange+1e-7);
 		if(it%16==0) std::cerr<<it<<": "<<highs.getObjectiveValue()<<" ~ "<<lagrange<<std::endl;
 		if(std::isfinite(lagrange)) {
