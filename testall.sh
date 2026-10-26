@@ -5,8 +5,8 @@ COMMAND="timeout 180s ./main.out"
 for var in "$@"
 do
 	echo "startgraph $var"
-	# ilp is slow
-	for mode in stats karger bnp bnp_nohot bnp_hp
+	# bnp bnp_nohot ilp
+	for mode in stats karger bnp_hp
 	do
 		echo "start $mode"
 		$COMMAND "$var" "$mode"

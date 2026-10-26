@@ -41,6 +41,7 @@ void Master::setup_highs() {
 		for(auto &j : columns[i].nodes) rows[j].push_back(i);
 	}
 	vector<double> ones(columns.size(), 1);
+	// could also use -inf for lower
 	for(size_t i = 0; i<rows.size(); ++i) { highs.addRow(0, 1, (int)rows[i].size(), rows[i].data(), ones.data()); }
 }
 
