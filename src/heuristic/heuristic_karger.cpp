@@ -59,16 +59,16 @@ std::pair<int, std::vector<std::vector<int>>> single_heuristic_karger(mgraph mg,
 	Rng rng(4);
 	auto [score, taken] = shk_score(mg, edg);
 
-	if(!taken.empty()) {
+	if(!taken.empty() && edg.size()>2) {
 		for(int _ = 0; _<nit; ++_) {
 			int i = taken[rng()%taken.size()];
-			int j = rng()%edg.size();
+			int j = (i==int(edg.size()-1)) ? (rng()%i) : (i+(rng()%(edg.size()-i)));
 			swap(edg[i], edg[j]);
 			auto [nscore, ntaken] = shk_score(mg, edg);
 			if(nscore<score) swap(edg[i], edg[j]);
 			else {
 				score = nscore;
-				ntaken = taken;
+				taken = ntaken;
 			}
 		}
 	}

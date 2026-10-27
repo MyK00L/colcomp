@@ -33,7 +33,7 @@ int cut_cost(const mgraph &mg, int u, int v) {
 	return ans;
 }
 
-int heuristic_merge_comp(mgraph mg) {
+int heuristic_merge_comp(mgraph &mg) {
 	int score = 0;
 	while(1) {
 		int bu = -1, bv = -1, best = std::numeric_limits<int>::min();
@@ -54,10 +54,15 @@ int heuristic_merge_comp(mgraph mg) {
 	return score;
 }
 
-void heuristic_merge(const problem &p) {
+std::vector<std::vector<int>> heuristic_merge(const problem &p) {
 	mgraph mg(p);
 	auto ccs = mg.split_components();
 	int score = 0;
-	for(auto cc : ccs) { score += heuristic_merge_comp(cc); }
+	std::vector<std::vector<int>> ans;
+	for(auto cc : ccs) {
+		score += heuristic_merge_comp(cc);
+		std::move(cc.groups.begin(), cc.groups.end(), std::back_inserter(ans));
+	}
 	std::cerr<<"heuristic merge: "<<score<<std::endl;
+	return ans;
 }

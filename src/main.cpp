@@ -110,6 +110,9 @@ int main(int argc, char **argv) {
 	clock_t t0 = clock();
 	if(mode=="stats") {
 		print_stats(p);
+	} else if(mode=="merge") {
+		auto sol = heuristic_merge(p);
+		std::cout<<"score "<<score(p, sol)<<std::endl;
 	} else if(mode=="karger") {
 		auto sol = heuristic_karger(p);
 		std::cout<<"score "<<score(p, sol)<<std::endl;

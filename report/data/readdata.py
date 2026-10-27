@@ -16,6 +16,11 @@ def printstats_multi(names, stats, data):
 		for stat in stats:
 			printstats(name+" "+stat, list(int(item[1][name][stat]) for item in data))
 
+
+def process_dataheur(data):
+	print("total: ", len(data))
+	printstats_multi(["karger", "merge"], ["time_millis","score"], data.items())
+
 def process_data2012(data):
 	print("total: ", len(data))
 	print("bnp solved: ", nsolved(data,"bnp"))
@@ -99,8 +104,8 @@ def read_data(filename):
 	return data
 
 def main():
-	data = read_data("data2024.txt")
-	process_data2024(data)
+	data = read_data("dataheur.txt")
+	process_dataheur(data)
 
 if __name__ == "__main__":
 	main()
