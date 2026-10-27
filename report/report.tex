@@ -44,12 +44,12 @@ $c : V \to C$ is a function giving the color of each node: for a node $u \in V$ 
 The problem consists in removing the minimum number of edges $E' \subset E$ such that in the resulting graph $G' = (V, E', C)$,
 all connected components are colorful.
 
-It is equivalent to find a way to partition the graph in $Q$ colorful subgraphs,
+It is equivalent to find a way to partition the graph into $Q$ colorful subgraphs,
 such that the sum of edges in each of them is maximized.
 Note that with this formulation the subgraphs do not necessarly need to be connected.
 
 \subsection{Integer Linear Programming formulation}
-given the last definition, MOP can be formulized as follows:
+given the last definition, MOP can be formulated as follows:
 
 \[
 \begin{cases}
@@ -62,21 +62,26 @@ given the last definition, MOP can be formulized as follows:
 \end{cases}
 \]
 
-where in (3) $ei$ is an index associated to the edges ranging from $1$ to $|E|$.
+Where $x_{q,i}$ is $1$ if node $i$ is present in subgraph $q$.\\
+For the $ei_{th}$ edge $(u,v)$, $e_{q,ei}$ is $\min(x_{q,u},x_{q,v})$, which is $1$ if edge $ei$ is present in subgraph $q$.\\
+(1) Are the partition constraints.\\
+(2) Are the color constraints.\\
+(3) Are to make $e_{q,ei} \le \min(x_{q,u},x_{q,v})$ for the objective.
+
 And $Q$ is a bound on the number of subgraphs for an optimal solution, since the exact number is hard to know.
 
 \subsection{Bound on Q}
 A simple upper bound to $Q$ would be $N$, in \parencite{ccc2025} better bounds are shown for when the subgraphs need to be connected.
 
 If, like in the above formulation, the subgraphs need not be connected, we can do better:\\
-define $nc : C \to N$ where $nc(k) = | u \in V : c(u) = k |$.\\
+Define $nc : C \to N$ where $nc(k) = | u \in V : c(u) = k |$.\\
 Call a partitioning to be minimal if all pairs of subgraphs have at least one color in common.\\
-There is always an optimal solution that is minimal: if it is not you can merge two subgraphs that have no color in common.\\
+There is always an optimal solution that is minimal: if it is not you can keep merging subgraphs that have no color in common, until it is minimal.\\
 Consider the graph of a partition, where each node is a subgraph and there is an edge between two subgraphs if they have at least one color in common.\\
 In a minimal solution, such graph is a clique, so it has $q = \frac{s \cdot (s-1)}{2}$ edges if $s$ is the number of subgraphs, $s = \sqrt{2q + \frac{1}{4}} + \frac{1}{2}$ .\\
 Each color $k$ in the original graph can make at most $\frac{nc(k) \cdot (nc(k)-1)}{2}$ edges.\\
 So there are at most $K = \sum_{k \in C}{\frac{nc(k) \cdot (nc(k)-1)}{2}}$ edges.\\
-thus a minimal solution always has at most $Q = \lfloor \sqrt{2K + \frac{1}{4}} + \frac{1}{2} \rfloor$ subgraphs.
+Thus a minimal solution always has at most $Q = \lfloor \sqrt{2K + \frac{1}{4}} + \frac{1}{2} \rfloor$ subgraphs.
 
 \section{Branch and price algorithm}
 \subsection{Master and Pricing problems}
@@ -93,9 +98,9 @@ The restricted linear master problem is:
 	\forall i \in V \quad \sum_{u=1}^{p} \sum_{q=1}^{Q} x_{p,i}^{(u)} \cdot \theta_u \le 1\\
 \end{cases}
 \]
-where $p$ is the number of generated columns.
+Where $p$ is the number of generated columns.
 
-and the pricing subproblem is:
+And the pricing subproblem is:
 \[
 \begin{cases}
 	\max \sum_{i \in V} \lambda_i + \sum_{q=1}^{Q} (\sum_{ei = 1}^{|E|}{e_{q,ei}} - \sum_{i \in V}{\lambda_i x_{q,i}}) \quad \text{s.t.}\\
@@ -105,7 +110,7 @@ and the pricing subproblem is:
 	\forall q \in Q \forall (ei,u,v) \in E \quad e_{q,ei} \le x_{q,u} \land e_{q,ei} \le x_v\\
 \end{cases}
 \]
-This is equivalent to a lagrangean relaxation of the ILP formulation, where (1) is lagrangeanized.
+This is equivalent to a Lagrangian relaxation of the ILP formulation, where (1) is Lagrangianized.
 So whenever we solve a pricing subproblem optimally, we also obtain a dual bound for free.
 
 Of course the subproblems are independent and can be separated,
@@ -132,7 +137,7 @@ We need to get rid of $Q$ in the master problem as well by having $\theta$ sum t
 And the pricing subproblem's objective will change to:
 $\max \sum_{i \in V} \lambda_i + \sum_{ei = 1}^{|E|}{e_{ei}} - \sum_{i \in V}{\lambda_i x_i}$
 
-And any optimal solution for this will also be an optimal solution for the lagrangean relaxation.
+And any optimal solution for this will also be an optimal solution for the Lagrangian relaxation.
 
 \subsection{Braching strategy}
 I branch on edges, like is done in \parencite{mop2012}.
@@ -147,38 +152,38 @@ often good enough to close the BnP on the first node.
 
 I always keep all generated columns, and feed all compatible ones into each instance of the master problem.
 
-\subsection{Hotstart}
-Columns were hotstarted with heuristic solutions.
+\subsection{Hot-start}
+Columns were hot-started with heuristic solutions.
 
 In \parencite{mop2012} a \textit{Merge heuristic} was proposed,
 They define a cut cost and merge cost, and at each step contract the edge maximizing cut cost minus merge cost.
 
-I propose a new heuristic:\\
-first edges are ordered by decreasing cut cost minus merge cost.\\
+I use a modified heuristic:\\
+First edges are ordered by decreasing cut cost minus merge cost.\\
 Then we contract each edge in that order, ignoring those that would merge two nodes having the same color.\\
 Then we modify the ordering by swapping a contracted edge with an edge that appears later in the order,\\
-if the new ordering produces a worse score, we undo the swapping.\\
+If the new ordering produces a worse score, we undo the swapping.\\
 Then repeat trying to swap other edges, for some number of iterations.\\
 I call it \textit{Karger heuristic} in the code because it was inspired by Karger's randomized algorithm for minimum cut \parencite{karger}.
 
 I default to 2000 iterations, and it achieves slightly better results on average,
-at the cost of some computational time, which is mainly negligible when used to hot start the BnP.
+at the cost of some computational time, which is mainly negligible when used to hot-start the BnP.
 
-Only the one set of best columns were used to hotstart the first node of the BnP.
+Only the one set of best columns were used to hot-start the first node of the BnP.
 
 \subsection{Stabilization}
 In order to avoid oscillations during column generation,
 I used single parameter stabilization, first described in \parencite{sps}.
 
 \section{Pricing subproblem}
-The pricing subproblem consists in finding the colorful subgraph with the biggest edge weight sum minus node costs.
+The pricing subproblem consists in finding the colorful subgraph maximizing edge weight sum minus node costs.
 Where each node has multiple colors and a real cost, and each edge has an integer weight.
 
 For each edge $(u,v)$, define $w(u,v)$ (or $w(ei)$) to be equal to its weight, or $0$ if there is no such edge.
 
 For each node $u$, call $\lambda_u$ its cost.
 
-Since each node can have multiple colors $c(u) \in 2^C$,
+Since each node can have multiple colors, $c(u) \in 2^C$,
 but in some cases I relax the problem, thinking of nodes having a single color.
 In those cases I will use the shorthand $c(u)=k$ to mean $min_{c' \in c(u)}{c'} = k$.
 
@@ -204,7 +209,7 @@ We can iteratively delete useless nodes and edges to obtain a smaller problem.
 
 \subsection{Branch and Bound solution}
 I only consider connected components in this solution, which has the advantage that it restricts the search, especially for sparse graphs,
-and the disandavtage that we can no longer use the tighter bound we obtained on $Q$.
+and the disandavtage that we can no longer use the tighter bound we obtained on $Q$, when computing the Lagrangian dual.
 
 I branch on the nodes and keep a connected set of "taken" nodes $U$.
 
@@ -217,13 +222,13 @@ Any node $u$ with $-\lambda_u + \sum_{v \in U}{w(u,v)} + \sum_{k \in C'}{\max_{v
 I split each edge's weight across its two nodes, this is a surrogate relaxation for each edge of constraints (3) in the previous formulation.\\
 
 If each edge $w(u,v)$ was split with $0 \le \alpha \le 1$ of its value goint towards $u$ and $1 - \alpha$ going towards $v$,
-call $w^{(u)}(u,v) = \alpha \cdot w(u,v)$ and $w^{(v)}(u,v) = (1-\alpha) \cdot w(u,v)$.
+define $w^{(u)}(u,v) = \alpha \cdot w(u,v)$ and $w^{(v)}(u,v) = (1-\alpha) \cdot w(u,v)$.
 
 The value of a node $u$ will now be: $\sigma(u) = -\lambda_u + \sum_{v \in U}{w(u,v)} + \sum_{k \in C'}{\max_{v : c(v)=k} w^{(u)}(u,v)}$.\\
 And $\sum_{k \in C'}{\max_{u : c(u) = k}{ \sigma(u) }}$ is a valid dual bound.
 
 In a couple of places (where I take the max across colors) I considered each node to have a single color, like in the preprocessing.
-This could lead to looser bounds and it might be better to split each node along its colors.
+This could lead to looser bounds and it might be better to split each node into weighted copies (so that their nodes costs, edge weights and colors sum up to the original node), each with a single color.
 
 It should not be hard to find good values for $\alpha$ with a local search, but I just used an (quite arbitrary) heuristic:
 considering $w(u,v)$, its $\alpha$ is $\frac{4 + \lambda_u}{8 + \lambda_u + \lambda_v}$.
@@ -234,7 +239,7 @@ I considered several heuristic approaches to pricing.
 In the end I opted for a beam-search based approach,
 where each entry is a connected subgraph and I incrementally add the next node that increases the score the most.
 
-When using heuristic pricing to generate columns, the lagrangean dual value cannot be updated,
+When using heuristic pricing to generate columns, the Lagrangian dual value cannot be updated,
 and the columns are not as good as with the exact approach,
 but it seems to speed up solving the master problem on average.
 
@@ -256,21 +261,25 @@ It contains 135 graphs, each with several connected components. When there are m
  \hline
  solved & 112 & 113 & 110 \\
  \hline
- avg time & 5.3s & 4.2s & 7.2s \\
+ avg time$^*$ & 5.3s & 4.2s & 7.2s \\
  \hline
- avg pricing bnb nodes & 374255 & 235378 & 518371 \\
+ avg pricing bnb nodes$^*$ & 374255 & 235378 & 518371 \\
  \hline
 \end{tabular}
+\smallskip\parbox[t]{\textwidth}{\footnotesize\centerline{$^*$ on instances that were solved by all 3 algorithms}}
 \end{center}
 
 Here \texttt{bnp} denotes the BnP without heuristic pricing,
 \texttt{bnp\_hp} with heuristic pricing,
-and \texttt{bnp\_nohot} without heuristic pricing and without hot start columns.
+and \texttt{bnp\_nohot} without heuristic pricing and without hot-start columns.
 
-Since \texttt{bnp\_hp} seems to be fastest on average, I will only be using it for the following benchmarks.
+Since, on average, \texttt{bnp\_hp} seems to be faster, I will only be using it for the following benchmarks.
 
 \subsection{Dataset 2}
-2024 data
+This second dataset is taken from \parencite{ccc2025},
+and it is based on the previous dataset, splitting the instances with multiple components,
+and restricting to graphs with 10 to 210 nodes.
+
 \begin{center}
 \def\svgwidth{\columnwidth}
 \input{./res/f2024.pdf_tex}
@@ -278,6 +287,9 @@ Since \texttt{bnp\_hp} seems to be fastest on average, I will only be using it f
 Number of optima with respect to time
 
 The maximum number of BnP nodes visited for solved instances is $3$, and it's $1$ for almost all instances.
+For these graphs,
+the dual bound found with column generation is usually very tight,
+and the ILP on the RMP almost always finds the optimal solution if it was not already found by the heuristic.
 
 Out of 445 instances, 426 were solved to optimality.
 
@@ -285,7 +297,7 @@ Out of 445 instances, 426 were solved to optimality.
 
 I also tested the solution on random graphs. The code used for generating them can be found in \texttt{src/utils/generator.cpp}.
 
-In the following table I show the total number of nodes for pricing BnB,
+In the following table I show the total number of nodes for the pricing BnB,
 all on graphs with 30 nodes, with varying density (column) and number of colors (row).
 Each entry is an average between 5 different graphs generated with the same parameters.
 
@@ -314,7 +326,9 @@ c \textbackslash d & 0.1 & 0.2 & 0.3 & 0.4 & 0.5 & 0.6 & 0.7 & 0.8 & 0.9 \\
 \hline
 \end{tabular}
 \end{center}
-%% analyze changing N, density, C
+
+The BnP is slower with higher $|C|$, even when it approaches $|V|$.
+It also seemps possible that the hardest density depends on $|C|$.
 
 \section{Conclusions}
 I presented an approach based on column generation for the MOP problem.
@@ -322,7 +336,7 @@ I presented an approach based on column generation for the MOP problem.
 It should be possible to adapt this approach to the MEC and MCC problems too,
 where there will be a different objective for the pricing subproblem.
 
-The approach could be improved further by employing preprocessing done in \parencite{mop2012},\\
+The approach could be improved further by employing rules 2 and 3 described in \parencite{mop2012},\\
 and by improving surrogate coefficients in the subpricing problem, either via local search or a better heuristic.
 
 
