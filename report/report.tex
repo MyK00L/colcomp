@@ -110,7 +110,7 @@ And the pricing subproblem is:
 	\forall q \in Q \forall (ei,u,v) \in E \quad e_{q,ei} \le x_{q,u} \land e_{q,ei} \le x_v\\
 \end{cases}
 \]
-This is equivalent to a Lagrangian relaxation of the ILP formulation, where (1) is Lagrangianized.
+This is equivalent to a Lagrangean relaxation of the ILP formulation, where (1) is Lagrangeanized.
 So whenever we solve a pricing subproblem optimally, we also obtain a dual bound for free.
 
 Of course the subproblems are independent and can be separated,
@@ -137,7 +137,7 @@ We need to get rid of $Q$ in the master problem as well by having $\theta$ sum t
 And the pricing subproblem's objective will change to:
 $\max \sum_{i \in V} \lambda_i + \sum_{ei = 1}^{|E|}{e_{ei}} - \sum_{i \in V}{\lambda_i x_i}$
 
-And any optimal solution for this will also be an optimal solution for the Lagrangian relaxation.
+And any optimal solution for this will also be an optimal solution for the Lagrangean relaxation.
 
 \subsection{Braching strategy}
 I branch on edges, like is done in \parencite{mop2012}.
@@ -209,7 +209,7 @@ We can iteratively delete useless nodes and edges to obtain a smaller problem.
 
 \subsection{Branch and Bound solution}
 I only consider connected components in this solution, which has the advantage that it restricts the search, especially for sparse graphs,
-and the disandavtage that we can no longer use the tighter bound we obtained on $Q$, when computing the Lagrangian dual.
+and the disandavtage that we can no longer use the tighter bound we obtained on $Q$, when computing the Lagrangean dual.
 
 I branch on the nodes and keep a connected set of "taken" nodes $U$.
 
@@ -239,7 +239,7 @@ I considered several heuristic approaches to pricing.
 In the end I opted for a beam-search based approach,
 where each entry is a connected subgraph and I incrementally add the next node that increases the score the most.
 
-When using heuristic pricing to generate columns, the Lagrangian dual value cannot be updated,
+When using heuristic pricing to generate columns, the Lagrangean dual value cannot be updated,
 and the columns are not as good as with the exact approach,
 but it seems to speed up solving the master problem on average.
 
@@ -339,8 +339,6 @@ where there will be a different objective for the pricing subproblem.
 The approach could be improved further by employing rules 2 and 3 described in \parencite{mop2012},\\
 and by improving surrogate coefficients in the subpricing problem, either via local search or a better heuristic.
 
-
-%% Aknowledgments (highs, graphs), link repo
 \section{Aknowledgments}
 
 For solving all LP and ILP instances, HiGHS \parencite{highs} was used.
