@@ -12,6 +12,7 @@
 
 #include "bnp/pricing/heuristic_pricing_beamsearch.cpp"
 #include "pricing/exact_pricing_bnb.cpp"
+#include "pricing/exact_pricing.cpp"
 
 #include "pricing/pricing.hpp"
 

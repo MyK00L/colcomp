@@ -16,6 +16,7 @@ doable with SAT, I guess
 but that's not the problem with what I'm doing anyway...
 */
 std::vector<mcolumn> exact_pricing(const pricing_problem &p) {
+	const double inf = kHighsInf;
 	Highs h;
 	// h.setOptionValue("seed",42); // TODO seed
 	h.setOptionValue("output_flag", false);
@@ -33,7 +34,7 @@ std::vector<mcolumn> exact_pricing(const pricing_problem &p) {
 			if(!compatible(p.g.c[i], p.g.c[j])) {
 				int ind[2] = {i, j};
 				double val[2] = {1, 1};
-				h.addRow(0, 1, 2, ind, val);
+				h.addRow(-inf, 1, 2, ind, val);
 			}
 		}
 	}
@@ -44,9 +45,9 @@ std::vector<mcolumn> exact_pricing(const pricing_problem &p) {
 				// h.changeColIntegrality(coli, HighsVarType::kImplicitInteger);
 				int nz[2] = {i, coli};
 				double val[2] = {-1, 1};
-				h.addRow(-1, 0, 2, nz, val);
+				h.addRow(-inf, 0, 2, nz, val);
 				nz[0] = j;
-				h.addRow(-1, 0, 2, nz, val);
+				h.addRow(-inf, 0, 2, nz, val);
 				h.changeColCost(coli, w);
 				++coli;
 			}

@@ -202,7 +202,7 @@ We can iteratively delete useless nodes and edges to obtain a smaller problem.
 	\max \sum_{ei = 1}^{|E|}{e_{ei} \cdot w(ei)} - \sum_{u \in V} \lambda_u \quad \text{s.t.}\\
 	x \in \{0,1\}^{|V|}\\
 	e \in [0,1]^{|E|}\\
-	\forall u \in V \forall v \in V : c(v) = c(u), v \neq u \quad x_u + x_v \le 1\\
+	\forall u \in V \forall v \in V : c(v) \cap c(u) \neq \emptyset, v \neq u \quad x_u + x_v \le 1\\
 	\text{(3) }\forall (ei,u,v) \in E \quad e_{ei} \le x_u \land e_{ei} \le x_v\\
 \end{cases}
 \]
@@ -283,8 +283,8 @@ and restricting to graphs with 10 to 210 nodes.
 \begin{center}
 \def\svgwidth{\columnwidth}
 \input{./res/f2024.pdf_tex}
+\smallskip\parbox[t]{\textwidth}{\footnotesize\centerline{Number of optima with respect to time}}
 \end{center}
-Number of optima with respect to time
 
 The maximum number of BnP nodes visited for solved instances is $3$, and it's $1$ for almost all instances.
 For these graphs,
@@ -329,6 +329,10 @@ c \textbackslash d & 0.1 & 0.2 & 0.3 & 0.4 & 0.5 & 0.6 & 0.7 & 0.8 & 0.9 \\
 
 The BnP is slower with higher $|C|$, even when it approaches $|V|$.
 It also seemps possible that the hardest density depends on $|C|$.
+
+This solution slows down considerably with increasing $|C|$,
+while the clique partitioning formulation in \parencite{mop2013},
+seems to manage high values of $|C|$ better.
 
 \section{Conclusions}
 I presented an approach based on column generation for the MOP problem.
