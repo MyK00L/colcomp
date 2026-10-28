@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
 #include <lp_data/HConst.h>
 #include <numeric>
 #include <queue>
@@ -30,8 +31,17 @@ struct epbnb_state {
 			}
 	}
 	void forbid(const int u) { untakeable.set1(u); }
+	bool can_branch(const pricing_problem& p) const {
+		for(int u=0; u<p.g.n(); ++u)
+			if(nodes[u])
+				for(const auto&[v,w]: p.g.g[u])
+					if(!untakeable[v])
+						return 1;
+		return 0;
+	}
 	std::array<epbnb_state, 2> branch(const pricing_problem &p) const {
 		int minv = p.g.n();
+		/*
 		for(int u = 0; u<p.g.n() && minv==p.g.n(); ++u)
 			if(nodes[u]) {
 				for(auto &[v, w] : p.g.g[u])
@@ -40,6 +50,27 @@ struct epbnb_state {
 						break;
 					}
 			}
+		*/
+		double bv=-std::numeric_limits<double>::infinity();
+		for(int u=0; u<p.g.n(); ++u) if(!untakeable[u]) {
+			double val = -p.cost[u];
+			bool adj = 0;
+			std::vector<double> bc(p.g.C(),0);
+			for(const auto &[v,w]: p.g.g[u]) {
+				if(nodes[v]) {
+					adj=1;
+					val+=w;
+				} else if(!untakeable[v]) {
+					bc[p.g.c[v][0]] = std::max(bc[p.g.c[v][0]], w-p.cost[v]);
+				}
+			}
+			for(double &x:bc) val+=x;
+			if(adj && val>bv) {
+				bv=val;
+				minv = u;
+			}
+		}
+		assert(minv!=p.g.n());
 
 		epbnb_state take_node(*this);
 		epbnb_state forbid_node(*this);
@@ -105,6 +136,7 @@ struct epbnb_state {
 		} while(updated);
 	}
 	double upper_bound(const pricing_problem &p) {
+		// return upper_bound_surrogate_lp(p);
 		update_untakeable_reach(p);
 		std::vector<double> bbc(p.g.C(), 0); // best reachable value by color
 		std::vector<double> bc(p.g.C(), 0);	 // best connection by color, for internal loop
@@ -226,8 +258,10 @@ struct epbnb_state {
 		// min sum gamma
 
 		Highs h;
-		// h.setOptionValue("seed",42); // TODO seed
 		h.setOptionValue("output_flag", false);
+		h.setOptionValue("log_to_console", false);
+		h.setOptionValue("solver", "simplex");
+		h.setOptionValue("presolve", "off");
 		h.changeObjectiveSense(ObjSense::kMinimize);
 		for(int i=0; i<(int)te.size(); ++i) { // alpha
 			h.addVar(0,1);
@@ -313,12 +347,11 @@ void epbnb(const pricing_problem &p, const epbnb_state state, const double dual,
 		primal = state.score;
 		ans = state.nodes;
 	}
-	if(state.score>dual+0.0001) return;
 	assert(state.score<=dual+0.0001);
-	if(primal>=dual) return;
+	if(primal>=dual || !state.can_branch(p)) return;
 	auto [s1, s2] = state.branch(p);
-	const double d1 = std::min(dual, s1.upper_bound(p));
-	const double d2 = std::min(dual, s2.upper_bound(p));
+	const double d1 = std::min(dual, s1.upper_bound(p)); // take
+	const double d2 = std::min(dual, s2.upper_bound(p)); // forbid
 	if(d2>d1 /*s2.score>s1.score*/) {
 		epbnb(p, s2, d2, primal, ans);
 		epbnb(p, s1, d1, primal, ans);

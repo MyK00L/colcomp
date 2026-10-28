@@ -12,6 +12,7 @@
 
 #include "bnp/pricing/heuristic_pricing_beamsearch.cpp"
 #include "pricing/exact_pricing_bnb.cpp"
+#include "pricing/exact_pricing_bnb2.cpp"
 #include "pricing/exact_pricing.cpp"
 
 #include "pricing/pricing.hpp"
@@ -71,7 +72,8 @@ bool Master::generate_columns() {
 			duals[i] = duals[i]*0.8+stab[i]*0.2;
 		}
 		pricing_problem pp(g, duals);
-		pricing_columns = exact_pricing_bnb(pp);
+		// pricing_columns = exact_pricing_bnb(pp);
+		pricing_columns = exact_pricing_bnb2(pp);
 		// pricing_columns = exact_pricing(pp);
 		/*
 		auto check = exact_pricing(pp);
