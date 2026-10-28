@@ -149,9 +149,9 @@ struct epbnb_state {
 					if(nodes[v]) {
 						bc[p.g.c[v][0]] = w;
 					} else if(!untakeable[v]) {
-						const double val = (4+p.cost[v])/(8.0+p.cost[u]+p.cost[v]);
 						// const double val = 0.5;
-						bc[p.g.c[v][0]] = std::max(bc[p.g.c[v][0]], w*val /*/2.0*/);
+						const double val = (1.0+p.cost[u])/(2.0+p.cost[u]+p.cost[v]);
+						bc[p.g.c[v][0]] = std::max(bc[p.g.c[v][0]], w*val);
 					}
 				}
 				double wsum = 0;
