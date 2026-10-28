@@ -72,8 +72,8 @@ bool Master::generate_columns() {
 			duals[i] = duals[i]*0.8+stab[i]*0.2;
 		}
 		pricing_problem pp(g, duals);
-		// pricing_columns = exact_pricing_bnb(pp);
-		pricing_columns = exact_pricing_bnb2(pp);
+		pricing_columns = exact_pricing_bnb(pp);
+		// pricing_columns = exact_pricing_bnb2(pp);
 		// pricing_columns = exact_pricing(pp);
 		/*
 		auto check = exact_pricing(pp);

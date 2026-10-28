@@ -319,6 +319,38 @@ struct epbnb_state {
 		assert(h.getModelStatus()==HighsModelStatus::kOptimal);
 		return h.getObjectiveValue()+score;
 	}
+	void update_primal_greedy(const pricing_problem& p, double& primal, bitvec& ans) const {
+		bitvec nnodes = nodes;
+		bitvec nuntakeable = untakeable;
+		double nscore = score;
+		bool updt;
+		do {
+			updt=0;
+			for(int u=0; u<p.g.n(); ++u) if(!nuntakeable[u]) {
+				double valu = -p.cost[u];
+				for(auto [v, w] : p.g.g[u]) if(nnodes[v]) valu += w;
+				if(valu>0) {
+					nnodes.set1(u);
+					nuntakeable.set1(u);
+					for(int v=0; v<p.g.n(); ++v) if(!nuntakeable[v] && !compatible(p.g.c[u], p.g.c[v])) nuntakeable.set1(v);
+					nscore += valu;
+					updt=1;
+				}
+			}
+		} while(updt);
+		for(int u=0; u<p.g.n(); ++u) if(nnodes[u]) {
+			double valu = -p.cost[u];
+			for(auto [v, w] : p.g.g[u]) if(nnodes[v]) valu += w;
+			if(valu<0) {
+				nnodes.set0(u);
+				nscore -= valu;
+			}
+		}
+		if(nscore > primal) {
+			primal=nscore;
+			ans=nnodes;
+		}
+	}
 	void debug_print(const pricing_problem& p) {
 		std::cerr<<"epbnb_state debug:"<<std::endl;
 		std::cerr<<"score="<<score<<std::endl;
@@ -348,11 +380,14 @@ void epbnb(const pricing_problem &p, const epbnb_state state, const double dual,
 		ans = state.nodes;
 	}
 	assert(state.score<=dual+0.0001);
-	if(primal>=dual || !state.can_branch(p)) return;
+	if(primal>=dual || !state.can_branch(p)) {
+		// state.update_primal_greedy(p, primal, ans);
+		return;
+	}
 	auto [s1, s2] = state.branch(p);
 	const double d1 = std::min(dual, s1.upper_bound(p)); // take
 	const double d2 = std::min(dual, s2.upper_bound(p)); // forbid
-	if(d2>d1 /*s2.score>s1.score*/) {
+	if(d2>d1) {
 		epbnb(p, s2, d2, primal, ans);
 		epbnb(p, s1, d1, primal, ans);
 	} else {
