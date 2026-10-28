@@ -68,7 +68,7 @@ struct epbnb_state {
 			for(int u = 0; u<p.g.n(); ++u)
 				if(nodes[u]) {
 					for(auto &[v, w] : p.g.g[u])
-						if(!untakeable[v] && !reach[v]) {
+						if(!untakeable[v] && !reach[v] && w>0) { // w<=0 means it's useless in pricing preprocessing
 							q.push({v, 1});
 							reach.set1(v);
 						}
@@ -78,7 +78,7 @@ struct epbnb_state {
 				q.pop();
 				if(d==cl) continue;
 				for(auto &[v, w] : p.g.g[u])
-					if(!untakeable[v] && !reach[v]) {
+					if(!untakeable[v] && !reach[v] && w>0) {
 						q.push({v, d+1});
 						reach.set1(v);
 					}
@@ -131,17 +131,7 @@ struct epbnb_state {
 		double ans = score;
 		for(auto &sc : bbc) ans += sc;
 
-		// const double dlp = upper_bound_lp(p);
-		const double dslp = upper_bound_surrogate_lp(p);
-		// assert(dslp<=dlp);
-		if(dslp>ans+0.0001) {
-			std::cerr<<"dslp="<<dslp<<" ans="<<ans<<std::endl;
-			debug_print(p);
-			upper_bound_surrogate_lp(p,1);
-		}
-		assert(dslp<=ans+0.0001);
-		return dslp;
-		// return ans;
+		return ans;
 	}
 	// linearize the thing
 	double upper_bound_lp(const pricing_problem &p) {
@@ -201,17 +191,12 @@ struct epbnb_state {
 			h.changeColCost(i, val);
 		}
 		h.run();
-		/*
-		if(h.getModelStatus()!=HighsModelStatus::kOptimal) {
-			debug_print(p);
-			std::cerr<<"lp "<<h.modelStatusToString(h.getModelStatus())<<std::endl;
-		}
-		*/
 		assert(h.getModelStatus()==HighsModelStatus::kOptimal);
 		return h.getObjectiveValue()+score;
 	}
 	// solve the surrogate with lp
-	double upper_bound_surrogate_lp(const pricing_problem &p, bool verbose=0) {
+	// TODO: keep a highs model throughout the bnb
+	double upper_bound_surrogate_lp(const pricing_problem &p) {
 		const double inf = kHighsInf;
 		update_untakeable_reach(p);
 		std::vector<int> tk;
@@ -258,9 +243,6 @@ struct epbnb_state {
 			{
 				// beta[u][c[v]] >= w(u,v)*alpha[uv]
 				// +w(u,v)*alpha[uv] - beta[u][c[v]] <= 0
-				if(verbose) {
-					std::cerr<<"beta["<<u<<"]["<<rtc[p.g.c[v][0]]<<"] >= "<<w<<" * alpha["<<u<<","<<v<<"]\n";
-				}
 				int i = rtk[u];
 				int ind[2] = {ai, int(te.size() + CC*i + rtc[p.g.c[v][0]])};
 				double vals[2] = {double(w),-1.0};
@@ -270,9 +252,6 @@ struct epbnb_state {
 			{
 				// beta[v][c[u]] >= w(u,v)*(1-alpha[uv])
 				// -alpha[uv] -beta[v][c[u]] <= -w(u,v)
-				if(verbose) {
-					std::cerr<<"beta["<<v<<"]["<<rtc[p.g.c[u][0]]<<"] >= "<<w<<" * (1-alpha["<<u<<","<<v<<"])\n";
-				}
 				int j = rtk[v];
 				int ind[2] = {ai, int(te.size() + CC*j + rtc[p.g.c[u][0]])};
 				double vals[2] = {-1.0,-1.0};
@@ -291,13 +270,10 @@ struct epbnb_state {
 			vector<double> vals;
 			ind.reserve(CC+1);
 			vals.reserve(CC+1);
-			if(verbose) std::cerr<<"gamma["<<rtc[p.g.c[u][0]]<<"] >= "<<valu;
 			for(int ki=0; ki<CC; ++ki) {
 				ind.push_back(te.size() + CC*i + ki);
 				vals.push_back(1.0);
-				if(verbose) std::cerr<<" +beta["<<u<<"]["<<ki<<"]";
 			}
-			if(verbose) std::cerr<<std::endl;
 			ind.push_back(te.size() + tk.size()*CC + rtc[p.g.c[u][0]]);
 			vals.push_back(-1.0);
 			h.addRow(-inf, -valu, ind.size(), ind.data(), vals.data());
@@ -306,26 +282,7 @@ struct epbnb_state {
 			h.changeColCost(gi, 1.0);
 		}
 		h.run();
-		/*
-		if(h.getModelStatus()!=HighsModelStatus::kOptimal) {
-			debug_print(p);
-			std::cerr<<"slp "<<h.modelStatusToString(h.getModelStatus())<<std::endl;
-		}
-		*/
 		assert(h.getModelStatus()==HighsModelStatus::kOptimal);
-		if(verbose) {
-			const auto& sol = h.getSolution().col_value;
-			for(int i=0; i<(int)te.size(); ++i) { // alpha
-				std::cerr<<"alpha: ("<<te[i][0]<<','<<te[i][1]<<','<<te[i][2]<<"):"<<sol[i]<<std::endl;
-			}
-			for(int i=0; i<(int)tk.size()*CC; ++i) { // beta
-				std::cerr<<"beta["<<tk[i/CC]<<"]["<<i%CC<<"]="<<sol[i+te.size()]<<std::endl;
-			}
-			for(int i=0; i<CC; ++i) { // gamma
-				std::cerr<<"gamma["<<i<<"]="<<sol[te.size()+tk.size()*CC+i]<<std::endl;
-			}
-			std::cerr<<"objvalue="<<h.getObjectiveValue()<<std::endl;
-		}
 		return h.getObjectiveValue()+score;
 	}
 	void debug_print(const pricing_problem& p) {
@@ -362,29 +319,9 @@ void epbnb(const pricing_problem &p, const epbnb_state state, const double dual,
 	auto [s1, s2] = state.branch(p);
 	const double d1 = std::min(dual, s1.upper_bound(p));
 	const double d2 = std::min(dual, s2.upper_bound(p));
-	if(true || d2>d1 /*s2.score>s1.score*/) {
-		if(d2>primal) { // TODO: resimplify
-			epbnb(p, s2, d2, primal, ans);
-			if(primal > d2+0.0001) {
-				s2.debug_print(p);
-				std::cerr<<"primal="<<primal<<std::endl;
-				std::cerr<<"dual2="<<d2<<std::endl;
-				s2.upper_bound_surrogate_lp(p,1);
-				exit(1);
-			}
-		}
-		if(primal > dual+0.0001) return;
-		if(d1>primal) {
-			epbnb(p, s1, d1, primal, ans);
-			if(primal > d1+0.0001) {
-				s1.debug_print(p);
-				std::cerr<<"primal="<<primal<<std::endl;
-				std::cerr<<"dual1="<<d1<<std::endl;
-				s1.upper_bound_surrogate_lp(p,1);
-				exit(1);
-			}
-		}
-		if(primal > dual+0.0001) return;
+	if(d2>d1 /*s2.score>s1.score*/) {
+		epbnb(p, s2, d2, primal, ans);
+		epbnb(p, s1, d1, primal, ans);
 	} else {
 		epbnb(p, s1, d1, primal, ans);
 		epbnb(p, s2, d2, primal, ans);
