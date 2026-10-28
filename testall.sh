@@ -6,10 +6,10 @@ for var in "$@"
 do
 	echo "startgraph $var"
 	# bnp bnp_nohot ilp
-	for mode in stats karger merge
+	for mode in "stats" "bnp" #"bnp bnb_lps"
 	do
 		echo "start $mode"
-		$COMMAND "$var" "$mode"
+		$COMMAND "$var" $mode
 		echo "exit_code $?"
 		echo "end $mode"
 	done

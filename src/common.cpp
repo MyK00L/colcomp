@@ -119,6 +119,42 @@ struct bitvec {
 		--n;
 		data.resize((n+WS-1)/WS);
 	}
+	struct const_iterator {
+		using iterator_category = std::forward_iterator_tag;
+		const std::vector<WT> &data;
+		const size_t n;
+		uint64_t b;
+		size_t idx;
+		const_iterator(const std::vector<uint64_t> &_data, const size_t _n) : data(_data), n(_n), idx(0) {
+			b = data[0];
+			while(b==0 && idx<data.size()) {
+				idx += 1;
+				if(idx!=data.size()) b = data[idx];
+			}
+			if(this->operator*()>=n) {
+				idx = data.size();
+				b = 0;
+			}
+		}
+		const_iterator(const std::vector<uint64_t> &_data, const size_t _n, uint64_t _b, size_t _idx)
+			: data(_data), n(_n), b(_b), idx(_idx) {}
+		const_iterator operator++() {
+			b ^= (b&(-b));
+			while(b==0 && idx<data.size()) {
+				idx += 1;
+				if(idx!=data.size()) b = data[idx];
+			}
+			if(this->operator*()>=n) {
+				idx = data.size();
+				b = 0;
+			}
+			return *this;
+		}
+		size_t operator*() { return idx*64+__builtin_ctzll(b&(-b)); }
+		bool operator!=(const const_iterator &o) const { return idx!=o.idx || b!=o.b; }
+	};
+	const_iterator begin() const { return const_iterator(data, n); }
+	const_iterator end() const { return const_iterator{data, n, 0, data.size()}; }
 };
 
 /// returns true if there's no element in common between a and b

@@ -11,9 +11,9 @@
 #include <vector>
 
 #include "bnp/pricing/heuristic_pricing_beamsearch.cpp"
+#include "pricing/exact_pricing.cpp"
 #include "pricing/exact_pricing_bnb.cpp"
 #include "pricing/exact_pricing_bnb2.cpp"
-#include "pricing/exact_pricing.cpp"
 
 #include "pricing/pricing.hpp"
 
@@ -22,6 +22,12 @@ idea: columns always have all colors, but master can choose which to actually us
 pricing idea: remove incrementally all nodes that have a multiplier bigger than the number of edges
 pricing dual: then take the biggest degree-multiplier for each color
 */
+
+enum ExactPricingMode {
+	ILP,
+	BNB,
+	BNB_LPS,
+} exact_pricing_mode = ExactPricingMode::BNB;
 
 // do everything with SAT (?)
 
@@ -64,21 +70,20 @@ bool Master::generate_columns() {
 	if(use_heuristic_pricing) {
 		pricing_problem pp(g, duals);
 		pricing_columns = heuristic_pricing_beamsearch(pp);
-		// SA pricing heuristic is currently bugged, don't use
-		// if(false && pricing_columns.empty()) pricing_columns = heuristic_pricing_annealing(pp);
+		// SA pricing heuristic is currently bugged, don't use it
 	}
 	if(pricing_columns.empty()) {
 		for(int i = 0; i<g.n(); ++i) { // single parameter stabilization
 			duals[i] = duals[i]*0.8+stab[i]*0.2;
 		}
 		pricing_problem pp(g, duals);
-		pricing_columns = exact_pricing_bnb(pp);
-		// pricing_columns = exact_pricing_bnb2(pp);
-		// pricing_columns = exact_pricing(pp);
-		/*
-		auto check = exact_pricing(pp);
-		std::cerr<<check[0].value<<' '<<pricing_columns[0].value<<'\n';
-		*/
+		if(exact_pricing_mode==ExactPricingMode::ILP) {
+			pricing_columns = exact_pricing(pp);
+		} else if(exact_pricing_mode==ExactPricingMode::BNB) {
+			pricing_columns = exact_pricing_bnb(pp);
+		} else if(exact_pricing_mode==ExactPricingMode::BNB_LPS) {
+			pricing_columns = exact_pricing_bnb2(pp);
+		}
 		is_exact = 1;
 	}
 

@@ -13,9 +13,8 @@
 #include <queue>
 #include <vector>
 
-#include "bnp/pricing/exact_pricing_bnb.cpp"
-
-// int pricing_bnb_nodes = 0;
+int pricing_bnb2_nodes = 0;
+int pricing_bnb2_runs = 0;
 struct epbnb_state2 {
 	Highs h;
 	bitvec nodes;	   // nodes taken
@@ -285,8 +284,8 @@ struct epbnb_state2 {
 					if(nodes[v]) {
 						bc[p.g.c[v][0]] = w;
 					} else if(!untakeable[v]) {
-						const double val = (4+p.cost[v])/(8.0+p.cost[u]+p.cost[v]);
 						// const double val = 0.5;
+						const double val = (1.0+p.cost[u])/(2.0+p.cost[u]+p.cost[v]);
 						bc[p.g.c[v][0]] = std::max(bc[p.g.c[v][0]], w*val /*/2.0*/);
 					}
 				}
@@ -359,7 +358,7 @@ struct epbnb_state2 {
 };
 
 void epbnb2(const pricing_problem &p, epbnb_state2& state, double dual, double &primal, bitvec &ans) {
-	pricing_bnb_nodes += 1;
+	pricing_bnb2_nodes += 1;
 	
 	{
 		auto [nscore,nans] = state.get_primal(p);
@@ -377,7 +376,7 @@ void epbnb2(const pricing_problem &p, epbnb_state2& state, double dual, double &
 	assert(state.score<=dual+0.0001);
 	if(primal>=dual || !state.can_branch(p)) return;
 
-	int bn = state.branch_node_lp(p);
+	int bn = state.branch_node(p);
 	
 	state.take(bn, p);
 	epbnb2(p,state, dual,primal,ans);
@@ -391,7 +390,7 @@ void epbnb2(const pricing_problem &p, epbnb_state2& state, double dual, double &
 
 }
 void epbnb02(const pricing_problem &p, epbnb_state2& state, double &primal, bitvec &ans) {
-	pricing_bnb_nodes += 1;
+	pricing_bnb2_nodes += 1;
 	std::vector<int> ord(p.g.n(), 0);
 	std::iota(ord.begin(), ord.end(), 0);
 	// std::sort(ord.begin(),ord.end(),[&](int i, int j){return p.cost[i]<p.cost[j];});
@@ -405,6 +404,7 @@ void epbnb02(const pricing_problem &p, epbnb_state2& state, double &primal, bitv
 }
 
 std::vector<mcolumn> exact_pricing_bnb2(pricing_problem p) {
+	pricing_bnb2_runs += 1;
 	epbnb_state2 s0(p);
 	double primal = 0;
 	bitvec ans = s0.nodes;

@@ -75,14 +75,18 @@ int ccs(mgraph mg) {
 void reset_globals() {
 	columns.clear();
 	pricing_bnb_nodes = 0;
+	pricing_bnb_runs = 0;
+	pricing_bnb2_nodes = 0;
+	pricing_bnb2_runs = 0;
 	bnp_nodes = 0;
 	use_heuristic_pricing = 0;
+	exact_pricing_mode = ExactPricingMode::BNB;
 }
 
 void print_stats(const problem &p) {
 	std::cout<<"N "<<p.n()<<std::endl;
 	std::cout<<"M "<<p.edges.size()<<std::endl;
-	std::cout<<"Pbound "<<max_useful_partitions(p)<<std::endl;
+	std::cout<<"Qbound "<<max_useful_partitions(p)<<std::endl;
 	mgraph mg(p);
 	std::cout<<"C "<<mg.C()<<std::endl;
 	auto ccs = mg.split_components();
@@ -99,14 +103,38 @@ void print_stats(const problem &p) {
 int main(int argc, char **argv) {
 	cin.tie(0);
 	ios_base::sync_with_stdio(0);
-	if(argc!=3) {
+	if(argc<3) {
 		std::string pname(argv[0]);
-		std::cerr<<"Usage: "<<argv[0]<<" [filename] [mode]"<<std::endl;
+		std::cerr<<"Usage: "<<argv[0]
+				 <<" [filename] [mode] (options)\n"
+					 "possible modes:\n"
+					 "stats : print graph info\n"
+					 "merge : merge heuristic\n"
+					 "karger : karger heuristic\n"
+					 "ilp : solve MOP with ILP\n"
+					 "bnp : solve MOP with BNP\n"
+					 "possible options:\n"
+					 "nhs : no hotstart\n"
+					 "nhp : no heuristic pricing\n"
+					 "ilp : use ilp for exact pricing\n"
+					 "bnb : use default bnb for exact pricing\n"
+					 "bnb_lps : use bnb with lp based dual bound for exact pricing"
+				 <<std::endl;
 		return 1;
 	}
 	string filename(argv[1]);
 	problem p = input(filename);
 	string mode(argv[2]);
+	bool nhs = 0; // no hotstart
+	use_heuristic_pricing = 1;
+	for(int i = 3; i<argc; ++i) {
+		std::string arg(argv[i]);
+		if(arg=="nhs") nhs = 1;
+		else if(arg=="nhp") use_heuristic_pricing = 0;
+		else if(arg=="ilp") exact_pricing_mode = ExactPricingMode::ILP;
+		else if(arg=="bnb") exact_pricing_mode = ExactPricingMode::BNB;
+		else if(arg=="bnb_lps") exact_pricing_mode = ExactPricingMode::BNB_LPS;
+	}
 	clock_t t0 = clock();
 	if(mode=="stats") {
 		print_stats(p);
@@ -120,18 +148,7 @@ int main(int argc, char **argv) {
 		auto sol = ilp(p);
 		std::cout<<"score "<<score(p, sol)<<std::endl;
 	} else if(mode=="bnp") {
-		auto sol = bnp_main(p);
-		std::cout<<"score "<<score(p, sol)<<std::endl;
-		std::cout<<"bnp_nodes "<<bnp_nodes<<std::endl;
-		std::cout<<"pricing_bnb_nodes "<<pricing_bnb_nodes<<std::endl;
-	} else if(mode=="bnp_nohot") {
-		auto sol = bnp_main(p, 0);
-		std::cout<<"score "<<score(p, sol)<<std::endl;
-		std::cout<<"bnp_nodes "<<bnp_nodes<<std::endl;
-		std::cout<<"pricing_bnb_nodes "<<pricing_bnb_nodes<<std::endl;
-	} else if(mode=="bnp_hp") {
-		use_heuristic_pricing = 1;
-		auto sol = bnp_main(p);
+		auto sol = bnp_main(p, !nhs);
 		std::cout<<"score "<<score(p, sol)<<std::endl;
 		std::cout<<"bnp_nodes "<<bnp_nodes<<std::endl;
 		std::cout<<"pricing_bnb_nodes "<<pricing_bnb_nodes<<std::endl;
