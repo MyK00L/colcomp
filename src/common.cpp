@@ -3,6 +3,7 @@
 #include <array>
 #include <cassert>
 #include <cstdint>
+#include <iostream>
 #include <limits>
 #include <vector>
 
@@ -10,6 +11,15 @@ struct problem {
 	std::vector<uint32_t> color;
 	std::vector<std::array<uint32_t, 2>> edges;
 	size_t n() const { return color.size(); }
+
+	void debug_print() {
+		for(int u=0; u<(int)n(); ++u) {
+			std::cerr<<u<<'('<<color[u]<<")\n";
+		}
+		for(const auto [u,v]: edges) {
+			std::cerr<<u<<'('<<color[u]<<") "<<v<<'('<<color[v]<<")\n";
+		}
+	}
 };
 
 struct mcolumn {
