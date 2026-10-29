@@ -93,7 +93,6 @@ struct epbnb_state {
 				}
 		}*/
 		for(auto i : nodes) cl -= p.g.c[i].size();
-		reach.zero();
 		for(auto u : nodes) {
 			for(auto &[v, w] : p.g.g[u])
 				if(!untakeable[v] && !reach[v] && w>0) { // w<=0 means it's useless in pricing preprocessing
@@ -167,24 +166,30 @@ struct epbnb_state {
 				rtk[u] = tk.size();
 				tk.push_back(u);
 			}
-
+		if(tk.size()==0) return score;
 		int coli = 0;
 		for(int i = 0; i<(int)tk.size(); ++i) {
 			h.addVar(0, 1);
 			++coli;
 		}
-		for(int i = 0; i<int(tk.size()); ++i) {
-			for(int j = i+1; j<int(tk.size()); ++j) {
+		for(int k=0; k<p.g.C(); ++k) {
+			vector<int> ind;
+			vector<double> val;
+			for(int i=0; i<int(tk.size()); ++i) {
 				int u = tk[i];
-				int v = tk[j];
-				if(!compatible(p.g.c[u], p.g.c[v])) {
-					int ind[2] = {i, j};
-					double val[2] = {1, 1};
-					h.addRow(-inf, 1, 2, ind, val);
+				bool contains=0;
+				for(auto &ki: p.g.c[u]) if(ki==k) {
+					contains=1;
+					break;
+				}
+				if(contains) {
+					ind.push_back(i);
+					val.push_back(1);
 				}
 			}
+			if(ind.size())
+				h.addRow(-inf, 1, ind.size(), ind.data(), val.data());
 		}
-		if(tk.size()==0) return score;
 		for(int i = 0; i<(int)tk.size(); ++i) {
 			int u = tk[i];
 			for(auto [v, w] : p.g.g[u]) {

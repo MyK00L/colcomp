@@ -134,6 +134,10 @@ int main(int argc, char **argv) {
 		else if(arg=="ilp") exact_pricing_mode = ExactPricingMode::ILP;
 		else if(arg=="bnb") exact_pricing_mode = ExactPricingMode::BNB;
 		else if(arg=="bnb_lps") exact_pricing_mode = ExactPricingMode::BNB_LPS;
+		else {
+			std::cerr<<"unknown option "<<arg<<std::endl;
+			exit(1);
+		}
 	}
 	clock_t t0 = clock();
 	if(mode=="stats") {

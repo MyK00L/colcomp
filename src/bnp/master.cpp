@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "bnp/pricing/heuristic_pricing_beamsearch.cpp"
-#include "pricing/exact_pricing.cpp"
+#include "pricing/exact_pricing_ilp.cpp"
 #include "pricing/exact_pricing_bnb.cpp"
 #include "pricing/exact_pricing_bnb2.cpp"
 
@@ -78,7 +78,7 @@ bool Master::generate_columns() {
 		}
 		pricing_problem pp(g, duals);
 		if(exact_pricing_mode==ExactPricingMode::ILP) {
-			pricing_columns = exact_pricing(pp);
+			pricing_columns = exact_pricing_ilp(pp);
 		} else if(exact_pricing_mode==ExactPricingMode::BNB) {
 			pricing_columns = exact_pricing_bnb(pp);
 		} else if(exact_pricing_mode==ExactPricingMode::BNB_LPS) {

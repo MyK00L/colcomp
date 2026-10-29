@@ -15,7 +15,7 @@ max z = sum_j /\_i(x[i,j])
 doable with SAT, I guess
 but that's not the problem with what I'm doing anyway...
 */
-std::vector<mcolumn> exact_pricing(const pricing_problem &p) {
+std::vector<mcolumn> exact_pricing_ilp(const pricing_problem &p) {
 	const double inf = kHighsInf;
 	Highs h;
 	// h.setOptionValue("seed",42); // TODO seed
@@ -29,14 +29,22 @@ std::vector<mcolumn> exact_pricing(const pricing_problem &p) {
 		// h.changeColCost(coli, -duals[i]);
 		++coli;
 	}
-	for(int i = 0; i<int(p.g.n()); ++i) {
-		for(int j = i+1; j<int(p.g.n()); ++j) {
-			if(!compatible(p.g.c[i], p.g.c[j])) {
-				int ind[2] = {i, j};
-				double val[2] = {1, 1};
-				h.addRow(-inf, 1, 2, ind, val);
+	for(int k=0; k<p.g.C(); ++k) {
+		vector<int> ind;
+		vector<double> val;
+		for(int i=0; i<p.g.n(); ++i) {
+			bool contains=0;
+			for(auto &ki: p.g.c[i]) if(ki==k) {
+				contains=1;
+				break;
+			}
+			if(contains) {
+				ind.push_back(i);
+				val.push_back(1);
 			}
 		}
+		if(ind.size())
+			h.addRow(-inf, 1, ind.size(), ind.data(), val.data());
 	}
 	for(int i = 0; i<int(p.g.n()); ++i) {
 		for(auto [j, w] : p.g.g[i])
