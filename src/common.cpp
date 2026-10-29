@@ -131,7 +131,7 @@ struct bitvec {
 				idx += 1;
 				if(idx!=data.size()) b = data[idx];
 			}
-			if(this->operator*()>=n) {
+			if(idx!=data.size() && this->operator*()>=n) {
 				idx = data.size();
 				b = 0;
 			}
@@ -144,7 +144,7 @@ struct bitvec {
 				idx += 1;
 				if(idx!=data.size()) b = data[idx];
 			}
-			if(this->operator*()>=n) {
+			if(idx!=data.size() && this->operator*()>=n) {
 				idx = data.size();
 				b = 0;
 			}
