@@ -9,7 +9,7 @@ void gen_with_greedy(const problem &p, const std::vector<std::vector<int>> &g, s
 	const int C = *std::max_element(p.color.begin(), p.color.end())+1;
 	std::vector<bool> incomp(p.n());
 	for(int u0 = 0; u0<int(p.n()); ++u0) {
-		int nedges = 0;
+		// int nedges = 0;
 		std::vector<int> comp;
 		std::set<int> neigh;
 		std::vector<int> col_node(C, -1);
@@ -18,7 +18,7 @@ void gen_with_greedy(const problem &p, const std::vector<std::vector<int>> &g, s
 		col_node[p.color[u0]] = u0;
 		for(int v : g[u0]) {
 			neigh.insert(v);
-			nedges += 1;
+			// nedges += 1;
 		}
 		for(;;) {
 			int minn = p.n()*2;
@@ -36,7 +36,7 @@ void gen_with_greedy(const problem &p, const std::vector<std::vector<int>> &g, s
 					}
 				}
 			if(minu==-1) break;
-			nedges += minn;
+			// nedges += minn;
 			col_node[p.color[minu]] = minu;
 			comp.push_back(minu);
 			incomp[minu] = 1;
@@ -44,17 +44,17 @@ void gen_with_greedy(const problem &p, const std::vector<std::vector<int>> &g, s
 			for(const auto v : g[minu])
 				if(!incomp[v]) neigh.insert(v);
 
+			std::sort(comp.begin(),comp.end());
 			if(comp.size()>1) // maybe filter based on |inside edges|/|border edges| or something
 				cols.push_back(comp);
 		}
-		//if(nedges>=C*2)
-		//	cols.push_back(comp);
 		for(const auto u : comp) incomp[u] = 0;
 	}
 }
 
 void gen_with_karger_heuristic(const problem& p, std::vector<std::vector<int>>& cols) {
 	auto c = heuristic_karger(p);
+	for(auto &col: c) std::sort(col.begin(),col.end());
 	std::move(c.begin(), c.end(), std::back_inserter(cols));
 }
 
