@@ -29,6 +29,7 @@ problem input(string filename) {
 	ifstream fin(filename);
 	vector<uint32_t> col;
 	vector<array<uint32_t, 2>> edg;
+	set<array<uint32_t, 2>> edgset;
 	while(!fin.eof()) {
 		char c = 0;
 		fin>>c;
@@ -41,6 +42,20 @@ problem input(string filename) {
 		} else if(c=='e') {
 			uint32_t a, b;
 			fin>>a>>b;
+			if(a>b) swap(a, b);
+			if(a>=col.size() || b>=col.size()) {
+				std::cerr<<"node in edge has not been defined yet, ignoring"<<std::endl;
+				continue;
+			}
+			if(col[a]==col[b]) {
+				std::cerr<<"edge between same-color nodes in input, ignoring"<<std::endl;
+				continue;
+			}
+			if(edgset.count({a, b})) {
+				std::cerr<<"edge present twice in input, ignoring"<<std::endl;
+				continue;
+			}
+			edgset.insert({a, b});
 			edg.push_back({a, b});
 		} else if(c=='#') {
 			fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
