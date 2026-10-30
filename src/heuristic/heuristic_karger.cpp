@@ -88,13 +88,13 @@ std::pair<int, std::vector<std::vector<int>>> single_heuristic_karger(mgraph mg,
 	return {score, sol};
 }
 
-std::vector<std::vector<int>> heuristic_karger(const problem &p) {
+std::vector<std::vector<int>> heuristic_karger(const problem &p, int nit = 2000) {
 	mgraph mg(p);
 	auto ccs = mg.split_components();
 	int score = 0;
 	std::vector<std::vector<int>> ans;
 	for(auto &cc : ccs) {
-		auto [sc, sol] = single_heuristic_karger(cc, 2000);
+		auto [sc, sol] = single_heuristic_karger(cc, nit);
 		score += sc;
 		std::move(sol.begin(), sol.end(), std::back_inserter(ans));
 	}

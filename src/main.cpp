@@ -9,8 +9,8 @@
 #include "common.cpp"
 #include "heuristic/heuristic_karger.cpp"
 #include "ilp.cpp"
-#include "scorer.cpp"
 #include "preprocess.cpp"
+#include "scorer.cpp"
 
 using namespace std;
 
@@ -159,26 +159,7 @@ int main(int argc, char **argv) {
 		std::cout<<"bnp_nodes "<<bnp_nodes<<std::endl;
 		std::cout<<"pricing_bnb_nodes "<<pricing_bnb_nodes<<std::endl;
 	} else if(mode=="preprocess") {
-		int s0=-1,s1=-1,s2=-1;
-		{
-			auto sol0 = bnp_main(p);
-			s0 = score(p, sol0);
-		}
-		{
-			problem p1(p);
-			preprocess(p1,0);
-			auto sol1 = bnp_main(p1);
-			s1 = score(p, sol1);
-		}
-		{
-			problem p2(p);
-			preprocess(p2,1);
-			// cacca(p);
-			// cacca(p2);
-			auto sol2 = bnp_main(p2);
-			s2 = score(p, sol2);
-		}
-		assert(s0==s1&&s1==s2);
+		preprocess(p);
 	} else {
 		std::cerr<<"unknown mode "<<mode<<std::endl;
 		return 1;
