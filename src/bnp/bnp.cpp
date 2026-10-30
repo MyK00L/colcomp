@@ -5,6 +5,7 @@
 #include "heuristic/heuristic_karger.cpp"
 #include "mgraph.cpp"
 #include "scorer.cpp"
+#include "bnp/hotstart.cpp"
 #include <iostream>
 #include <map>
 #include <queue>
@@ -252,7 +253,7 @@ std::vector<std::vector<int>> bnp_main(problem p, bool hot_start = 1) {
 	// single-element columns for feasibility are not needed
 	// hot start columns
 	if(hot_start) {
-		for(auto col : heuristic_karger(p)) columns.insert(col);
+		for(auto col : gen_hotstart_columns(p)) columns.insert(col);
 	}
 	mgraph mg0(p);
 
