@@ -21,8 +21,7 @@ class Master {
 	/// tries to generate new columns
 	/// returns true if new columns were generated
 	bool generate_columns();
-	/// keeps generating columns until optimality
-	/// (TODO: or some condition is met, like lagrange passing the primal bound or being close to cg)
+	/// keeps generating columns until a valid integer dual bound is found
 	double run(int global_primal);
 	/// returns the best partitioning with the current columns
 	std::pair<int, std::vector<std::vector<int>>> primal_ilp(int primal);

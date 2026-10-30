@@ -79,9 +79,6 @@ std::vector<int> intersect(const std::vector<std::array<int, 2>> gu, const std::
 	return ans;
 }
 
-// TODO: limit pricing time to branch more in bnp if necessary
-// (exp in dense graphs) ?
-
 struct BnpNode {
 	mgraph mg;
 	int base; // base value (sum of edges already merged in mg)

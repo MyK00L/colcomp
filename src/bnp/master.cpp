@@ -37,9 +37,6 @@ Master::Master(mgraph _mg, std::vector<mcolumn> _columns)
 void Master::setup_highs() {
 	highs.clear();
 	highs.setOptionValue("output_flag", false);
-	// highs.setOptionValue("solver", "ipm");
-	// highs.setOptionValue("seed",42); // TODO seed
-	// highs.setMatrixFormat(MatrixFormat::kColwise);
 	highs.changeObjectiveSense(ObjSense::kMaximize);
 
 	vector<vector<int>> rows(g.n());
@@ -59,7 +56,6 @@ void Master::update_lp() {
 }
 
 bool use_heuristic_pricing = 0;
-// TODO: clean everything, better exact pricing
 /// tries to generate new columns
 /// returns true if new columns were generated
 bool Master::generate_columns() {
@@ -94,7 +90,7 @@ bool Master::generate_columns() {
 	if(pricing_columns.size()) {
 		for(auto &col : pricing_columns) {
 			if(is_exact) {
-				const int n_partitions = g.n(); // TODO: better bound
+				const int n_partitions = g.n(); // could use a better bound
 				// LR obj: max sum_{i}{lambda_i}+|P|*( sum_{ei}{e(ei)}-sum_{i}{lamda_i*x_i} )
 				double tmp = col.value;
 				for(auto &i : col.nodes) tmp -= duals[i];
@@ -113,8 +109,7 @@ bool Master::generate_columns() {
 
 	return false;
 }
-/// keeps generating columns until optimality
-/// (TODO: or some condition is met, like lagrange passing the primal bound or being close to cg)
+/// keeps generating columns until a valid integer dual bound is found
 double Master::run(int global_primal) {
 	int it = 0;
 	do {
@@ -132,7 +127,6 @@ double Master::run(int global_primal) {
 	return lagrange;
 }
 
-// TODO: heuristic primal?
 std::pair<int, std::vector<std::vector<int>>> Master::primal_ilp(int primal) {
 	// set integrality constraints for columns
 	for(int i = 0; i<(int)columns.size(); ++i) highs.changeColIntegrality(i, HighsVarType::kInteger);

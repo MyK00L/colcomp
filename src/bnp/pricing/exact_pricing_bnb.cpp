@@ -156,7 +156,6 @@ struct epbnb_state {
 		const double inf = kHighsInf;
 		update_untakeable_reach(p);
 		Highs h;
-		// h.setOptionValue("seed",42); // TODO seed
 		h.setOptionValue("output_flag", false);
 		h.changeObjectiveSense(ObjSense::kMaximize);
 		std::vector<int> tk;
@@ -220,7 +219,6 @@ struct epbnb_state {
 		return h.getObjectiveValue()+score;
 	}
 	// solve the surrogate with lp
-	// TODO: keep a highs model throughout the bnb
 	double upper_bound_surrogate_lp(const pricing_problem &p) {
 		const double inf = kHighsInf;
 		update_untakeable_reach(p);

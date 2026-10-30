@@ -347,8 +347,7 @@ int try_with_greedy(problem &p, std::vector<std::vector<int>> &g, const std::vec
 	return removed.size();
 }
 
-// TODO: mark and ignore those in finished components,
-//       try with both heuristics, if fail try greedily constructed sets (like before change)
+// try with both heuristics, if fail try greedily constructed sets (like before change)
 void preprocess(problem &p) {
 	std::vector<bool> finished(p.n());
 	std::vector<std::vector<int>> g(p.n());

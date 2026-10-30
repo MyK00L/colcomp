@@ -23,7 +23,6 @@ std::vector<std::vector<int>> ilp(problem p) {
 	int nvar_part = n+m;
 	Highs highs;
 	highs.setOptionValue("output_flag", false);
-	highs.setOptionValue("seed", 42); // TODO seed
 	highs.changeObjectiveSense(ObjSense::kMaximize);
 	// add variables
 	for(int parti = 0; parti<P; ++parti) {
