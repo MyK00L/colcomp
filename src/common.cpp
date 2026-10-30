@@ -13,12 +13,8 @@ struct problem {
 	size_t n() const { return color.size(); }
 
 	void debug_print() {
-		for(int u=0; u<(int)n(); ++u) {
-			std::cerr<<u<<'('<<color[u]<<")\n";
-		}
-		for(const auto [u,v]: edges) {
-			std::cerr<<u<<'('<<color[u]<<") "<<v<<'('<<color[v]<<")\n";
-		}
+		for(int u = 0; u<(int)n(); ++u) { std::cerr<<u<<'('<<color[u]<<")\n"; }
+		for(const auto [u, v] : edges) { std::cerr<<u<<'('<<color[u]<<") "<<v<<'('<<color[v]<<")\n"; }
 	}
 };
 
@@ -169,6 +165,7 @@ struct bitvec {
 
 /// returns true if there's no element in common between a and b
 bool compatible(const std::vector<int> &a, const std::vector<int> &b) {
+	if(a.size()==1 && b.size()==1) return a[0]!=b[0]; // fastpath
 	if(a.size()>b.size()) return compatible(b, a);
 	auto bb = b.begin();
 	for(auto &x : a) {

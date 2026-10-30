@@ -133,7 +133,7 @@ int main(int argc, char **argv) {
 					 "possible options:\n"
 					 "nhs : no hotstart\n"
 					 "nhp : no heuristic pricing\n"
-					 "npp : no preprocessing before bnp or ilp or stats\n"
+					 "npp : no preprocessing before stats/merge/karger/ilp/bnp\n"
 					 "ilp : use ilp for exact pricing\n"
 					 "bnb : use default bnb for exact pricing\n"
 					 "bnb_lps : use bnb with lp based dual bound for exact pricing"
@@ -164,9 +164,11 @@ int main(int argc, char **argv) {
 		if(!npp) preprocess(p);
 		print_stats(p);
 	} else if(mode=="merge") {
+		if(!npp) preprocess(p);
 		auto sol = heuristic_merge(p);
 		std::cout<<"score "<<score(p, sol)<<std::endl;
 	} else if(mode=="karger") {
+		if(!npp) preprocess(p);
 		auto sol = heuristic_karger(p);
 		std::cout<<"score "<<score(p, sol)<<std::endl;
 	} else if(mode=="ilp") {

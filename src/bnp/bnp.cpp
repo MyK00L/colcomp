@@ -12,7 +12,7 @@
 #include <set>
 
 int bnp_nodes = 0;
-/// global set of columns
+/// global set of columns, only insert sorted vectors of nodes with indeces in the original graph
 std::set<std::vector<int>> columns;
 std::vector<mcolumn> columns_for(const mgraph &mg) {
 	std::vector<mcolumn> ans;

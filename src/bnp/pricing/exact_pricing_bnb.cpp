@@ -25,17 +25,14 @@ struct epbnb_state {
 			if(nodes[v]) score += w;
 		nodes.set1(u);
 		untakeable.set1(u);
-		for(int v = 0; v<p.g.n(); ++v)
-			if(!untakeable[v]) {
-				if(!compatible(p.g.c[u], p.g.c[v])) untakeable.set1(v);
-			}
+		for(const auto v : ~untakeable)
+			if(!compatible(p.g.c[u], p.g.c[v])) untakeable.set1(v);
 	}
 	void forbid(const int u) { untakeable.set1(u); }
 	bool can_branch(const pricing_problem &p) const {
-		for(int u = 0; u<p.g.n(); ++u)
-			if(nodes[u])
-				for(const auto &[v, w] : p.g.g[u])
-					if(!untakeable[v]) return 1;
+		for(const auto u : nodes)
+			for(const auto &[v, w] : p.g.g[u])
+				if(!untakeable[v]) return 1;
 		return 0;
 	}
 	std::array<epbnb_state, 2> branch(const pricing_problem &p) const {
@@ -142,12 +139,12 @@ struct epbnb_state {
 				}
 			}
 			double wsum = 0;
-			for(auto &sc : bc) wsum += sc;
+			for(const auto &sc : bc) wsum += sc;
 			const double us = wsum-p.cost[u];
 			if(us>bbc[p.g.c[u][0]]) bbc[p.g.c[u][0]] = us;
 		}
 		double ans = score;
-		for(auto &sc : bbc) ans += sc;
+		for(const auto &sc : bbc) ans += sc;
 
 		return ans;
 	}
@@ -171,23 +168,23 @@ struct epbnb_state {
 			h.addVar(0, 1);
 			++coli;
 		}
-		for(int k=0; k<p.g.C(); ++k) {
+		for(int k = 0; k<p.g.C(); ++k) {
 			vector<int> ind;
 			vector<double> val;
-			for(int i=0; i<int(tk.size()); ++i) {
+			for(int i = 0; i<int(tk.size()); ++i) {
 				int u = tk[i];
-				bool contains=0;
-				for(auto &ki: p.g.c[u]) if(ki==k) {
-					contains=1;
-					break;
-				}
+				bool contains = 0;
+				for(auto &ki : p.g.c[u])
+					if(ki==k) {
+						contains = 1;
+						break;
+					}
 				if(contains) {
 					ind.push_back(i);
 					val.push_back(1);
 				}
 			}
-			if(ind.size())
-				h.addRow(-inf, 1, ind.size(), ind.data(), val.data());
+			if(ind.size()) h.addRow(-inf, 1, ind.size(), ind.data(), val.data());
 		}
 		for(int i = 0; i<(int)tk.size(); ++i) {
 			int u = tk[i];
