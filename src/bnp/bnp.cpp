@@ -109,7 +109,7 @@ void bnp(const mgraph &mg, const int base, int dual, int &primal, std::vector<st
 		return;
 	}
 	std::cerr<<"PRIMAL:"<<primal<<" DUAL:"<<dual<<std::endl;
-	auto [pv, pcols] = m.primal_ilp();
+	auto [pv, pcols] = m.primal_ilp(primal);
 	pv += base;
 	if(pv>primal) {
 		primal = pv;

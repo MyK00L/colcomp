@@ -118,6 +118,7 @@ int main(int argc, char **argv) {
 					 "possible options:\n"
 					 "nhs : no hotstart\n"
 					 "nhp : no heuristic pricing\n"
+					 "npp : no preprocessing before bnp or ilp or stats\n"
 					 "ilp : use ilp for exact pricing\n"
 					 "bnb : use default bnb for exact pricing\n"
 					 "bnb_lps : use bnb with lp based dual bound for exact pricing"
@@ -128,11 +129,13 @@ int main(int argc, char **argv) {
 	problem p = input(filename);
 	string mode(argv[2]);
 	bool nhs = 0; // no hotstart
+	bool npp = 0; // no preprocess
 	use_heuristic_pricing = 1;
 	for(int i = 3; i<argc; ++i) {
 		std::string arg(argv[i]);
 		if(arg=="nhs") nhs = 1;
 		else if(arg=="nhp") use_heuristic_pricing = 0;
+		else if(arg=="npp") npp = 1;
 		else if(arg=="ilp") exact_pricing_mode = ExactPricingMode::ILP;
 		else if(arg=="bnb") exact_pricing_mode = ExactPricingMode::BNB;
 		else if(arg=="bnb_lps") exact_pricing_mode = ExactPricingMode::BNB_LPS;
@@ -143,6 +146,7 @@ int main(int argc, char **argv) {
 	}
 	clock_t t0 = clock();
 	if(mode=="stats") {
+		if(!npp) preprocess(p);
 		print_stats(p);
 	} else if(mode=="merge") {
 		auto sol = heuristic_merge(p);
@@ -151,9 +155,11 @@ int main(int argc, char **argv) {
 		auto sol = heuristic_karger(p);
 		std::cout<<"score "<<score(p, sol)<<std::endl;
 	} else if(mode=="ilp") {
+		if(!npp) preprocess(p);
 		auto sol = ilp(p);
 		std::cout<<"score "<<score(p, sol)<<std::endl;
 	} else if(mode=="bnp") {
+		if(!npp) preprocess(p);
 		auto sol = bnp_main(p, !nhs);
 		std::cout<<"score "<<score(p, sol)<<std::endl;
 		std::cout<<"bnp_nodes "<<bnp_nodes<<std::endl;

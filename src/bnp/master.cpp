@@ -133,11 +133,22 @@ double Master::run(int global_primal) {
 }
 
 // TODO: heuristic primal?
-std::pair<int, std::vector<std::vector<int>>> Master::primal_ilp() {
+std::pair<int, std::vector<std::vector<int>>> Master::primal_ilp(int primal) {
 	// set integrality constraints for columns
 	for(int i = 0; i<(int)columns.size(); ++i) highs.changeColIntegrality(i, HighsVarType::kInteger);
+	{	// set objective>=primal+1
+		std::vector<int> inds(columns.size());
+		std::vector<double> vals(columns.size());
+		for(int i=0; i<(int)columns.size(); ++i) {
+			inds[i]=i;
+			vals[i]=columns[i].value;
+		}
+		highs.addRow(primal+1,kHighsInf,columns.size(),inds.data(),vals.data());
+	}
+
 	highs.run();
-	int obj = int(highs.getObjectiveValue()+0.1);
+	assert(highs.getModelStatus()==HighsModelStatus::kOptimal || highs.getModelStatus()==HighsModelStatus::kInfeasible);
+	int obj = highs.getModelStatus()==HighsModelStatus::kOptimal ? int(highs.getObjectiveValue()+0.1) : -1;
 	const std::vector<double> &cv = highs.getSolution().col_value;
 	std::vector<std::vector<int>> ans;
 	vector<bool> taken(g.n());
@@ -155,8 +166,9 @@ std::pair<int, std::vector<std::vector<int>>> Master::primal_ilp() {
 			for(auto &ou : g.groups[u]) { ans.back().push_back(ou); }
 		}
 
-	// reset integrality constraints just in case
+	// reset integrality constraints and remove obj>=primal+1 constraint
 	for(int i = 0; i<(int)columns.size(); ++i) highs.changeColIntegrality(i, HighsVarType::kContinuous);
+	highs.deleteRows(highs.getNumRows()-1, highs.getNumRows()-1);
 
 	return {obj, ans};
 }
