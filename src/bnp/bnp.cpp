@@ -248,9 +248,8 @@ void bnp(const mgraph &mg, const int depth, const int base, int dual, int &prima
 }
 
 std::vector<std::vector<int>> bnp_main(problem p, bool hot_start = 1) {
-	// single-element columns for feasibility
-	columns = std::set<std::vector<int>>();
-	for(int i = 0; i<(int)p.n(); ++i) columns.insert({i});
+	columns = std::set<std::vector<int>>(); // reset columns
+	// single-element columns for feasibility are not needed
 	// hot start columns
 	if(hot_start) {
 		for(auto col : heuristic_karger(p)) columns.insert(col);
