@@ -1,11 +1,10 @@
 #pragma once
 
+#include "bnp/hotstart.cpp"
 #include "bnp/master.hpp"
 #include "common.cpp"
-#include "heuristic/heuristic_karger.cpp"
 #include "mgraph.cpp"
 #include "scorer.cpp"
-#include "bnp/hotstart.cpp"
 #include <iostream>
 #include <map>
 #include <queue>
@@ -264,7 +263,8 @@ std::vector<std::vector<int>> bnp_main(problem p, bool hot_start = 1) {
 		std::cerr<<"component: n="<<cc.n()<<" partitions_bound="<<cc.tight_partition_bound()<<std::endl;
 		std::vector<std::vector<int>> ansi;
 		int primal = -1;
-		bnp(cc, 0, 0, cc.m(), primal, ansi);
+		// bnp(cc, 0, 0, cc.m(), primal, ansi);
+		bnp_bfs(cc, primal, ansi);
 		sol += primal;
 		std::move(ansi.begin(), ansi.end(), std::back_inserter(ans));
 	}

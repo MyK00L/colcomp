@@ -145,9 +145,9 @@ struct epbnb_state {
 		return ans;
 	}
 	// linearize the thing
-	double upper_bound_lp(const pricing_problem &p) {
+	double upper_bound_lp(const pricing_problem &p) const {
+		// update_untakeable_reach(p);
 		const double inf = kHighsInf;
-		update_untakeable_reach(p);
 		Highs h;
 		h.setOptionValue("output_flag", false);
 		h.changeObjectiveSense(ObjSense::kMaximize);
@@ -212,9 +212,9 @@ struct epbnb_state {
 		return h.getObjectiveValue()+score;
 	}
 	// solve the surrogate with lp
-	double upper_bound_surrogate_lp(const pricing_problem &p) {
+	double upper_bound_surrogate_lp(const pricing_problem &p) const {
+		// update_untakeable_reach(p);
 		const double inf = kHighsInf;
-		update_untakeable_reach(p);
 		std::vector<int> tk;
 		std::vector<int> rtk(p.g.n(), -1);
 		std::vector<std::array<int, 3>> te;
@@ -340,7 +340,7 @@ struct epbnb_state {
 			ans = nnodes;
 		}
 	}
-	void debug_print(const pricing_problem &p) {
+	void debug_print(const pricing_problem &p) const {
 		std::cerr<<"epbnb_state debug:"<<std::endl;
 		std::cerr<<"score="<<score<<std::endl;
 		for(int u = 0; u<p.g.n(); ++u)
