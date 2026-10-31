@@ -3,7 +3,6 @@
 #include "bnp/hotstart.cpp"
 #include "bnp/master.hpp"
 #include "common.cpp"
-#include "heuristic/local_search.cpp"
 #include "mgraph.cpp"
 #include "scorer.cpp"
 #include <iostream>
@@ -134,7 +133,7 @@ struct BnpNode {
 	int depth;
 	bool operator<(const BnpNode &o) const { return std::make_pair(dual, -depth)<std::make_pair(o.dual, -o.depth); }
 };
-void bnp_bfs(const problem &p0, const mgraph mg0, int &primal, std::vector<std::vector<int>> &best) {
+void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best) {
 	if(mg0.is_trivial()) { // base case: all components are colorful
 		int pv = mg0.m();
 		if(pv>primal) {
@@ -162,36 +161,24 @@ void bnp_bfs(const problem &p0, const mgraph mg0, int &primal, std::vector<std::
 		Master m(mg, columns_for(mg));
 		m.setup_highs();
 		double dv = base+m.run(primal-base);
-		for(auto col : m.get_columns()) { columns.insert(col); }
-		const std::vector<double> cv = m.highs.getSolution().col_value;
-		assert(cv.size()==m.columns.size());
 		dual = std::min(dual, int(dv+1e-4));
-		if(primal>=dual) {
-			std::cerr<<"prune2"<<std::endl;
-			continue;
-		}
-
-		// auto [pv, pcols] = m.primal_ilp(primal-base); pv += base;
+		for(auto col : m.get_columns()) { columns.insert(col); }
 		if(bnp_nodes%16==1) {
 			auto [pv, pcols] = primal_with_all_columns(mg0, primal);
-
-			int imp = local_search(p0, pcols);
-			if(imp>0) {
-				std::cerr<<"YAY"<<std::endl;
-				pv += imp;
-				// TODO: add columns;
-			}
 			if(pv>primal) {
 				primal = pv;
 				best = pcols;
 				std::cerr<<"NEW PRIMAL: "<<primal<<std::endl;
 			}
-			if(primal>=dual) {
-				std::cerr<<"prune3"<<std::endl;
-				continue;
-			}
 		}
+		if(primal>=dual) {
+			std::cerr<<"prune2"<<std::endl;
+			continue;
+		}
+		// auto [pv, pcols] = m.primal_ilp(primal-base); pv += base;
 
+		const std::vector<double> cv = m.highs.getSolution().col_value;
+		assert(cv.size()==m.columns.size());
 		// find where to split
 		std::array<int, 2> split = {-1, -1};
 		{
@@ -229,81 +216,6 @@ void bnp_bfs(const problem &p0, const mgraph mg0, int &primal, std::vector<std::
 	}
 }
 
-/// mg already is a single component
-void bnp(const mgraph &mg, const int depth, const int base, int dual, int &primal,
-		 std::vector<std::vector<int>> &best) {
-	bnp_nodes += 1;
-	if(mg.is_trivial()) { // base case: all components are colorful
-		int pv = base+mg.m();
-		if(pv>primal) {
-			primal = pv;
-			auto comps = mg.split_components();
-			best = std::vector<std::vector<int>>();
-			for(auto &comp : comps) { best.push_back(comp.orig_nodes()); }
-		}
-		return;
-	}
-	std::cerr<<"BNPNODE "<<bnp_nodes<<": depth="<<depth<<" base="<<base<<" dual="<<dual
-			 <<" primal="<<primal<<std::endl;
-
-	Master m(mg, columns_for(mg));
-	m.setup_highs();
-	double dv = base+m.run(primal-base);
-	for(auto col : m.get_columns()) { columns.insert(col); }
-	const std::vector<double> cv = m.highs.getSolution().col_value;
-	assert(cv.size()==m.columns.size());
-	dual = std::min(dual, int(dv+1e-4));
-	if(primal>=dual) {
-		std::cerr<<"prune1"<<std::endl;
-		return;
-	}
-	auto [pv, pcols] = m.primal_ilp(primal-base);
-	pv += base;
-	if(pv>primal) {
-		primal = pv;
-		best = pcols;
-		std::cerr<<"NEW PRIMAL: "<<primal<<std::endl;
-	}
-	if(primal>=dual) {
-		std::cerr<<"prune2"<<std::endl;
-		return;
-	}
-
-	// find where to split
-	std::map<std::array<int, 2>, double> tmp;
-	for(int i = 0; i<(int)cv.size(); ++i)
-		if(cv[i]>0.0001) {
-			sort(m.columns[i].nodes.begin(), m.columns[i].nodes.end()); // to call intersect
-			for(auto &u : m.columns[i].nodes) {
-				for(auto &v : intersect(mg.g[u], m.columns[i].nodes, u)) { tmp[{u, v}] += cv[i]; }
-			}
-		}
-	double md = 2;
-	std::array<int, 2> split = {-1, -1};
-	for(auto &[uv, w] : tmp) {
-		if(fabs(w-0.5)<md) {
-			md = fabs(w-0.5);
-			split = uv;
-		}
-	}
-	assert(split[0]!=-1);
-	std::cerr<<"branch on ("<<split[0]<<","<<split[1]<<")"<<std::endl;
-	// TODO: split components
-	mgraph mg1(mg);
-	int w = mg1.merge_edge(split[0], split[1]);
-	assert(w);
-	bnp(mg1, depth+1, base+w, dual, primal, best);
-
-	if(primal>=dual) {
-		std::cerr<<"prune second child\n";
-		return;
-	}
-
-	mgraph mg2(mg);
-	assert(mg2.remove_edge(split[0], split[1]));
-	bnp(mg2, depth+1, base, dual, primal, best);
-}
-
 std::vector<std::vector<int>> bnp_main(problem p, bool hot_start = 1) {
 	columns = std::set<std::vector<int>>(); // reset columns
 	// single-element columns for feasibility are not needed
@@ -321,7 +233,7 @@ std::vector<std::vector<int>> bnp_main(problem p, bool hot_start = 1) {
 		std::vector<std::vector<int>> ansi;
 		int primal = -1;
 		// bnp(cc, 0, 0, cc.m(), primal, ansi);
-		bnp_bfs(p, cc, primal, ansi);
+		bnp_bfs(cc, primal, ansi);
 		sol += primal;
 		std::move(ansi.begin(), ansi.end(), std::back_inserter(ans));
 	}
