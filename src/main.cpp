@@ -11,6 +11,7 @@
 #include "ilp.cpp"
 #include "preprocess.cpp"
 #include "scorer.cpp"
+#include "heuristic/local_search.cpp"
 
 using namespace std;
 
@@ -90,6 +91,7 @@ int ccs(mgraph mg) {
 }
 void reset_globals() {
 	columns.clear();
+	pricing_steps = 0;
 	pricing_bnb_nodes = 0;
 	pricing_bnb_runs = 0;
 	pricing_bnb2_nodes = 0;
@@ -180,7 +182,9 @@ int main(int argc, char **argv) {
 		auto sol = bnp_main(p, !nhs);
 		std::cout<<"score "<<score(p, sol)<<std::endl;
 		std::cout<<"bnp_nodes "<<bnp_nodes<<std::endl;
+		std::cout<<"pricing_steps "<<pricing_steps<<std::endl;
 		std::cout<<"pricing_bnb_nodes "<<pricing_bnb_nodes<<std::endl;
+		std::cout<<"pricing_bnb_runs "<<pricing_bnb_runs<<std::endl;
 	} else if(mode=="preprocess") {
 		preprocess(p);
 	} else {

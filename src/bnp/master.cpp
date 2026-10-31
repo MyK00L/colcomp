@@ -55,10 +55,12 @@ void Master::update_lp() {
 	if(hs!=HighsStatus::kOk) { std::cerr<<"Highs status: "<<highsStatusToString(hs)<<std::endl; }
 }
 
+int pricing_steps = 0;
 bool use_heuristic_pricing = 0;
 /// tries to generate new columns
 /// returns true if new columns were generated
 bool Master::generate_columns() {
+	pricing_steps += 1;
 	vector<double> duals = highs.getSolution().row_dual;
 
 	bool is_exact = 0;
