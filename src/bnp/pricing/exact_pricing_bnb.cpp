@@ -35,18 +35,8 @@ struct epbnb_state {
 				if(!untakeable[v]) return 1;
 		return 0;
 	}
-	std::array<epbnb_state, 2> branch(const pricing_problem &p) const {
+	int branch_node(const pricing_problem &p) const {
 		int minv = p.g.n();
-		/*
-		for(int u = 0; u<p.g.n() && minv==p.g.n(); ++u)
-			if(nodes[u]) {
-				for(auto &[v, w] : p.g.g[u])
-					if(!untakeable[v]) {
-						minv = v;
-						break;
-					}
-			}
-		*/
 		double bv = -std::numeric_limits<double>::infinity();
 		for(auto u : ~untakeable) {
 			double val = -p.cost[u];
@@ -67,7 +57,9 @@ struct epbnb_state {
 			}
 		}
 		assert(minv!=p.g.n());
-
+		return minv;
+	}
+	std::array<epbnb_state, 2> branch(const pricing_problem &p, const int minv) const {
 		epbnb_state take_node(*this);
 		epbnb_state forbid_node(*this);
 		take_node.take(minv, p);
@@ -122,7 +114,7 @@ struct epbnb_state {
 		}
 		untakeable |= ~reach;
 	}
-	double upper_bound(const pricing_problem &p) {
+	double upper_bound(const pricing_problem &p, const std::vector<int> &msigma) {
 		// return upper_bound_surrogate_lp(p);
 		update_untakeable_reach(p);
 		std::vector<double> bbc(p.g.C(), 0); // best reachable value by color
@@ -133,9 +125,13 @@ struct epbnb_state {
 				if(nodes[v]) {
 					bc[p.g.c[v][0]] = w;
 				} else if(!untakeable[v]) {
-					// const double val = 0.5;
-					const double val = (1.0+p.cost[u])/(2.0+p.cost[u]+p.cost[v]);
-					bc[p.g.c[v][0]] = std::max(bc[p.g.c[v][0]], w*val);
+					double valu = msigma[u]+p.cost[u]; // -sigma[u]
+					double valv = msigma[v]+p.cost[v]; // -sigma[v]
+					const double muv = std::min(valu, valv);
+					valu -= muv;
+					valv -= muv;
+					const double alpha = (1.0+valu)/(2.0+valu+valv);
+					bc[p.g.c[v][0]] = std::max(bc[p.g.c[v][0]], w*alpha);
 				}
 			}
 			double wsum = 0;
@@ -367,7 +363,8 @@ struct epbnb_state {
 	}
 };
 
-void epbnb(const pricing_problem &p, const epbnb_state state, const double dual, double &primal, bitvec &ans) {
+void epbnb(const pricing_problem &p, const epbnb_state state, std::vector<int> &msigma, const double dual,
+		   double &primal, bitvec &ans) {
 	pricing_bnb_nodes += 1;
 	if(state.score>primal) {
 		primal = state.score;
@@ -378,28 +375,38 @@ void epbnb(const pricing_problem &p, const epbnb_state state, const double dual,
 		// state.update_primal_greedy(p, primal, ans);
 		return;
 	}
-	auto [s1, s2] = state.branch(p);
-	const double d1 = std::min(dual, s1.upper_bound(p)); // take
-	const double d2 = std::min(dual, s2.upper_bound(p)); // forbid
+	int u = state.branch_node(p);
+	auto [s1, s2] = state.branch(p, u);
+	for(const auto &[v, w] : p.g.g[u]) msigma[v] -= w;
+	const double d1 = std::min(dual, s1.upper_bound(p, msigma)); // take
+	for(const auto &[v, w] : p.g.g[u]) msigma[v] += w;
+	const double d2 = std::min(dual, s2.upper_bound(p, msigma)); // forbid
 	if(d2>d1) {
-		epbnb(p, s2, d2, primal, ans);
-		epbnb(p, s1, d1, primal, ans);
+		epbnb(p, s2, msigma, d2, primal, ans);
+		for(const auto &[v, w] : p.g.g[u]) msigma[v] -= w;
+		epbnb(p, s1, msigma, d1, primal, ans);
+		for(const auto &[v, w] : p.g.g[u]) msigma[v] += w;
 	} else {
-		epbnb(p, s1, d1, primal, ans);
-		epbnb(p, s2, d2, primal, ans);
+		for(const auto &[v, w] : p.g.g[u]) msigma[v] -= w;
+		epbnb(p, s1, msigma, d1, primal, ans);
+		for(const auto &[v, w] : p.g.g[u]) msigma[v] += w;
+		epbnb(p, s2, msigma, d2, primal, ans);
 	}
 }
 void epbnb0(const pricing_problem &p, epbnb_state state, double &primal, bitvec &ans) {
 	pricing_bnb_nodes += 1;
 	std::vector<int> ord(p.g.n(), 0);
 	std::iota(ord.begin(), ord.end(), 0);
+	std::vector<int> msigma(p.g.n(), 0);
 	// std::sort(ord.begin(),ord.end(),[&](int i, int j){return p.cost[i]<p.cost[j];});
-	for(auto &i : ord) {
+	for(auto &u : ord) {
 		epbnb_state s1 = state;
-		s1.take(i, p);
-		const double d1 = s1.upper_bound(p);
-		epbnb(p, s1, d1, primal, ans);
-		state.forbid(i);
+		s1.take(u, p);
+		for(const auto &[v, w] : p.g.g[u]) msigma[v] -= w;
+		const double d1 = s1.upper_bound(p, msigma);
+		epbnb(p, s1, msigma, d1, primal, ans);
+		state.forbid(u);
+		for(const auto &[v, w] : p.g.g[u]) msigma[v] += w;
 	}
 }
 
