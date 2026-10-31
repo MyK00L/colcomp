@@ -59,6 +59,53 @@ std::vector<mcolumn> columns_for(const mgraph &mg) {
 	return ans;
 }
 
+std::pair<int, std::vector<std::vector<int>>> primal_with_all_columns(const mgraph &mg0, int primal) {
+	auto columns = columns_for(mg0);
+	Highs highs;
+	highs.setOptionValue("output_flag", false);
+	highs.changeObjectiveSense(ObjSense::kMaximize);
+	vector<vector<int>> rows(mg0.n());
+	std::vector<int> inds(columns.size());
+	std::vector<double> vals(columns.size());
+	for(int i = 0; i<(int)columns.size(); ++i) {
+		inds[i] = i;
+		vals[i] = columns[i].value;
+		highs.addVar(0.0, 1.0);
+		highs.changeColCost(i, columns[i].value);
+		highs.changeColIntegrality(i, HighsVarType::kInteger);
+		for(auto &j : columns[i].nodes) rows[j].push_back(i);
+	}
+	vector<double> ones(columns.size(), 1);
+	// could also use -inf for lower
+	for(size_t i = 0; i<rows.size(); ++i) {
+		highs.addRow(-kHighsInf, 1, (int)rows[i].size(), rows[i].data(), ones.data());
+	}
+	highs.addRow(primal+1, kHighsInf, columns.size(), inds.data(), vals.data());
+
+	highs.run();
+	assert(highs.getModelStatus()==HighsModelStatus::kOptimal ||
+		   highs.getModelStatus()==HighsModelStatus::kInfeasible);
+	int obj = highs.getModelStatus()==HighsModelStatus::kOptimal ? int(highs.getObjectiveValue()+0.1) : -1;
+	const std::vector<double> &cv = highs.getSolution().col_value;
+	std::vector<std::vector<int>> ans;
+	vector<bool> taken(mg0.n());
+	for(int i = 0; i<(int)columns.size(); ++i)
+		if(cv[i]>0.5) {
+			ans.push_back({});
+			for(auto &u : columns[i].nodes) {
+				taken[u] = 1;
+				for(auto &ou : mg0.groups[u]) { ans.back().push_back(ou); }
+			}
+		}
+	for(int u = 0; u<mg0.n(); ++u)
+		if(!taken[u]) {
+			ans.push_back({});
+			for(auto &ou : mg0.groups[u]) { ans.back().push_back(ou); }
+		}
+
+	return {obj, ans};
+}
+
 std::vector<int> intersect(const std::vector<std::array<int, 2>> gu, const std::vector<int> ci, const int exupto) {
 	auto i = gu.begin();
 	auto ie = gu.end();
@@ -123,7 +170,8 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 			continue;
 		}
 
-		auto [pv, pcols] = m.primal_ilp(primal);
+		auto [pv, pcols] = m.primal_ilp(primal-base);
+		// auto [pv, pcols] = primal_with_all_columns(mg0, primal);
 		pv += base;
 		if(pv>primal) {
 			primal = pv;
