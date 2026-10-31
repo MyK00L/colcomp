@@ -201,7 +201,7 @@ void bnp(const mgraph &mg, const int depth, const int base, int dual, int &prima
 		std::cerr<<"prune1"<<std::endl;
 		return;
 	}
-	auto [pv, pcols] = m.primal_ilp(primal);
+	auto [pv, pcols] = m.primal_ilp(primal-base);
 	pv += base;
 	if(pv>primal) {
 		primal = pv;
