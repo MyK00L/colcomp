@@ -3,6 +3,7 @@
 #include "bnp/hotstart.cpp"
 #include "bnp/master.hpp"
 #include "common.cpp"
+#include "heuristic/local_search.cpp"
 #include "mgraph.cpp"
 #include "scorer.cpp"
 #include <iostream>
@@ -133,7 +134,7 @@ struct BnpNode {
 	int depth;
 	bool operator<(const BnpNode &o) const { return std::make_pair(dual, -depth)<std::make_pair(o.dual, -o.depth); }
 };
-void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best) {
+void bnp_bfs(const problem &p0, const mgraph mg0, int &primal, std::vector<std::vector<int>> &best) {
 	if(mg0.is_trivial()) { // base case: all components are colorful
 		int pv = mg0.m();
 		if(pv>primal) {
@@ -170,17 +171,25 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 			continue;
 		}
 
-		auto [pv, pcols] = m.primal_ilp(primal-base);
-		// auto [pv, pcols] = primal_with_all_columns(mg0, primal);
-		pv += base;
-		if(pv>primal) {
-			primal = pv;
-			best = pcols;
-			std::cerr<<"NEW PRIMAL: "<<primal<<std::endl;
-		}
-		if(primal>=dual) {
-			std::cerr<<"prune3"<<std::endl;
-			continue;
+		// auto [pv, pcols] = m.primal_ilp(primal-base); pv += base;
+		if(bnp_nodes%16==1) {
+			auto [pv, pcols] = primal_with_all_columns(mg0, primal);
+
+			int imp = local_search(p0, pcols);
+			if(imp>0) {
+				std::cerr<<"YAY"<<std::endl;
+				pv += imp;
+				// TODO: add columns;
+			}
+			if(pv>primal) {
+				primal = pv;
+				best = pcols;
+				std::cerr<<"NEW PRIMAL: "<<primal<<std::endl;
+			}
+			if(primal>=dual) {
+				std::cerr<<"prune3"<<std::endl;
+				continue;
+			}
 		}
 
 		// find where to split
@@ -312,7 +321,7 @@ std::vector<std::vector<int>> bnp_main(problem p, bool hot_start = 1) {
 		std::vector<std::vector<int>> ansi;
 		int primal = -1;
 		// bnp(cc, 0, 0, cc.m(), primal, ansi);
-		bnp_bfs(cc, primal, ansi);
+		bnp_bfs(p, cc, primal, ansi);
 		sol += primal;
 		std::move(ansi.begin(), ansi.end(), std::back_inserter(ans));
 	}
