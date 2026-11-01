@@ -417,7 +417,7 @@ although, most of the extra pricing steps seem to be solved by heuristic pricing
 I would have expected \textit{bnb nhp} to also use less BnB nodes on average, but it seems to be the opposite.
 
 \subsection{Datasets from previous works}
-
+\label{dfpw}
 I tested this solution on \parencite{mop2012}, also used in \parencite{ccc2025}. These instances have been generated from the BAliBASE 3.0 benchmark \parencite{balibase},
 a benchmark for multiple sequence alignment.
 
@@ -462,14 +462,13 @@ better heuristics for the surrogate coefficient in the pricing steps,
 faster ways to obtain good primal values,
 smarter node order in the BnP.
 
+The code is available at \url{https://github.com/MyK00L/colcomp}, and can be compiled with \texttt{make}, HiGHS needs to be installed.
+
 \section{Aknowledgments}
 
 For solving all LP and ILP instances, HiGHS \parencite{highs} was used.
 
-Graphs for dataset 1 and 2 have been taken from \parencite{mop2012} and \parencite{ccc2025} respectively.
-
-The code is available at \url{https://github.com/MyK00L/colcomp}, and can be compiled with \texttt{make}, HiGHS needs to be installed.
-
+Graphs for section \ref{dfpw} have been taken from \parencite{mop2012}, and in the repository are included also graphs from \parencite{ccc2025}.
 
 \printbibliography
 
