@@ -96,7 +96,7 @@ The restricted linear master problem is:
 	\max \sum_{i=1}^{p} \sum_{q=1}^{Q} \sum_{(u,v) \in E} e^{(i)}_{q, (u,v)} \cdot \theta_i \quad \text{s.t.}\\
 	\theta \in [0,1]^{p}\\
 	\sum_{i=1}^{p} \theta_i = 1\\
-	\forall u \in V \quad \sum_{i=1}^{p} \sum_{q=1}^{Q} x_{p,u}^{(i)} \cdot \theta_i \le 1\\
+	\forall u \in V \quad \sum_{i=1}^{p} \sum_{q=1}^{Q} x_{q,u}^{(i)} \cdot \theta_i \le 1\\
 \end{cases}
 \]
 Where $p$ is the number of generated columns.
@@ -104,21 +104,20 @@ Where $p$ is the number of generated columns.
 And the pricing subproblem is:
 \[
 \begin{cases}
-	\max \sum_{u \in V} \lambda_u + \sum_{q=1}^{Q} (\sum_{(u,v) \in E}{e_{q,(u,v)}} - \sum_{u \in V}{\lambda_u x_{q,u}}) \quad \text{s.t.}\\
+	\max -\mu + \sum_{q=1}^{Q} (\sum_{(u,v) \in E}{e_{q,(u,v)}} - \sum_{u \in V}{\lambda_u x_{q,u}}) \quad \text{s.t.}\\
 	x \in \{0,1\} ^{ Q \times V }\\
 	e \in [0,1]^{ Q \times E }\\
 	\forall q \in Q \forall k \in C \quad \sum_{u \in V : c(u) = k} x_{q,u} \le 1\\
 	\forall q \in Q \forall (u,v) \in E \quad e_{q,(u,v)} \le x_{q,u} \land e_{q,(u,v)} \le x_v\\
 \end{cases}
 \]
-This is equivalent to a Lagrangean relaxation of the ILP formulation, where (1) is Lagrangeanized.
-So whenever we solve a pricing subproblem optimally, we also obtain a dual bound for free.
+Where $\mu$ is the dual variable of the convexity constraint, and $\lambda$ is the dual variable of the other.
 
-Of course the subproblems are independent and can be separated,
+Of course, since the subproblems are independent and identical, they can be separated,
 so the $Q$ dimension is now superfluous and the problem can be rewritten as:
 \[
 \begin{cases}
-	\max \sum_{u \in V} \lambda_u + Q(\sum_{(u,v) \in E}{e_{(u,v)}} - \sum_{u \in V}{\lambda_u x_u}) \quad \text{s.t.}\\
+	\max -\mu + Q(\sum_{(u,v) \in E}{e_{(u,v)}} - \sum_{u \in V}{\lambda_u x_u}) \quad \text{s.t.}\\
 	x \in \{0,1\} ^{V}\\
 	e \in [0,1]^{E}\\
 	\forall k \in C \quad \sum_{u \in V : c(u) = k} x_{u} \le 1\\
@@ -126,7 +125,7 @@ so the $Q$ dimension is now superfluous and the problem can be rewritten as:
 \end{cases}
 \]
 
-We need to get rid of $Q$ in the master problem as well by having $\theta$ sum to $Q$ instead of $1$:
+We can to get rid of $Q$ in the master problem by having $\theta$ sum to $Q$ instead of $1$:
 \[
 \begin{cases}
 	\max \sum_{i=1}^{p} \sum_{(u,v) \in E} e^{(i)}_{(u,v)} \cdot \theta_i \quad \text{s.t.}\\
@@ -136,9 +135,19 @@ We need to get rid of $Q$ in the master problem as well by having $\theta$ sum t
 \]
 
 And the pricing subproblem's objective will change to:
-$\max \sum_{u \in V} \lambda_u + \sum_{(u,v) \in E}{e_{(u,v)}} - \sum_{u \in V}{\lambda_u x_u}$
+$\max \sum_{(u,v) \in E}{e_{(u,v)}} - \sum_{u \in V}{\lambda_u x_u}$
 
-And any optimal solution for this will also be an optimal solution for the Lagrangean relaxation.
+Any solution to the pricing subproblem also solves the Lagrangean relaxation associated to the initial ILP formulation when lagrangeanizing (1):
+\[
+\begin{cases}
+	\max \sum_{u \in V}{\lambda_u} + Q(\sum_{(u,v) \in E}{e_{(u,v)}} - \sum_{u \in V}{\lambda_u x_u}) \quad \text{s.t.}\\
+	x \in \{0,1\} ^{V}\\
+	e \in [0,1]^{E}\\
+	\forall k \in C \quad \sum_{u \in V : c(u) = k} x_{u} \le 1\\
+	\forall (u,v) \in E \quad e_{(u,v)} \le x_{u} \land e_{(u,v)} \le x_v\\
+\end{cases}
+\]
+So, whenever we solve a pricing subproblem optimally, we also obtain a dual bound for free.
 
 \subsection{Braching strategy}
 I branch on edges, like is done in \parencite{mop2012}.
