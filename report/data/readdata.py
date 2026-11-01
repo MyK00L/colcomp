@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def nsolved(data, mode):
-	return len(list(filter(lambda item: (item[1][mode]["exit_code"] == "0"), data.items())))
+	return len(list(filter(lambda item: (item[1][mode]["exit_code"] == 0), data.items())))
 
 def printstats(name, l):
 	print(name, "mean:", statistics.mean(l))
-	print(name, "median:", statistics.median(l))
-	print(name, "min:", min(l))
-	print(name, "max:", max(l))
+	#print(name, "median:", statistics.median(l))
+	#print(name, "min:", min(l))
+	#print(name, "max:", max(l))
 
 def printstats_multi(names, stats, data):
 	for name in names:
@@ -24,60 +24,71 @@ def process_dataheur(data):
 def process_data2012(data):
 	print("total: ", len(data))
 	print("bnp solved: ", nsolved(data,"bnp"))
-	print("bnp_hp solved: ", nsolved(data,"bnp_hp"))
-	print("bnp_nohot solved: ", nsolved(data,"bnp_nohot"))
-	byall = list(filter(lambda item: (item[1]["bnp"]["exit_code"] == "0" and item[1]["bnp_hp"]["exit_code"] == "0" and item[1]["bnp_nohot"]["exit_code"] == "0"), data.items() ))
-	printstats_multi(["bnp", "bnp_hp", "bnp_nohot"], ["time_millis", "bnp_nodes", "pricing_bnb_nodes"], byall)
+	byall = list(filter(lambda item: (item[1]["bnp"]["exit_code"] == 0), data.items() ))
+	printstats_multi(["stats npp", "stats"], ["N", "M", "maxN", "maxM", "ccs"], data.items())
+	printstats_multi(["bnp"], ["time_millis", "bnp_nodes", "pricing_bnb_nodes"], byall)
 
 def process_data2024(data):
+	smallish = list(filter(lambda item: (item[1]["stats npp"]["N"] >= 10 and item[1]["stats npp"]["N"] <= 210), data.items() ))
+	print(len(smallish))
+
+
+def process_datag(data):
 	print("total: ", len(data))
-	print("solved: ", nsolved(data,"bnp_hp"))
-	printstats_multi(["bnp_hp"], ["time_millis", "bnp_nodes", "pricing_bnb_nodes"], list(filter(lambda item: (item[1]["bnp_hp"]["exit_code"] == "0"),data.items()) ))
-	x = [0]+sorted(list(map(lambda item: int(item[1]["bnp_hp"]["time_millis"])/1000, filter(lambda item: (item[1]["bnp_hp"]["exit_code"] == "0"),data.items()))))
-	y = range(len(x))
-	plt.semilogx(x,y)
-	plt.grid(axis='y')
-	plt.xlabel("time in seconds")
-	plt.ylabel("instances solved")
+	print("improved by preprocess: ", len(list(filter(lambda item: (item[1]["stats npp"]["M"] != item[1]["stats"]["M"]), data.items() ))))
+	printstats_multi(["bnp", "bnp nhp", "bnp npp", "bnp nhs"], ["time_millis", "bnp_nodes", "pricing_steps", "pricing_bnb_runs", "pricing_bnb_nodes"], data.items())
+
+
+def process_data_by_fnp(ax, data, fnp, stat, fun):
+	print("total: ", len(data))
+	print("bnp solved: ", nsolved(data,"bnp"))
+	byall = list(filter(lambda item: (item[1]["bnp"]["exit_code"] == 0), data.items() ))
+	printstats_multi(["stats npp", "stats"], ["N", "M", "maxN", "maxM", "ccs"], data.items())
+	printstats_multi(["bnp"], ["time_millis", "bnp_nodes", "pricing_bnb_nodes"], byall)
+	stats = list(item[1] for item in data.items())
+	stats = sorted(stats, key=lambda x: float(x["fnp"][fnp]))
+	x = list(float(item["fnp"][fnp]) for item in stats)
+	y = list(fun(item["bnp"]) for item in stats)
+	ax.grid()
+	ax.set_xlabel(fnp)
+	ax.set_ylabel("time in seconds")
+	ax.scatter(x,y)
+	ax.set_yscale("log")
+	ax.set_xlim(left=0)
+
+def process_data_bys():
+	fig, ax = plt.subplots(2,3)
+	py=0
+	px=0
+	for stat in ["n","c","px","pv","pe"]:
+		data = read_data("data_by_"+stat+".txt")
+		process_data_by_fnp(ax[py][px], data, stat, "time_millis", lambda x: float(x["time_millis"] if "time_millis" in x else 0)/1000)
+		py+=1
+		if py>=2:
+			py=0
+			px+=1
+	fig.delaxes(ax[1][2])
+	# plt.savefig('figure.pdf', format='pdf', bbox_inches='tight')
 	plt.show()
 
-	# TODO: charts
-
-def process_datag1(data):
-	print("total: ", len(data))
-	for d in ["c\\d",0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
-		print(d,end=" & ")
-	print("\\\\")
-	for c in [3,6,9,12,15,18,21,24,27]:
-		print(c,end=" & ")
-		for d in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
-			pbnsum=0
-			for seed in [1,2,3,4,5]:
-				name = "./graphs/group1/s"+str(seed)+"n30c"+str(c)+"d"+str(d)+".graph"
-				pbnsum += int(data[name]["bnp_hp"]["pricing_bnb_nodes"])
-			print(int(pbnsum/5),end=" & ")
-		print("\\\\")
-
-def process_datag2(data):
-	c = 6
-	d = 0.125
-	x=[]
-	y=[]
-	for n in [10,20,30,40,50,60,70,80,90]:
-		pbnsum=0
-		pbnnum=0
-		for seed in [1,2,3,4,5]:
-			name = "./graphs/group2/s"+str(seed)+"n"+str(n)+"c"+str(c)+"d"+str(d)+".graph"
-			if data[name]["bnp_hp"]["exit_code"]=="0":
-				pbnsum += int(data[name]["bnp_hp"]["pricing_bnb_nodes"])
-				pbnnum += 1	
-		print(int(pbnsum/pbnnum))
-		x.append(n)
-		y.append(pbnsum/pbnnum)
-
-	plt.semilogy(x,y)
-	plt.show()
-
+def get_filename_params(name):
+	res = {}
+	key = ""
+	i=0
+	while(i<len(name)):
+		i0=i
+		while i<len(name) and name[i].isalpha():
+			i+=1
+		key=name[i0:i]
+		i0=i
+		while i<len(name) and not name[i].isalpha():
+			i+=1
+			try:
+				float(name[i0:i])
+				res[key]=name[i0:i]
+			except:
+				pass
+	return res
 
 
 def read_data(filename):
@@ -86,9 +97,16 @@ def read_data(filename):
 	mode = ""
 	data = {}
 	for line in file:
-		sp = line.split()
+		line = line.strip()
+		if line.startswith("start ") or line.startswith("end "):
+			sp = line.split(" ", 1)
+		else:
+			sp = line.split()
 		if sp[0]=="startgraph":
 			graph=sp[1]
+			if not graph in data:
+				data[graph] = {}
+			data[graph]["fnp"] = get_filename_params(sp[1])
 		elif sp[0]=="start":
 			mode=sp[1]
 		elif sp[0]=="endgraph":
@@ -100,12 +118,25 @@ def read_data(filename):
 				data[graph] = {}
 			if not mode in data[graph]:
 				data[graph][mode] = {}
-			data[graph][mode][sp[0]]=sp[1]
+			data[graph][mode][sp[0]]=float(sp[1])
 	return data
 
 def main():
-	data = read_data("dataheur.txt")
-	process_dataheur(data)
+	data = read_data("data_group1.txt")
+	process_datag(data)
+	#process_data_bys()
 
 if __name__ == "__main__":
+	plt.rcParams['font.size'] = 12
+	plt.rcParams['axes.labelsize'] = 14
+	plt.rcParams['axes.titlesize'] = 16
+	plt.rcParams['xtick.labelsize'] = 11
+	plt.rcParams['ytick.labelsize'] = 11
+	plt.rcParams['legend.fontsize'] = 11
+	plt.rcParams['figure.dpi'] = 100
+	plt.rcParams['savefig.dpi'] = 300
+	#plt.rcParams['text.usetex'] = True
+	plt.rcParams['font.family'] = 'serif'
+	plt.rcParams['lines.linewidth'] = 2
+	plt.rcParams['lines.markersize'] = 6
 	main()

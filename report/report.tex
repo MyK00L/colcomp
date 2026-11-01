@@ -5,6 +5,7 @@
 \usepackage{graphicx}
 \usepackage{amssymb}
 \usepackage{amsmath}
+\usepackage{color}
 \usepackage[backend=bibtex,style=authoryear]{biblatex}
 \addbibresource{references.bib}
 \graphicspath{{./res/}}
@@ -45,40 +46,40 @@ The problem consists in removing the minimum number of edges $E' \subset E$ such
 all connected components are colorful.
 
 It is equivalent to find a way to partition the graph into $Q$ colorful subgraphs,
-such that the sum of edges in each of them is maximized.
+such that the sum of edges within them is maximized.
 Note that with this formulation the subgraphs do not necessarly need to be connected.
 
 \subsection{Integer Linear Programming formulation}
-given the last definition, MOP can be formulated as follows:
+Given the last definition, MOP can be formulated as follows:
 
 \[
 \begin{cases}
-	\max \sum_{q \in Q}{\sum_{ei = 1}^{|E|}{e_{q,ei}}} \quad \text{s.t.}\\
-	x \in \{0,1\} ^{ Q \times |V| }\\
-	e \in [0,1]^{ Q \times |E| }\\
-	\text{(1) } \forall i \in V & \sum_{q=1}^{Q}{x_{q,i}}\le 1 \\
-	\text{(2) } \forall q \in Q \forall k \in C & \sum_{i \in V : c(i) = k}{ x_{q,i} } \le 1 \\
-	\text{(3) } \forall q \in Q \forall (ei,u,v) \in E & e_{q,ei} \le x_{p,u} \land e_{q,ei} \le x_{q,v}\\
+	\max \sum_{q \in Q}{\sum_{(u,v) \in E}{e_{q,(u,v)}}} \quad \text{s.t.}\\
+	x \in \{0,1\} ^{ Q \times V }\\
+	e \in [0,1]^{ Q \times E }\\
+	\text{(1) } \forall u \in V & \sum_{q=1}^{Q}{x_{q,u}}\le 1 \\
+	\text{(2) } \forall q \in Q \forall k \in C & \sum_{u \in V : c(u) = k}{ x_{q,u} } \le 1 \\
+	\text{(3) } \forall q \in Q \forall (u,v) \in E & e_{q,(u,v)} \le x_{q,u} \land e_{q,(u,v)} \le x_{q,v}\\
 \end{cases}
 \]
 
-Where $x_{q,i}$ is $1$ if node $i$ is present in subgraph $q$.\\
-For the $ei_{th}$ edge $(u,v)$, $e_{q,ei}$ is $\min(x_{q,u},x_{q,v})$, which is $1$ if edge $ei$ is present in subgraph $q$.\\
+Where $x_{q,u}$ is $1$ if node $u$ is present in subgraph $q$.\\
+For the edge $(u,v)$, $e_{q,(u,v)}$ is $\min(x_{q,u},x_{q,v})$, which is $1$ if edge $(u,v)$ is present in subgraph $q$.\\
 (1) Are the partition constraints.\\
 (2) Are the color constraints.\\
-(3) Are to make $e_{q,ei} \le \min(x_{q,u},x_{q,v})$ for the objective.
+(3) Are to make $e_{q,(u,v)} \le \min(x_{q,u},x_{q,v})$ for the objective.
 
 And $Q$ is a bound on the number of subgraphs for an optimal solution, since the exact number is hard to know.
 
 \subsection{Bound on Q}
-A simple upper bound to $Q$ would be $N$, in \parencite{ccc2025} better bounds are shown for when the subgraphs need to be connected.
+A simple upper bound to $Q$ would be $|V|$, in \parencite{ccc2025} better bounds are shown for when the subgraphs need to be connected.
 
-If, like in the above formulation, the subgraphs need not be connected, we can do better:\\
-Define $nc : C \to N$ where $nc(k) = | u \in V : c(u) = k |$.\\
+If, like in the above formulation, the subgraphs don't need to be connected, we can do better:\\
+Define $nc : C \to N$ such that $nc(k) = | u \in V : c(u) = k |$.\\
 Call a partitioning to be minimal if all pairs of subgraphs have at least one color in common.\\
-There is always an optimal solution that is minimal: if it is not you can keep merging subgraphs that have no color in common, until it is minimal.\\
+There is always an optimal solution that is minimal: if it is not, you can keep merging subgraphs that have no color in common, until it is minimal.\\
 Consider the graph of a partition, where each node is a subgraph and there is an edge between two subgraphs if they have at least one color in common.\\
-In a minimal solution, such graph is a clique, so it has $q = \frac{s \cdot (s-1)}{2}$ edges if $s$ is the number of subgraphs, $s = \sqrt{2q + \frac{1}{4}} + \frac{1}{2}$ .\\
+In a minimal solution, such graph is a clique, so it has $q = \frac{s \cdot (s-1)}{2}$ edges if $s$ is the number of subgraphs, and $s = \sqrt{2q + \frac{1}{4}} + \frac{1}{2}$ .\\
 Each color $k$ in the original graph can make at most $\frac{nc(k) \cdot (nc(k)-1)}{2}$ edges.\\
 So there are at most $K = \sum_{k \in C}{\frac{nc(k) \cdot (nc(k)-1)}{2}}$ edges.\\
 Thus a minimal solution always has at most $Q = \lfloor \sqrt{2K + \frac{1}{4}} + \frac{1}{2} \rfloor$ subgraphs.
@@ -92,10 +93,10 @@ We convexify constraints (2) and (3), and do column generation, where constrains
 The restricted linear master problem is:
 \[
 \begin{cases}
-	\max \sum_{u=1}^{p} \sum_{q=1}^{Q} \sum_{ei = 1}^{|E|} e^{(u)}_{q, ei} \cdot \theta_u \quad \text{s.t.}\\
+	\max \sum_{i=1}^{p} \sum_{q=1}^{Q} \sum_{(u,v) \in E} e^{(i)}_{q, (u,v)} \cdot \theta_i \quad \text{s.t.}\\
 	\theta \in [0,1]^{p}\\
-	\sum_{u=1}^{p} \theta_u = 1\\
-	\forall i \in V \quad \sum_{u=1}^{p} \sum_{q=1}^{Q} x_{p,i}^{(u)} \cdot \theta_u \le 1\\
+	\sum_{i=1}^{p} \theta_i = 1\\
+	\forall u \in V \quad \sum_{i=1}^{p} \sum_{q=1}^{Q} x_{p,u}^{(i)} \cdot \theta_i \le 1\\
 \end{cases}
 \]
 Where $p$ is the number of generated columns.
@@ -103,11 +104,11 @@ Where $p$ is the number of generated columns.
 And the pricing subproblem is:
 \[
 \begin{cases}
-	\max \sum_{i \in V} \lambda_i + \sum_{q=1}^{Q} (\sum_{ei = 1}^{|E|}{e_{q,ei}} - \sum_{i \in V}{\lambda_i x_{q,i}}) \quad \text{s.t.}\\
-	x \in \{0,1\} ^{ Q \times |V| }\\
-	e \in [0,1]^{ Q \times |E| }\\
-	\forall q \in Q \forall k \in C \quad \sum_{i \in V : c(i) = k} x_{q,i} \le 1\\
-	\forall q \in Q \forall (ei,u,v) \in E \quad e_{q,ei} \le x_{q,u} \land e_{q,ei} \le x_v\\
+	\max \sum_{u \in V} \lambda_u + \sum_{q=1}^{Q} (\sum_{(u,v) \in E}{e_{q,(u,v)}} - \sum_{u \in V}{\lambda_u x_{q,u}}) \quad \text{s.t.}\\
+	x \in \{0,1\} ^{ Q \times V }\\
+	e \in [0,1]^{ Q \times E }\\
+	\forall q \in Q \forall k \in C \quad \sum_{u \in V : c(u) = k} x_{q,u} \le 1\\
+	\forall q \in Q \forall (u,v) \in E \quad e_{q,(u,v)} \le x_{q,u} \land e_{q,(u,v)} \le x_v\\
 \end{cases}
 \]
 This is equivalent to a Lagrangean relaxation of the ILP formulation, where (1) is Lagrangeanized.
@@ -117,25 +118,25 @@ Of course the subproblems are independent and can be separated,
 so the $Q$ dimension is now superfluous and the problem can be rewritten as:
 \[
 \begin{cases}
-	\max \sum_{i \in V} \lambda_i + Q(\sum_{ei = 1}^{|E|}{e_{ei}} - \sum_{i \in V}{\lambda_i x_i}) \quad \text{s.t.}\\
-	x \in \{0,1\} ^{ |V| }\\
-	e \in [0,1]^{ |E| }\\
-	\forall k \in C \quad \sum_{i \in V : c(i) = k} x_{i} \le 1\\
-	\forall (ei,u,v) \in E \quad e_{ei} \le x_{u} \land e_{ei} \le x_v\\
+	\max \sum_{u \in V} \lambda_u + Q(\sum_{(u,v) \in E}{e_{(u,v)}} - \sum_{u \in V}{\lambda_u x_u}) \quad \text{s.t.}\\
+	x \in \{0,1\} ^{V}\\
+	e \in [0,1]^{E}\\
+	\forall k \in C \quad \sum_{u \in V : c(u) = k} x_{u} \le 1\\
+	\forall (u,v) \in E \quad e_{(u,v)} \le x_{u} \land e_{(u,v)} \le x_v\\
 \end{cases}
 \]
 
 We need to get rid of $Q$ in the master problem as well by having $\theta$ sum to $Q$ instead of $1$:
 \[
 \begin{cases}
-	\max \sum_{u=1}^{p} \sum_{ei = 1}^{|E|} e^{(u)}_{ei} \cdot \theta_u \quad \text{s.t.}\\
+	\max \sum_{i=1}^{p} \sum_{(u,v) \in E} e^{(i)}_{(u,v)} \cdot \theta_i \quad \text{s.t.}\\
 	\theta \in [0,1]^{p}\\
-	\forall i \in V \sum_{u=1}^{p} \theta_u \cdot x_i^u \le 1\\
+	\forall u \in V \sum_{i=1}^{p} \theta_i \cdot x_u^{(i)} \le 1\\
 \end{cases}
 \]
 
 And the pricing subproblem's objective will change to:
-$\max \sum_{i \in V} \lambda_i + \sum_{ei = 1}^{|E|}{e_{ei}} - \sum_{i \in V}{\lambda_i x_i}$
+$\max \sum_{u \in V} \lambda_u + \sum_{(u,v) \in E}{e_{(u,v)}} - \sum_{u \in V}{\lambda_u x_u}$
 
 And any optimal solution for this will also be an optimal solution for the Lagrangean relaxation.
 
@@ -144,15 +145,21 @@ I branch on edges, like is done in \parencite{mop2012}.
 On one side of the branch, the chosen edge will be deleted, on the other side its nodes will be merged.
 This means that in the pricing problem, the edges will now be weighted, and each node can have multiple colors associated to it.
 
-Branching is done on the edge whose $e_{ei}$ is closest to $0.5$ in the RLMP solution.
+Branching is done on the edge $(u,v)$ whose $\sum_{i=1}^{p} e^{(i)}_{(u,v)} \cdot \theta_i$ is closest to $0.5$ in the RLMP solution.
 I first explore the branch where the edge is merged, this was somewhat of an arbitrary decision.
 
-After solving the LMP, I solve the Restricted Master Problem with ILP, which usually gives good primal bounds,
+Exploration is done best first:
+at each step I explore the node with the best dual value as computed by its parent node,
+exploring the shallowest one when multiple nodes have the same dual value.
+
+Once every 16 steps, after solving the LMP, I solve the Restricted Master Problem (which is a weighted set packing problem) with ILP on all columns generated so far, which usually gives good primal bounds,
 often good enough to close the BnP on the first node.
+I don't do it at each step since at each BnP node other than the root, only a few columns are generated, and searching for the primal bound would take up most of the time.
 
 I always keep all generated columns, and feed all compatible ones into each instance of the master problem.
 
 \subsection{Hot-start}
+\label{hotstart}
 Columns were hot-started with heuristic solutions.
 
 In \parencite{mop2012} a \textit{Merge heuristic} was proposed,
@@ -169,41 +176,101 @@ I call it \textit{Karger heuristic} in the code because it was inspired by Karge
 I default to 2000 iterations, and it achieves slightly better results on average,
 at the cost of some computational time, which is mainly negligible when used to hot-start the BnP.
 
-Only the one set of best columns were used to hot-start the first node of the BnP.
+I also add columns generated by a greedy approach that starts at each node,
+and keeps adding nodes, without taking two nodes with the same color, trying to minimize the cut to the rest of the graph at each step.
+
+One other interesting thing one can do is a large scale neighbourhood search based on cyclic exchanges:
+for each color you can create a directed graph where each node represents a component,
+and an edge represents moving that node of that color from one component to another,
+with its weight being the number of edges (in the original graph) between that node and the new component minus those within the current component.
+If you also add an empty component, a positive weight simple cycle in this graph (which can be found in $O(nm)$),
+represents a list of node transfers between components that improves the solution.\\
+On smaller graphs that are tractable with an exact solution, this does not often improve on the previous heuristics,
+so I ended up not using it as a hot-start step. However, on larger graphs, this search applied to the result of one of the previous heuritics can improve the solution by a lot.
 
 \subsection{Stabilization}
 In order to avoid oscillations during column generation,
 I used single parameter stabilization, first described in \parencite{sps}.
 
+\subsection{Preprocessing}
+In \parencite{mop2012}, 3 rules for preprocessing are proposed.
+
+Note that, as opposed to \parencite{mop2012}, I maximize for edges that are not deleted,
+and think of an edge as in the solution when it was not deleted.
+
+Rule 1:
+If a connected component is colorful, remove it from $G$ and add its edges to the solution.
+
+Rule 2:
+Let $B \subseteq E$ be a minimal edge cut of size $t$, partitioning $G$ in $G_B$ and $G \setminus G_B$.
+Let $N$ be the nodes incident in $B$ that are not in $G_B$.
+If $G_B$ is colorful, t-edge connected, and all colors in $N$ also appear in $G_B$, remove $B$.
+
+Rule 3:
+Same as Rule 2, but $N$ has some colors not in $G_B$, then merge the nodes in $G_B$.
+If merging nodes is not an option, you can still delete all edges in $B$ where the node in $N$ has a color present in $G_B$.
+
+I propose a rule weaker than Rule 2 that also finds the edges deleted by Rule 3:\\
+Let $G_B$ be a colorful subgraph, $B$ the minimal edge cut that separates it from $G \setminus G_B$.
+For any $(u,v) \in B$ where $u \in G_B$ and $v \in G \setminus G_B$,
+such that $\exists u' \in G_B : c(u') = c(v)$,
+if $|mincut_{G_B}(u,u')| \ge |B|$, remove $(u,v)$.\\
+Where $|mincut_{G_B}(u,u')|$ is the size of the minimum cut between $u$ and $u'$ within $G_B$.
+
+The proof is the same as that given for Rule 2 in \parencite{mop2012}:\\
+If a solution $S \subseteq E$ contains $(u,v)$, within $G_B$,
+at least $|mincut_{G_B}(u,u')| \ge |B|$ edges must have been deleted, call them $X$.
+Then $S' = (S \setminus B) \cup X$ is also a solution, and $|S'| \ge |S|$.
+
+This rule is weaker as it only asks for the cut between two nodes to be $\ge |B|$, and it can delete a single edge at the time.
+So among the edges in $B$, where the color of $v$ is present in $G_B$ too, the edge associated to the $i_{th}$ biggest cut (among those mentioned by the rule), of size $t_i$, can be removed if $t_i - (i-1) \ge |B|$.
+
+For the original Rule 2, you could check for t-edge connectivity in $O(nm) = O(|C|^3)$ with the algorithm described in \parencite{matula}.\\
+To check for this rule for a component can be less efficient:
+you have to check for $O(|C|)$ cuts between pairs of nodes (if $|B| \ge |G_B|$, all cuts are $<|B|$ and since $G_B$ is colorful, $|G_B| \le |C|$),
+and if you check each of them with a simple $O(nm)$ max-flow algorithm, the complexity would be $O(|C|^4)$.
+In theory there exist faster algorithm for max-flow or all-pairs minimum cut, but I found $O(|C|^4)$ to be sufficient.
+
+To apply this rule, I first get a partition with one of the heuristics mentioned in \nameref{hotstart},
+then I iteratively remove all edges that can be removed.
+Starting from a partition has the advantage that if you remove an edge with a bound for some component,
+$|B|$ decreases also for the other component incident to that edge,
+and you can check its edges again without having to recompute cuts.
+
+I also try single components generated from a greedy that starts at each node,
+and adds nodes trying to keep the cut to the rest of the graph as small as possible.
+
 \section{Pricing subproblem}
 The pricing subproblem consists in finding the colorful subgraph maximizing edge weight sum minus node costs.
 Where each node has multiple colors and a real cost, and each edge has an integer weight.
 
-For each edge $(u,v)$, define $w(u,v)$ (or $w(ei)$) to be equal to its weight, or $0$ if there is no such edge.
+For each edge $(u,v)$, define $w(u,v)$ to be equal to its weight, or $0$ if there is no such edge.
 
 For each node $u$, call $\lambda_u$ its cost.
 
 Since each node can have multiple colors, $c(u) \in 2^C$,
-but in some cases I relax the problem, thinking of nodes having a single color.
-In those cases I will use the shorthand $c(u)=k$ to mean $min_{c' \in c(u)}{c'} = k$.
+but in many cases I relax the problem, thinking of nodes having a single color.
+In those cases I will use the shorthand $c(u)=k$ to mean $min_{c' \in c(u)}{c'} = k$.\\
+Since most of the pricing steps happen in the root of the BnP,
+where each node only has one color, this relaxation is not felt too much.
 
 \subsection{Preprocessing}
 For simplicity, consider each node to have a single color during the preprocessing.
 
 A node $u$ is useless if $-\lambda_u + \sum_{k \in C} \max_{v : c(v)=k} w(u,v) < 0$
 
-An edge $(u,v)$ is useless if $-\lambda_u -\lambda_v + \sum_{k \in C \setminus \{c(u),c(v)\}} \max_{i : c(i)=k} w(u,i)+w(v,i) < 0$
+An edge $(u,v)$ is useless if $-\lambda_u -\lambda_v + \sum_{k \in C \setminus \{c(u),c(v)\}} \max_{u' \in V : c(u')=k} w(u,u')+w(v,u') < 0$
 
 We can iteratively delete useless nodes and edges to obtain a smaller problem.
 
 \subsection{ILP formulation}
 \[
 \begin{cases}
-	\max \sum_{ei = 1}^{|E|}{e_{ei} \cdot w(ei)} - \sum_{u \in V} \lambda_u \quad \text{s.t.}\\
-	x \in \{0,1\}^{|V|}\\
-	e \in [0,1]^{|E|}\\
+	\max \sum_{(u,v) \in E}{e_{(u,v)} \cdot w(u,v)} - \sum_{u \in V} \lambda_u \quad \text{s.t.}\\
+	x \in \{0,1\}^{V}\\
+	e \in [0,1]^{E}\\
 	\forall u \in V \forall v \in V : c(v) \cap c(u) \neq \emptyset, v \neq u \quad x_u + x_v \le 1\\
-	\text{(3) }\forall (ei,u,v) \in E \quad e_{ei} \le x_u \land e_{ei} \le x_v\\
+	\text{(3) }\forall (u,v) \in E \quad e_{(u,v)} \le x_u \land e_{(u,v)} \le x_v\\
 \end{cases}
 \]
 
@@ -213,6 +280,8 @@ and the disandavtage that we can no longer use the tighter bound we obtained on 
 
 I branch on the nodes and keep a connected set of "taken" nodes $U$.
 
+To bound the search, I relax the problem as follows:
+
 Call $C'$ the set of colors that do not appear in $U$.
 
 Any node further than $|C'|$ from $U$ can be discarded, as to reach it you would have to take the same color twice at least once.
@@ -221,17 +290,64 @@ Any node $u$ with $-\lambda_u + \sum_{v \in U}{w(u,v)} + \sum_{k \in C'}{\max_{v
 
 I split each edge's weight across its two nodes, this is a surrogate relaxation for each edge of constraints (3) in the previous formulation.\\
 
-If each edge $w(u,v)$ was split with $0 \le \alpha \le 1$ of its value goint towards $u$ and $1 - \alpha$ going towards $v$,
-define $w^{(u)}(u,v) = \alpha \cdot w(u,v)$ and $w^{(v)}(u,v) = (1-\alpha) \cdot w(u,v)$.
+Each edge $(u,v)$ is split with $0 \le \alpha_{(u,v)} \le 1$ of its value goint towards $u$ and $1 - \alpha_{(u,v)}$ going towards $v$,\\
+call $w^{(u)}(u,v) = \alpha_{(u,v)} \cdot w(u,v)$ and $w^{(v)}(u,v) = (1-\alpha_{(u,v)}) \cdot w(u,v)$.
 
-The value of a node $u$ will now be: $\sigma(u) = -\lambda_u + \sum_{v \in U}{w(u,v)} + \sum_{k \in C'}{\max_{v : c(v)=k} w^{(u)}(u,v)}$.\\
-And $\sum_{k \in C'}{\max_{u : c(u) = k}{ \sigma(u) }}$ is a valid dual bound.
+Call $\sigma(u) = -\lambda_u + \sum_{v \in U}{w(u,v)}$,\\
+$V'$ the set of nodes that has not been discarded,\\
+$E'$ the set of edges that has not been discarded, and\\
+$C'$ the set of colors associated to nodes in $V'$ (each node having a single color),\\
+the relaxed problem looks as follows:
+\[
+\begin{cases}
+	\max \sum_{(u,v) \in E'}{e_{(u,v)} \cdot w(u,v)} + \sum_{u \in V'} \sigma_u \quad \text{s.t.}\\
+	x \in \{0,1\}^{V'}\\
+	e \in [0,1]^{E'}\\
+	\text{(1) }\forall (u,v), (u,v') \in E' : v' \neq v, c(v) = c(v') \quad e_{(u,v)} \cdot e_{(u,v')} = 0\\
+	\forall u, v \in V': c(v) \neq c(u) \quad x_u + x_v \le 1\\
+	\forall (u,v) \in E' \quad e_{(u,v)} \le \alpha_{(u,v)} \cdot x_u + (1 - \alpha_{(u,v)}) x_v\\
+\end{cases}
+\]
+Where the extra constraint (1) makes sure that two edges incident to the same node,
+associated to two nodes of the same color and cannot both contribute to the objective.
 
-In a couple of places (where I take the max across colors) I considered each node to have a single color, like in the preprocessing.
-This could lead to looser bounds and it might be better to split each node into weighted copies (so that their nodes costs, edge weights and colors sum up to the original node), each with a single color.
+Solving it is straightforward: for each color choose the best node. The solution is:
+$\sum_{k \in C'} \max_{u \in V' : c(u) = k}{(\sigma_u + \sum_{k' \in C'}{ \max_{v \in V' : c(v) = k'}{w^{(u)}(u,v)}})}$
 
-It should not be hard to find good values for $\alpha$ with a local search, but I just used an (quite arbitrary) heuristic:
-considering $w(u,v)$, its $\alpha$ is $\frac{4 + \lambda_u}{8 + \lambda_u + \lambda_v}$.
+The best values for $\alpha$ can be found with the following linear program.
+\[
+\begin{cases}
+	\min \sum_{k \in C} \gamma_k\\
+	\alpha \in [0,1]^{E'}\\
+	\beta \in \mathbb{R}_+^{V' \times C'}\\
+	\gamma \in \mathbb{R}_+^{C'}\\
+	\forall (u,v) \in E' \quad \beta_{u,c(v)} \ge w(u,v) \cdot \alpha_{(u,v)} \land \beta_{v,c(u)} \ge w(u,v) \cdot (1-\alpha_{(u,v)})\\
+	\forall u \in V' \quad \gamma_{c(u)} \ge \sigma_u + \sum_{k \in C'} \beta_{u,k}\\
+\end{cases}
+\]
+And its objective is the solution, providing a dual bound for the BnB.
+
+When each node has a single color, this provides tighter bounds than a linear relaxation, for example in the following graph (where $\sigma_u$ is written next to each node $u$):
+
+\begin{center}
+\def\svgwidth{.5\columnwidth}
+\input{./res/graph.pdf_tex}
+\end{center}
+
+The surrogate solution achieves $0.0$ by setting $\alpha_{(1,2)}=\alpha_{(1,3)}=1$.
+
+While the linear relaxation reaches $0.5$ with $x_1 = x_2 = x_3 = 0.5$.
+
+That said, solving a linear program at each node in the BnB was slow,
+so I opted to just use the following heuristic for the surrogate coefficients:
+$\alpha_{(u,v)} = \frac{1 - \sigma_u + \max(\sigma_u,\sigma_v)}{2 - \sigma_u - \sigma_v + 2 \cdot \max(\sigma_u,\sigma_v)}$.
+
+I also tried to compute the optimal coefficients at the root of the BnB,
+and use them for the other nodes too, but it did not perform as well.
+
+When there are multiple colors per node,
+it might be better to split the nodes among their colors,
+similarly to what I have done with edges.
 
 \subsection{Heuristic pricing}
 I considered several heuristic approaches to pricing.
@@ -247,101 +363,95 @@ but it seems to speed up solving the master problem on average.
 \section{Experiments}
 All runs were executed on a "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz" CPU, with a time limit of 180s per graph.
 
-\subsection{Dataset 1}
+\subsection{Random graphs}
+I generated random graphs starting from the following parameters:
+$n$ is the number of nodes in the graph,
+$c$ is the number of colors: each node has a uniform probability chance to be of any color,
+$d$ is the amount of edges, over the total possible amount of edges between nodes of different colors.
 
-This first dataset is from \parencite{mop2012}, these instances have been generated from the BAliBASE 3.0 benchmark \parencite{balibase},
-a benchmark for multiple sequence alignment.
+I generated 20 graphs with parameters $n=100$, $c=6$, $d=0.1$,
+and used them to test the proposed solution.
 
-It contains 135 graphs, each with several connected components. When there are multiple components, each one is solved with a separate BnP.
+In the following table, I list the average values of some statistics for four different settings:
+\textit{bnp} is the full solution,
+\textit{bnp nhp} is without heuristic pricing,
+\textit{bnp npp} is without preprocessing,
+\textit{bnp nhs} is without hot-start columns.
 
 \begin{center}
-\begin{tabular}{ |c|c|c|c| } 
+\begin{tabular}{ |c|c|c|c|c| } 
  \hline
- & bnp & bnp\_hp & bnp\_nohot \\
+ & bnp & bnp nhp & bnp npp & bnp nhs \\
  \hline
- solved & 112 & 113 & 110 \\
+ time (s) & 14.7 & 18.4 & 14.6 & 15.8 \\
  \hline
- avg time$^*$ & 5.3s & 4.2s & 7.2s \\
+ BnP nodes & 35 & 38.5 & 35 & 36.8 \\
  \hline
- avg pricing bnb nodes$^*$ & 374255 & 235378 & 518371 \\
+ pricing steps & 426 & 390 & 426 & 568 \\
+ \hline
+ pricing steps solved with BnB & 269 & 390 & 269 & 285 \\
+ \hline
+ pricing BnB nodes per BnB run & 2162 & 3144 & 2162 & 1712 \\
  \hline
 \end{tabular}
-\smallskip\parbox[t]{\textwidth}{\footnotesize\centerline{$^*$ on instances that were solved by all 3 algorithms}}
 \end{center}
 
-Here \texttt{bnp} denotes the BnP without heuristic pricing,
-\texttt{bnp\_hp} with heuristic pricing,
-and \texttt{bnp\_nohot} without heuristic pricing and without hot-start columns.
+\textit{bnp npp} results the same as \textit{bnp}, except slightly faster,
+this is because the preprocessing described is good for sparse graphs,
+and not so good on random graphs, the preprocessing could not exclude any edge in the 20 instances.
 
-Since, on average, \texttt{bnp\_hp} seems to be faster, I will only be using it for the following benchmarks.
+\textit{bnp nhs} uses less BnB nodes on average in the pricing,
+this is to be expected as without hot-start,
+some of those easier columns have to be generated by pricing,
+although, most of the extra pricing steps seem to be solved by heuristic pricing.
 
-\subsection{Dataset 2}
-This second dataset is taken from \parencite{ccc2025},
-and it is based on the previous dataset, splitting the instances with multiple components,
-and restricting to graphs with 10 to 210 nodes.
+I would have expected \textit{bnb nhp} to also use less BnB nodes on average, but it seems to be the opposite.
+
+\subsection{Datasets from previous works}
+
+I tested this solution on \parencite{mop2012}, also used in \parencite{ccc2025}. These instances have been generated from the BAliBASE 3.0 benchmark \parencite{balibase},
+a benchmark for multiple sequence alignment.
+
+It contains 135 graphs, each with several connected components.
+The BnP solves 132 of them to optimality.
+
+\subsection{Other random graphs}
+
+In \parencite{mop2013}, random graphs were generated starting from observations on Wikipedia interlanguage link graphs.
+There are five parameters:
+$c$ is the number of colors,
+$n$ is the number of vertices,
+$p_v$ is the probability that a component contains a vertex of a certain color,
+$p_e$ is the probability that there is an edge between two vertices in the same component,
+$p_x$ is the probability that there is an edge between two vertices in a different component.
+
+I used the same generator, and the same base parameters of $c=6$, $n=70$, $p_v=0.6$, $p_e=0.7$, $p_x=0.03$,
+except in the plots for $p_v$ and $p_e$, where $n=120$ was used.
+
+Two of the instances in the plot for $p_x$ ran out of time, and their data points are not shown.
 
 \begin{center}
 \def\svgwidth{\columnwidth}
-\input{./res/f2024.pdf_tex}
-\smallskip\parbox[t]{\textwidth}{\footnotesize\centerline{Number of optima with respect to time}}
+\input{./res/byplots.pdf_tex}
 \end{center}
 
-The maximum number of BnP nodes visited for solved instances is $3$, and it's $1$ for almost all instances.
-For these graphs,
-the dual bound found with column generation is usually very tight,
-and the ILP on the RMP almost always finds the optimal solution if it was not already found by the heuristic.
+With increasing $n$, as expected, we can clearly see an exponential growth of the running time.
+The time also increases with $p_x$ and $c$, while $p_e$ and $p_v$ don't seem to affect it too much.
 
-Out of 445 instances, 426 were solved to optimality.
+Compared to the clique partitioning based solution in \parencite{mop2013},
+this BnP solution seems to have a harder time handling larger $c$, and an easier time handling larger $p_x$.
 
-\subsection{Random graphs}
 
-I also tested the solution on random graphs. The code used for generating them can be found in \texttt{src/utils/generator.cpp}.
-
-In the following table I show the total number of nodes for the pricing BnB,
-all on graphs with 30 nodes, with varying density (column) and number of colors (row).
-Each entry is an average between 5 different graphs generated with the same parameters.
-
-\begin{center}
-\begin{tabular}{ |c|c|c|c|c|c|c|c|c|c| }
-\hline
-c \textbackslash d & 0.1 & 0.2 & 0.3 & 0.4 & 0.5 & 0.6 & 0.7 & 0.8 & 0.9 \\
-\hline
-3 & 274 & 573 & 640 & 671 & 566 & 1127 & 994 & 1031 & 1275 \\
-\hline
-6 & 1053 & 6697 & 8281 & 7391 & 18634 & 12695 & 6964 & 27989 & 10297 \\
-\hline
-9 & 3698 & 21487 & 37308 & 30164 & 53630 & 48984 & 32462 & 39338 & 71382 \\
-\hline
-12 & 6860 & 53279 & 82110 & 116848 & 122786 & 169424 & 121719 & 81097 & 289346 \\
-\hline
-15 & 14423 & 101473 & 212302 & 221085 & 244455 & 271075 & 248919 & 263013 & 207646 \\
-\hline
-18 & 17142 & 157576 & 176105 & 320521 & 339844 & 258944 & 382696 & 350921 & 191873 \\
-\hline
-21 & 20390 & 170051 & 295625 & 340622 & 340280 & 325748 & 370755 & 345187 & 104549 \\
-\hline
-24 & 26617 & 217733 & 404090 & 589747 & 616473 & 383444 & 250796 & 219174 & 202491 \\
-\hline
-27 & 35178 & 306726 & 440203 & 673426 & 621840 & 747201 & 774985 & 414004 & 420081 \\
-\hline
-\end{tabular}
-\end{center}
-
-The BnP is slower with higher $|C|$, even when it approaches $|V|$.
-It also seemps possible that the hardest density depends on $|C|$.
-
-This solution slows down considerably with increasing $|C|$,
-while the clique partitioning formulation in \parencite{mop2013},
-seems to manage high values of $|C|$ better.
-
-\section{Conclusions}
+\section{Conclusions} %% TODO: update
 I presented an approach based on column generation for the MOP problem.
 
 It should be possible to adapt this approach to the MEC and MCC problems too,
 where there will be a different objective for the pricing subproblem.
 
-The approach could be improved further by employing rules 2 and 3 described in \parencite{mop2012},\\
-and by improving surrogate coefficients in the subpricing problem, either via local search or a better heuristic.
+Things that could improve this results are:
+better heuristics for the surrogate coefficient in the pricing steps,
+faster ways to obtain good primal values,
+smarter node order in the BnP.
 
 \section{Aknowledgments}
 
