@@ -13,10 +13,9 @@
 int bnp_nodes = 0;
 /// global set of columns, only insert sorted vectors of nodes with indeces in the original graph
 std::set<std::vector<int>> columns;
+/// prepares columns for an instance of the master problem
 std::vector<mcolumn> columns_for(const mgraph &mg) {
 	std::vector<mcolumn> ans;
-	// single-element columns for feasibility
-	// for(int i=0; i<mg.n(); ++i) ans.push_back({0,{i}});
 
 	std::vector<int> group_of_node(mg.orig_n, -1); // what group each node is in in the subproblem, -1 if finalized
 	for(int i = 0; i<(int)mg.groups.size(); ++i)

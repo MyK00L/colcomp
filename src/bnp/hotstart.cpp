@@ -5,7 +5,6 @@
 #include "heuristic/heuristic_karger.cpp"
 
 void gen_with_greedy(const problem &p, const std::vector<std::vector<int>> &g, std::vector<std::vector<int>>& cols) {
-
 	const int C = *std::max_element(p.color.begin(), p.color.end())+1;
 	std::vector<bool> incomp(p.n());
 	for(int u0 = 0; u0<int(p.n()); ++u0) {
