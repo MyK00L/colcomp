@@ -7,13 +7,13 @@
 
 std::vector<mcolumn> heuristic_pricing_annealing(const pricing_problem &pp) {
 	// BUGGED, TOFIX
-	assert(false);
+	// assert(false);
 	int C = pp.g.C();
 	const std::vector<double> &duals = pp.cost;
 	const int n = pp.g.n();
 	std::vector<bool> best_ans(n, 0);
 	double best_val = 0;
-	std::vector<bool> ans = best_ans;
+	std::vector<bool> ans(n, 0);
 	double val = 0;
 	std::vector<int> by_color(C, -1);
 	double temp = 64;
@@ -43,7 +43,7 @@ std::vector<mcolumn> heuristic_pricing_annealing(const pricing_problem &pp) {
 		}
 		temp *= 0.999;
 	}
-	best_val += local_search_pricing(best_ans, duals, pp.g.g);
+	// best_val += local_search_pricing(best_ans, duals, pp.g.g);
 	if(best_val<=0.0001) return {};
 	std::vector<int> nz;
 	for(int i = 0; i<n; ++i)

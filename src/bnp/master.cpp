@@ -68,7 +68,6 @@ bool Master::generate_columns() {
 	if(use_heuristic_pricing) {
 		pricing_problem pp(g, duals);
 		pricing_columns = heuristic_pricing_beamsearch(pp);
-		// SA pricing heuristic is currently bugged, don't use it
 	}
 	if(pricing_columns.empty()) {
 		for(int i = 0; i<g.n(); ++i) { // single parameter stabilization

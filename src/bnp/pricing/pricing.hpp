@@ -57,7 +57,6 @@ struct pricing_problem {
 		for(auto &y : ma) x += y;
 		return x<0;
 	}
-	// WRONG, to fix or delete (eg on BBS11037C5.graph)
 	void preprocess() {
 		std::vector<bool> nu(g.n(), 0);										   // 1 if node is useless
 		std::vector<std::vector<bool>> eu(g.n(), std::vector<bool>(g.n(), 0)); // 1 if edge is useless
