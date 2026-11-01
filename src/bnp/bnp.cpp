@@ -157,6 +157,17 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 			std::cerr<<"prune1"<<std::endl;
 			continue;
 		}
+		if(mg.is_trivial()) {
+			int pv = base+mg.m();
+			if(pv>primal) {
+				primal = pv;
+				auto comps = mg.split_components();
+				best = std::vector<std::vector<int>>();
+				for(auto &comp : comps) best.push_back(comp.orig_nodes());
+			}
+			std::cerr<<"prunebase"<<std::endl;
+			continue;
+		}
 
 		Master m(mg, columns_for(mg));
 		m.setup_highs();

@@ -11,7 +11,6 @@
 #include "ilp.cpp"
 #include "preprocess.cpp"
 #include "scorer.cpp"
-#include "heuristic/local_search.cpp"
 
 using namespace std;
 
@@ -49,7 +48,7 @@ problem input(string filename) {
 				continue;
 			}
 			if(col[a]==col[b]) {
-				std::cerr<<"edge between same-color nodes in input, ignoring"<<std::endl;
+				// std::cerr<<"edge between same-color nodes in input, ignoring"<<std::endl;
 				continue;
 			}
 			if(edgset.count({a, b})) {
