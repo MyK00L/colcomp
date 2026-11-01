@@ -137,7 +137,7 @@ We can to get rid of $Q$ in the master problem by having $\theta$ sum to $Q$ ins
 And the pricing subproblem's objective will change to:
 $\max \sum_{(u,v) \in E}{e_{(u,v)}} - \sum_{u \in V}{\lambda_u x_u}$
 
-Any solution to the pricing subproblem also solves the Lagrangean relaxation associated to the initial ILP formulation when lagrangeanizing (1):
+Any solution to the pricing subproblem also solves the Lagrangean relaxation associated to the initial ILP formulation when Lagrangeanizing (1):
 \[
 \begin{cases}
 	\max \sum_{u \in V}{\lambda_u} + Q(\sum_{(u,v) \in E}{e_{(u,v)}} - \sum_{u \in V}{\lambda_u x_u}) \quad \text{s.t.}\\
@@ -190,9 +190,10 @@ and keeps adding nodes, without taking two nodes with the same color, trying to 
 
 One other interesting thing one can do is a large scale neighbourhood search based on cyclic exchanges:
 for each color you can create a directed graph where each node represents a component,
-and an edge represents moving that node of that color from one component to another,
+and an edge represents moving the node of that color from one component to another,
 with its weight being the number of edges (in the original graph) between that node and the new component minus those within the current component.
-If you also add an empty component, a positive weight simple cycle in this graph (which can be found in $O(nm)$),
+Also add an empty component to represent just removing the node from its component.
+A positive weight simple cycle in this graph (which can be found in $O(nm)$),
 represents a list of node transfers between components that improves the solution.\\
 On smaller graphs that are tractable with an exact solution, this does not often improve on the previous heuristics,
 so I ended up not using it as a hot-start step. However, on larger graphs, this search applied to the result of one of the previous heuritics can improve the solution by a lot.
@@ -224,7 +225,7 @@ Let $G_B$ be a colorful subgraph, $B$ the minimal edge cut that separates it fro
 For any $(u,v) \in B$ where $u \in G_B$ and $v \in G \setminus G_B$,
 such that $\exists u' \in G_B : c(u') = c(v)$,
 if $|mincut_{G_B}(u,u')| \ge |B|$, remove $(u,v)$.\\
-Where $|mincut_{G_B}(u,u')|$ is the size of the minimum cut between $u$ and $u'$ within $G_B$.
+Where $|mincut_{G_B}(u,u')|$ is the size of a minimum cut between $u$ and $u'$ within $G_B$.
 
 The proof is the same as that given for Rule 2 in \parencite{mop2012}:\\
 If a solution $S \subseteq E$ contains $(u,v)$, within $G_B$,
@@ -278,7 +279,7 @@ We can iteratively delete useless nodes and edges to obtain a smaller problem.
 	\max \sum_{(u,v) \in E}{e_{(u,v)} \cdot w(u,v)} - \sum_{u \in V} \lambda_u \quad \text{s.t.}\\
 	x \in \{0,1\}^{V}\\
 	e \in [0,1]^{E}\\
-	\forall u \in V \forall v \in V : c(v) \cap c(u) \neq \emptyset, v \neq u \quad x_u + x_v \le 1\\
+	\forall u \in V \forall v \in V : c(v) \cap c(u) \neq \emptyset \quad x_u + x_v \le 1\\
 	\text{(3) }\forall (u,v) \in E \quad e_{(u,v)} \le x_u \land e_{(u,v)} \le x_v\\
 \end{cases}
 \]
@@ -354,10 +355,6 @@ $\alpha_{(u,v)} = \frac{1 - \sigma_u + \max(\sigma_u,\sigma_v)}{2 - \sigma_u - \
 I also tried to compute the optimal coefficients at the root of the BnB,
 and use them for the other nodes too, but it did not perform as well.
 
-When there are multiple colors per node,
-it might be better to split the nodes among their colors,
-similarly to what I have done with edges.
-
 \subsection{Heuristic pricing}
 I considered several heuristic approaches to pricing.
 
@@ -376,7 +373,7 @@ All runs were executed on a "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz" CPU
 I generated random graphs starting from the following parameters:
 $n$ is the number of nodes in the graph,
 $c$ is the number of colors: each node has a uniform probability chance to be of any color,
-$d$ is the amount of edges, over the total possible amount of edges between nodes of different colors.
+$d$ is the amount of edges between nodes of different colors, over the total possible amount (I generate no edges between nodes with the same color).
 
 I generated 20 graphs with parameters $n=100$, $c=6$, $d=0.1$,
 and used them to test the proposed solution.
@@ -460,7 +457,8 @@ where there will be a different objective for the pricing subproblem.
 Things that could improve this results are:
 better heuristics for the surrogate coefficient in the pricing steps,
 faster ways to obtain good primal values,
-smarter node order in the BnP.
+smarter node order in the BnP,
+handling multiple colors in the pricing BnB (maybe splitting them among each color, similarly to what is done with the edges).
 
 The code is available at \url{https://github.com/MyK00L/colcomp}, and can be compiled with \texttt{make}, HiGHS needs to be installed.
 
