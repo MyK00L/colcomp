@@ -58,6 +58,7 @@ std::vector<mcolumn> columns_for(const mgraph &mg) {
 	return ans;
 }
 
+/// find a primal value by solving the integer restricted master problem with all columns found so far
 std::pair<int, std::vector<std::vector<int>>> primal_with_all_columns(const mgraph &mg0, int primal) {
 	auto columns = columns_for(mg0);
 	Highs highs;
@@ -75,10 +76,9 @@ std::pair<int, std::vector<std::vector<int>>> primal_with_all_columns(const mgra
 		for(auto &j : columns[i].nodes) rows[j].push_back(i);
 	}
 	vector<double> ones(columns.size(), 1);
-	// could also use -inf for lower
-	for(size_t i = 0; i<rows.size(); ++i) {
+	for(size_t i = 0; i<rows.size(); ++i)
 		highs.addRow(-kHighsInf, 1, (int)rows[i].size(), rows[i].data(), ones.data());
-	}
+	// cut out solutions with the same or lower primal as before
 	highs.addRow(primal+1, kHighsInf, columns.size(), inds.data(), vals.data());
 
 	highs.run();
@@ -163,6 +163,7 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 				auto comps = mg.split_components();
 				best = std::vector<std::vector<int>>();
 				for(auto &comp : comps) best.push_back(comp.orig_nodes());
+				std::cerr<<"NEW PRIMAL: "<<primal<<std::endl;
 			}
 			std::cerr<<"prunebase"<<std::endl;
 			continue;
@@ -185,7 +186,6 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 			std::cerr<<"prune2"<<std::endl;
 			continue;
 		}
-		// auto [pv, pcols] = m.primal_ilp(primal-base); pv += base;
 
 		const std::vector<double> cv = m.highs.getSolution().col_value;
 		assert(cv.size()==m.columns.size());
@@ -239,10 +239,9 @@ std::vector<std::vector<int>> bnp_main(problem p, bool hot_start = 1) {
 	auto ccs = mg0.split_components();
 	int sol = 0;
 	for(auto &cc : ccs) {
-		std::cerr<<"component: n="<<cc.n()<<" partitions_bound="<<cc.tight_partition_bound()<<std::endl;
+		std::cerr<<"component: n="<<cc.n()<<std::endl;
 		std::vector<std::vector<int>> ansi;
 		int primal = -1;
-		// bnp(cc, 0, 0, cc.m(), primal, ansi);
 		bnp_bfs(cc, primal, ansi);
 		sol += primal;
 		std::move(ansi.begin(), ansi.end(), std::back_inserter(ans));

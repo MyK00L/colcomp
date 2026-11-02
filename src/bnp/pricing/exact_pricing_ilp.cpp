@@ -12,40 +12,39 @@ forall i: sum_j x[i,j]=n_i
 forall j1,j2 max_i min(x[i,j1],x[i,j2])=1
 max z = sum_j /\_i(x[i,j])
 
-doable with SAT, I guess
-but that's not the problem with what I'm doing anyway...
+also doable with SAT, I guess
 */
 std::vector<mcolumn> exact_pricing_ilp(const pricing_problem &p) {
 	const double inf = kHighsInf;
 	Highs h;
-	// h.setOptionValue("seed",42); // TODO seed
 	h.setOptionValue("output_flag", false);
-	// h.setMatrixFormat(MatrixFormat::kColwise);
 	h.changeObjectiveSense(ObjSense::kMaximize);
 	int coli = 0;
 	for(size_t i = 0; (int)i<p.g.n(); ++i) {
 		h.addVar(0, 1);
 		h.changeColIntegrality(coli, HighsVarType::kInteger);
-		// h.changeColCost(coli, -duals[i]);
 		++coli;
 	}
-	for(int k=0; k<p.g.C(); ++k) {
+	for(int k = 0; k<p.g.C(); ++k) {
 		vector<int> ind;
 		vector<double> val;
-		for(int i=0; i<p.g.n(); ++i) {
-			bool contains=0;
-			for(auto &ki: p.g.c[i]) if(ki==k) {
-				contains=1;
-				break;
-			}
+		for(int i = 0; i<p.g.n(); ++i) {
+			bool contains = 0;
+			for(auto &ki : p.g.c[i])
+				if(ki==k) {
+					contains = 1;
+					break;
+				}
 			if(contains) {
 				ind.push_back(i);
 				val.push_back(1);
 			}
 		}
-		if(ind.size())
-			h.addRow(-inf, 1, ind.size(), ind.data(), val.data());
+		if(ind.size()) h.addRow(-inf, 1, ind.size(), ind.data(), val.data());
 	}
+
+	// old edge constraints
+	/*
 	for(int i = 0; i<int(p.g.n()); ++i) {
 		for(auto [j, w] : p.g.g[i])
 			if(j>i && w>0) {
@@ -60,7 +59,34 @@ std::vector<mcolumn> exact_pricing_ilp(const pricing_problem &p) {
 				++coli;
 			}
 	}
-	// TODO integer cuts
+	*/
+
+	// tighter edge constraints
+	std::map<std::array<int, 2>, int> eis;
+	for(int i = 0; i<int(p.g.n()); ++i) {
+		for(auto [j, w] : p.g.g[i])
+			if(j>i && w>0) {
+				h.addVar(0, 1);
+				eis[{i, j}] = coli;
+				eis[{j, i}] = coli;
+				h.changeColCost(coli, w);
+				coli += 1;
+			}
+		for(int ci = 0; ci<p.g.C(); ++ci) {
+			std::vector<int> inds = {i};
+			std::vector<double> vals = {-1.0};
+			for(auto [j, w] : p.g.g[i])
+				if(w>0) {
+					bool hasc = 0;
+					for(auto col : p.g.c[j]) hasc |= col==ci;
+					if(hasc) {
+						inds.push_back(eis[{i, j}]);
+						vals.push_back(1.0);
+					}
+				}
+			if(inds.size()>1) { h.addRow(-inf, 0, inds.size(), inds.data(), vals.data()); }
+		}
+	}
 
 	for(size_t i = 0; i<p.cost.size(); ++i) h.changeColCost((int)i, -p.cost[i]);
 	h.run();

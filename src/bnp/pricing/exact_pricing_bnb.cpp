@@ -115,7 +115,6 @@ struct epbnb_state {
 		untakeable |= ~reach;
 	}
 	double upper_bound(const pricing_problem &p, const std::vector<int> &msigma) {
-		// return upper_bound_surrogate_lp(p);
 		update_untakeable_reach(p);
 		std::vector<double> bbc(p.g.C(), 0); // best reachable value by color
 		std::vector<double> bc(p.g.C(), 0);	 // best connection by color, for internal loop
@@ -180,8 +179,10 @@ struct epbnb_state {
 					val.push_back(1);
 				}
 			}
-			if(ind.size()) h.addRow(-inf, 1, ind.size(), ind.data(), val.data());
+			if(ind.size()>1) h.addRow(-inf, 1, ind.size(), ind.data(), val.data());
 		}
+		// old edge constraints
+		/*
 		for(int i = 0; i<(int)tk.size(); ++i) {
 			int u = tk[i];
 			for(auto [v, w] : p.g.g[u]) {
@@ -196,6 +197,39 @@ struct epbnb_state {
 					h.addRow(-inf, 0, 2, nz, val);
 					h.changeColCost(coli, w);
 					++coli;
+				}
+			}
+		}
+		*/
+		{ // tighter edge constraints
+			std::map<std::array<int, 2>, int> eis;
+			for(int i = 0; i<int(tk.size()); ++i) {
+				int u = tk[i];
+				for(auto [v, w] : p.g.g[u]) {
+					int j = rtk[v];
+					if(j>i && w>0) {
+						h.addVar(0, 1);
+						eis[{i, j}] = coli;
+						eis[{j, i}] = coli;
+						h.changeColCost(coli, w);
+						coli += 1;
+					}
+				}
+				for(int k = 0; k<p.g.C(); ++k) {
+					std::vector<int> inds = {i};
+					std::vector<double> vals = {-1.0};
+					for(auto [v, w] : p.g.g[u])
+						if(w>0) {
+							int j = rtk[v];
+							if(j==-1) continue;
+							bool hasc = 0;
+							for(int colj : p.g.c[v]) hasc |= (colj==k);
+							if(hasc) {
+								inds.push_back(eis[{i, j}]);
+								vals.push_back(1.0);
+							}
+						}
+					if(inds.size()>1) h.addRow(-inf, 0, inds.size(), inds.data(), vals.data());
 				}
 			}
 		}
@@ -343,22 +377,31 @@ struct epbnb_state {
 	void debug_print(const pricing_problem &p) const {
 		std::cerr<<"epbnb_state debug:"<<std::endl;
 		std::cerr<<"score="<<score<<std::endl;
+		std::vector<double> valus(p.g.n());
 		for(int u = 0; u<p.g.n(); ++u)
 			if(!untakeable[u]) {
-				double valu = -p.cost[u];
+				valus[u] = -p.cost[u];
 				for(auto [v, w] : p.g.g[u]) {
-					if(nodes[v]) valu += w;
+					if(nodes[v]) valus[u] += w;
 				}
-				std::cerr<<"cost("<<u<<")="<<p.cost[u]<<'\t';
-				std::cerr<<"val("<<u<<")="<<valu<<"\t";
-				std::cerr<<"col("<<u<<")=";
-				for(auto &k : p.g.c[u]) std::cerr<<k<<',';
-				std::cerr<<std::endl;
+				std::cerr<<u<<"(";
+				for(auto &k : p.g.c[u]) std::cerr<<k<<'_';
+				std::cerr<<")["<<valus[u]<<"]\n";
 			}
 		for(int u = 0; u<p.g.n(); ++u)
 			if(!untakeable[u]) {
 				for(const auto &[v, w] : p.g.g[u])
-					if(v>u && !untakeable[v]) { std::cerr<<u<<'-'<<v<<": "<<w<<std::endl; }
+					if(v>u && !untakeable[v]) {
+						std::cerr<<u<<"(";
+						for(auto &k : p.g.c[u]) std::cerr<<k<<'_';
+						std::cerr<<")["<<valus[u]<<"] ";
+
+						std::cerr<<v<<"(";
+						for(auto &k : p.g.c[v]) std::cerr<<k<<'_';
+						std::cerr<<")["<<valus[v]<<"] ";
+
+						std::cerr<<w<<std::endl;
+					}
 			}
 	}
 };

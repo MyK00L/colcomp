@@ -9,6 +9,7 @@
 struct pricing_problem {
 	mgraph g;
 	std::vector<double> cost;
+	/// returns true if a node would never produce a positive value if taken
 	bool is_node_useless(int u, const std::vector<bool> &nu, const std::vector<std::vector<bool>> &eu) {
 		std::vector<int> ma(g.C(), 0);
 		for(auto &[v, w] : g.g[u])
@@ -17,6 +18,7 @@ struct pricing_problem {
 		for(auto &y : ma) x += y;
 		return x<0;
 	}
+	/// returns true if a pair of nodes with an edge between them would never produce a positive value if taken
 	bool is_edge_useless(int u, int v, const std::vector<bool> &nu, const std::vector<std::vector<bool>> &eu) {
 		std::vector<int> ma(g.C(), 0);
 		{
@@ -57,6 +59,7 @@ struct pricing_problem {
 		for(auto &y : ma) x += y;
 		return x<0;
 	}
+	/// marks some nodes and edges as useless by giving them a very negative weight
 	void preprocess() {
 		std::vector<bool> nu(g.n(), 0);										   // 1 if node is useless
 		std::vector<std::vector<bool>> eu(g.n(), std::vector<bool>(g.n(), 0)); // 1 if edge is useless

@@ -1,6 +1,7 @@
 #include "common.cpp"
 #include "scorer.cpp"
 #include <Highs.h>
+#include <map>
 
 int max_useful_partitions(const problem &p) {
 	// compute bound on max useful number of partitions
@@ -15,6 +16,15 @@ int max_useful_partitions(const problem &p) {
 }
 
 std::vector<std::vector<int>> ilp(problem p) {
+	std::vector<std::vector<int>> g(p.n());
+	std::map<std::array<int, 2>, int> eis;
+	for(int ei = 0; ei<(int)p.edges.size(); ++ei) {
+		auto [u, v] = p.edges[ei];
+		g[u].push_back(v);
+		g[v].push_back(u);
+		eis[{int(u), int(v)}] = ei;
+		eis[{int(v), int(u)}] = ei;
+	}
 	const double inf = kHighsInf;
 	int n = (int)p.n();
 	int P = max_useful_partitions(p);
@@ -55,6 +65,7 @@ std::vector<std::vector<int>> ilp(problem p) {
 			if(ind.size()<=1) continue;
 			highs.addRow(-inf, 1, ind.size(), ind.data(), val.data()); // (-inf <=) i+j+k+...<=1
 		}
+		/*
 		for(int ei = 0; ei<m; ++ei) { // edge objective constraints
 			int i = p.edges[ei][0];
 			int j = p.edges[ei][1];
@@ -63,6 +74,20 @@ std::vector<std::vector<int>> ilp(problem p) {
 			highs.addRow(-inf, 0, 2, nz, val); // (-inf <=) e-i<=0
 			nz[0] = parti*nvar_part+j;
 			highs.addRow(-inf, 0, 2, nz, val); // (-inf <=) e-j<=0
+		}
+		*/
+		for(int i = 0; i<n; ++i) { // tighter edge constraints
+			for(int c = 0; c<C; ++c) {
+				std::vector<int> inds = {parti*nvar_part+i};
+				std::vector<double> vals = {-1.0};
+				for(const int j : g[i])
+					if((int)p.color[j]==c) {
+						int ei = eis[{i, j}];
+						inds.push_back(nvar_part*parti+n+ei);
+						vals.push_back(1.0);
+					}
+				if(inds.size()>1) { highs.addRow(-inf, 0, inds.size(), inds.data(), vals.data()); }
+			}
 		}
 	}
 	for(int i = 0; i<n; ++i) { // partition constraints
