@@ -148,6 +148,7 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 	BnpNode n0 = BnpNode{mg0, 0, mg0.m(), 0};
 	std::priority_queue<BnpNode> maxheap;
 	maxheap.push(n0);
+	int it_for_primal=0;
 	while(!maxheap.empty()) {
 		auto [mg, base, dual, depth] = maxheap.top();
 		maxheap.pop();
@@ -176,7 +177,7 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 		double dv = base+m.run(primal-base);
 		dual = std::min(dual, int(dv+1e-4));
 		for(auto col : m.get_columns()) { columns.insert(col); }
-		if(bnp_nodes%16==1) { // compute a primal bound every 16 nodes (even if it would be fathomable after the dual bound)
+		if((it_for_primal++)%16==0) { // compute a primal bound every 16 nodes (even if it would be fathomable after the dual bound)
 			auto [pv, pcols] = primal_with_all_columns(mg0, primal);
 			if(pv>primal) {
 				primal = pv;
