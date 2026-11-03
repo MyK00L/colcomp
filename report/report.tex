@@ -6,6 +6,7 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{color}
+\usepackage[subnum,amsstyle]{cases}
 \usepackage[backend=bibtex,style=authoryear]{biblatex}
 \addbibresource{references.bib}
 \graphicspath{{./res/}}
@@ -52,24 +53,24 @@ Note that with this formulation the subgraphs do not necessarly need to be conne
 \subsection{Integer Linear Programming formulation}
 Given the last definition, MOP can be formulated as follows:
 
-\[
-\begin{cases}
-	\max \sum_{q \in Q}{\sum_{(u,v) \in E}{e_{q,(u,v)}}} \quad \text{s.t.}\\
-	x \in \{0,1\} ^{ Q \times V }\\
-	e \in [0,1]^{ Q \times E }\\
-	\text{(1) } \forall u \in V & \sum_{q=1}^{Q}{x_{q,u}}\le 1 \\
-	\text{(2) } \forall q \in Q \forall k \in C & \sum_{u \in V : c(u) = k}{ x_{q,u} } \le 1 \\
-	\text{(3) } \forall q \in Q \forall (u,v) \in E & e_{q,(u,v)} \le x_{q,u} \land e_{q,(u,v)} \le x_{q,v}\\
-\end{cases}
-\]
+\begin{numcases}{\label{ilp}}
+	\max \sum_{q \in Q}{\sum_{(u,v) \in E}{e_{q,(u,v)}}} \quad \text{s.t.} \nonumber \\
+	x \in \{0,1\} ^{ Q \times V } \nonumber \\
+	e \in [0,1]^{ Q \times E } \nonumber \\
+	\forall u \in V \quad \sum_{q=1}^{Q}{x_{q,u}}\le 1 \label{ilp1} \\
+	\forall q \in Q \forall k \in C \quad \sum_{u \in V : c(u) = k}{ x_{q,u} } \le 1 \label{ilp2} \\
+	\forall q \in Q \forall (u,v) \in E \quad e_{q,(u,v)} \le x_{q,u} \land e_{q,(u,v)} \le x_{q,v} \label{ilp3}
+\end{numcases}
 
 Where $x_{q,u}$ is $1$ if node $u$ is present in subgraph $q$.\\
 For the edge $(u,v)$, $e_{q,(u,v)}$ is $\min(x_{q,u},x_{q,v})$, which is $1$ if edge $(u,v)$ is present in subgraph $q$.\\
-(1) Are the partition constraints.\\
-(2) Are the color constraints.\\
-(3) Are to make $e_{q,(u,v)} \le \min(x_{q,u},x_{q,v})$ for the objective.
+(\ref{ilp1}) Are the partition constraints.\\
+(\ref{ilp2}) Are the color constraints.\\
+(\ref{ilp3}) Are to make $e_{q,(u,v)} \le \min(x_{q,u},x_{q,v})$ for the objective.
 
 And $Q$ is a bound on the number of subgraphs for an optimal solution, since the exact number is hard to know.
+
+The bounds for the edges (\ref{ilp3}) can be made tighter, as will be seen in (\ref{pricing_cr_edge_const}).
 
 \subsection{Bound on Q}
 A simple upper bound to $Q$ would be $|V|$, in \parencite{ccc2025} better bounds are shown for when the subgraphs need to be connected.
@@ -86,9 +87,9 @@ Thus a minimal solution always has at most $Q = \lfloor \sqrt{2K + \frac{1}{4}} 
 
 \section{Branch and price algorithm}
 \subsection{Master and Pricing problems}
-In the ILP formulation, (1) are linking constraints, we can separate these from the others obtaining a Dantzig-Wolfe decomposition \parencite{dwd} with identical subproblems.
+In the ILP formulation, (\ref{ilp1}) are linking constraints, we can separate these from the others obtaining a Dantzig-Wolfe decomposition \parencite{dwd} with identical subproblems.
 
-We convexify constraints (2) and (3), and do column generation, where constrains in (1) remain in the master problem and the other go in the pricing subproblem.
+We convexify constraints (\ref{ilp2}) and (\ref{ilp3}), and do column generation, where constrains in (\ref{ilp1}) remain in the master problem and the other go in the pricing subproblem.
 
 The restricted linear master problem is:
 \[
@@ -111,7 +112,7 @@ And the pricing subproblem is:
 	\forall q \in Q \forall (u,v) \in E \quad e_{q,(u,v)} \le x_{q,u} \land e_{q,(u,v)} \le x_v\\
 \end{cases}
 \]
-Where $\mu$ is the dual variable of the convexity constraint, and $\lambda$ is the dual variable of the other.
+Where $\mu$ is the dual variable of the convexity constraint, and $\lambda$ is the dual variable of the other constraints.
 
 Of course, since the subproblems are independent and identical, they can be separated,
 so the $Q$ dimension is now superfluous and the problem can be rewritten as:
@@ -137,17 +138,16 @@ We can to get rid of $Q$ in the master problem by having $\theta$ sum to $Q$ ins
 And the pricing subproblem's objective will change to:
 $\max \sum_{(u,v) \in E}{e_{(u,v)}} - \sum_{u \in V}{\lambda_u x_u}$
 
-Any solution to the pricing subproblem also solves the Lagrangean relaxation associated to the initial ILP formulation when Lagrangeanizing (1):
-\[
-\begin{cases}
-	\max \sum_{u \in V}{\lambda_u} + Q(\sum_{(u,v) \in E}{e_{(u,v)}} - \sum_{u \in V}{\lambda_u x_u}) \quad \text{s.t.}\\
-	x \in \{0,1\} ^{V}\\
-	e \in [0,1]^{E}\\
-	\forall k \in C \quad \sum_{u \in V : c(u) = k} x_{u} \le 1\\
-	\forall (u,v) \in E \quad e_{(u,v)} \le x_{u} \land e_{(u,v)} \le x_v\\
-\end{cases}
-\]
-So, whenever we solve a pricing subproblem optimally, we also obtain a dual bound for free.
+Any solution to the pricing subproblem also solves the Lagrangean relaxation associated to the initial ILP formulation when Lagrangeanizing (\ref{ilp1}):
+\begin{numcases}{}
+	\max \sum_{u \in V}{\lambda_u} + Q(\sum_{(u,v) \in E}{e_{(u,v)}} - \sum_{u \in V}{\lambda_u x_u}) \quad \text{s.t.} \label{lr_obj}\\
+	x \in \{0,1\} ^{V} \nonumber \\
+	e \in [0,1]^{E} \nonumber \\
+	\forall k \in C \quad \sum_{u \in V : c(u) = k} x_{u} \le 1 \nonumber \\
+	\forall (u,v) \in E \quad e_{(u,v)} \le x_{u} \land e_{(u,v)} \le x_v \nonumber \\
+\end{numcases}
+So, whenever we solve a pricing subproblem optimally,
+we also obtain a dual bound for free by applying $\lambda^*$ to (\ref{lr_obj}).
 
 \subsection{Braching strategy}
 I branch on edges, like is done in \parencite{mop2012}.
@@ -274,15 +274,13 @@ An edge $(u,v)$ is useless if $-\lambda_u -\lambda_v + \sum_{k \in C \setminus \
 We can iteratively delete useless nodes and edges to obtain a smaller problem.
 
 \subsection{ILP formulation}
-\[
-\begin{cases}
-	\max \sum_{(u,v) \in E}{e_{(u,v)} \cdot w(u,v)} - \sum_{u \in V} \lambda_u \quad \text{s.t.}\\
-	x \in \{0,1\}^{V}\\
-	e \in [0,1]^{E}\\
-	\forall u \in V \forall v \in V : c(v) \cap c(u) \neq \emptyset \quad x_u + x_v \le 1\\
-	\text{(3) }\forall (u,v) \in E \quad e_{(u,v)} \le x_u \land e_{(u,v)} \le x_v\\
-\end{cases}
-\]
+\begin{numcases}{\label{pricing_ilp}}
+	\max \sum_{(u,v) \in E}{e_{(u,v)} \cdot w(u,v)} - \sum_{u \in V} \lambda_u \quad \text{s.t.} \nonumber \\
+	x \in \{0,1\}^{V} \nonumber \\
+	e \in [0,1]^{E} \nonumber \\
+	\forall k \in C \quad \sum_{u \in V : k \in c(u)} x_{u} \le 1 \nonumber \\
+	\forall (u,v) \in E \quad e_{(u,v)} \le x_u \land e_{(u,v)} \le x_v \label{pricing_ilp_edge}
+\end{numcases}
 
 \subsection{Branch and Bound solution}
 I only consider connected components in this solution, which has the advantage that it restricts the search, especially for sparse graphs,
@@ -292,67 +290,94 @@ I branch on the nodes and keep a connected set of "taken" nodes $U$.
 
 To bound the search, I relax the problem as follows:
 
-Call $C'$ the set of colors that do not appear in $U$.
-
-Any node further than $|C'|$ from $U$ can be discarded, as to reach it you would have to take the same color twice at least once.
+If $C'$ the set of colors that do not appear in $U$,
+any node further than $|C'|$ from $U$ can be discarded,
+as to reach it you would have to take the same color twice at least once.
 
 Any node $u$ with $-\lambda_u + \sum_{v \in U}{w(u,v)} + \sum_{k \in C'}{\max_{v : c(v)=k} w(u,v)} < 0$ is useless and can be discarded.
 
-I split each edge's weight across its two nodes, this is a surrogate relaxation for each edge of constraints (3) in the previous formulation.\\
-
-Each edge $(u,v)$ is split with $0 \le \alpha_{(u,v)} \le 1$ of its value goint towards $u$ and $1 - \alpha_{(u,v)}$ going towards $v$,\\
-call $w^{(u)}(u,v) = \alpha_{(u,v)} \cdot w(u,v)$ and $w^{(v)}(u,v) = (1-\alpha_{(u,v)}) \cdot w(u,v)$.
-
-Call $\sigma(u) = -\lambda_u + \sum_{v \in U}{w(u,v)}$,\\
+Call $\sigma(u) = -\lambda_u + \sum_{v \in U}{w(u,v)}$\\
 $V'$ the set of nodes that has not been discarded,\\
 $E'$ the set of edges that has not been discarded, and\\
-$C'$ the set of colors associated to nodes in $V'$ (each node having a single color),\\
-the relaxed problem looks as follows:
-\[
-\begin{cases}
-	\max \sum_{(u,v) \in E'}{e_{(u,v)} \cdot w(u,v)} + \sum_{u \in V'} \sigma_u \quad \text{s.t.}\\
-	x \in \{0,1\}^{V'}\\
-	e \in [0,1]^{E'}\\
-	\text{(1) }\forall (u,v), (u,v') \in E' : v' \neq v, c(v) = c(v') \quad e_{(u,v)} \cdot e_{(u,v')} = 0\\
-	\forall u, v \in V': c(v) \neq c(u) \quad x_u + x_v \le 1\\
-	\forall (u,v) \in E' \quad e_{(u,v)} \le \alpha_{(u,v)} \cdot x_u + (1 - \alpha_{(u,v)}) x_v\\
-\end{cases}
-\]
-Where the extra constraint (1) makes sure that two edges incident to the same node,
-associated to two nodes of the same color and cannot both contribute to the objective.
+$C'$ the set of colors associated to nodes in $V'$ (each node having a single color).
 
-Solving it is straightforward: for each color choose the best node. The solution is:
-$\sum_{k \in C'} \max_{u \in V' : c(u) = k}{(\sigma_u + \sum_{k' \in C'}{ \max_{v \in V' : c(v) = k'}{w^{(u)}(u,v)}})}$
+I consider all subgraphs of $V'$ instead of only connected ones.
+Next I present two ways to get a useful relaxation out of this formulation.
 
-The best values for $\alpha$ can be found with the following linear program.
-\[
-\begin{cases}
-	\min \sum_{k \in C} \gamma_k\\
-	\alpha \in [0,1]^{E'}\\
-	\beta \in \mathbb{R}_+^{V' \times C'}\\
-	\gamma \in \mathbb{R}_+^{C'}\\
-	\forall (u,v) \in E' \quad \beta_{u,c(v)} \ge w(u,v) \cdot \alpha_{(u,v)} \land \beta_{v,c(u)} \ge w(u,v) \cdot (1-\alpha_{(u,v)})\\
-	\forall u \in V' \quad \gamma_{c(u)} \ge \sigma_u + \sum_{k \in C'} \beta_{u,k}\\
-\end{cases}
-\]
-And its objective is the solution, providing a dual bound for the BnB.
+\subsubsection{Bound with continuous relaxation}
+\begin{numcases}{\label{pricing_cr}}
+	\max \sum_{(u,v) \in E'}{e_{(u,v)} \cdot w(u,v)} + \sum_{u \in V'} \sigma_u \quad \text{s.t.} \nonumber \\
+	x \in [0,1]^{V'} \label{pricing_cr_x} \\
+	e \in [0,1]^{E'} \label{pricing_cr_e} \\
+	\forall k \in C' \quad \sum_{u \in V' : k \in c(u)}{x_u} \le 1 \label{pricing_cr_color_const} \\
+	\forall k \in C' \forall u \in V' \quad \sum_{v \in V' : (u,v) \in E', k \in c(v)}{e_{(u,v)}} \le x_u \label{pricing_cr_edge_const}
+\end{numcases}
+This is a continuous relaxation of the exact solution (\ref{pricing_ilp}),\\
+except that (\ref{pricing_cr_edge_const}) is a tighter bound on edges.
 
-When each node has a single color, this provides tighter bounds than a linear relaxation, for example in the following graph (where $\sigma_u$ is written next to each node $u$):
-
+This formulation is tighter, for example, in the following graph (where $\sigma_u$ is written next to each node $u$):
 \begin{center}
 \def\svgwidth{.5\columnwidth}
 \input{./res/graph.pdf_tex}
 \end{center}
+The solution with the tight bound is $0.0$, while the one with the looser bound is $0.5$.\\
+This bound is tighter also on the ILP for the whole problem (\ref{ilp}), and it can be seen from the same graph.
 
-The surrogate solution achieves $0.0$ by setting $\alpha_{(1,2)}=\alpha_{(1,3)}=1$.
+\subsubsection{Bound with surrogate relaxation}
 
-While the linear relaxation reaches $0.5$ with $x_1 = x_2 = x_3 = 0.5$.
+I split each edge's weight across its two nodes, obtaining a surrogate relaxation for each edge of constraints (\ref{pricing_ilp_edge}) of the ILP formulation.\\
+
+Each edge $(u,v)$ is split with $0 \le \alpha_{(u,v)} \le 1$ of its value goint towards $u$ and $1 - \alpha_{(u,v)}$ going towards $v$.
+
+The relaxed problem looks as follows:
+\begin{numcases}{}
+	\max \sum_{(u,v) \in E'}{e_{(u,v)} \cdot w(u,v)} + \sum_{u \in V'} \sigma_u \quad \text{s.t.} \nonumber \\
+	x \in \{0,1\}^{V'} \nonumber \\
+	e \in [0,1]^{E'} \nonumber \\
+	\forall (u,v), (u,v') \in E' : v' \neq v, c(v) = c(v') \quad e_{(u,v)} \cdot e_{(u,v')} = 0 \label{pricing_sr_1} \\
+	\forall k \in C \quad \sum_{u \in V : k \in c(u)} x_{u} \le 1 \nonumber \\
+	\forall (u,v) \in E' \quad e_{(u,v)} \le \alpha_{(u,v)} \cdot x_u + (1 - \alpha_{(u,v)}) x_v \label{pricing_sr_2}
+\end{numcases}
+Where (\ref{pricing_sr_2}) are the convex combinations of (\ref{pricing_ilp_edge}) from the ILP formulation,
+and the extra constraint (\ref{pricing_sr_1}) makes sure that two edges incident to the same node,
+associated to two nodes of the same color and cannot both contribute to the objective.
+
+Solving it given $\alpha$ is straightforward: for each color choose the best node.
+If we call $w^{(u)}(u,v) = \alpha_{(u,v)} \cdot w(u,v)$ and $w^{(v)}(u,v) = (1-\alpha_{(u,v)}) \cdot w(u,v)$,
+the solution is:
+\begin{equation}
+\label{eqn:sr_sol}
+\sum_{k \in C'} \max_{u \in V' : c(u) = k}{(\sigma_u + \sum_{k' \in C'}{ \max_{v \in V' : c(v) = k'}{w^{(u)}(u,v)}})}
+\end{equation}
+
+The best values for $\alpha$ can be found with the following linear program.
+\begin{numcases}{}
+	\min \sum_{k \in C} \gamma_k \nonumber \\
+	\alpha \in [0,1]^{E'} \label{pricing_sr_alpha} \\
+	\beta \in \mathbb{R}_+^{V' \times C'} \label{pricing_sr_beta} \\
+	\gamma \in \mathbb{R}_+^{C'} \label{pricing_sr_gamma} \\
+	\forall (u,v) \in E' \quad \beta_{u,c(v)} \ge w(u,v) \cdot \alpha_{(u,v)} \land \beta_{v,c(u)} \ge w(u,v) \cdot (1-\alpha_{(u,v)}) \label{pricing_sr_beta_const} \\
+	\forall u \in V' \quad \gamma_{c(u)} \ge \sigma_u + \sum_{k \in C'} \beta_{u,k} \label{pricing_sr_gamma_const} \\
+\end{numcases}
+$\beta$ takes care of the inner $\max$ in (\ref{eqn:sr_sol}), while $\gamma$ of the outer one.
+
+When each node has a single color associated to it,
+this bound is just as tight as the one from the continuous relaxation (\ref{pricing_cr}).
+
+In fact that these LPs are duals of each other:\\
+$\gamma$ (\ref{pricing_sr_gamma}) corresponds to the color constraints (\ref{pricing_cr_color_const}),\\
+$\beta$ (\ref{pricing_sr_beta}) corresponds to the edge constraints (\ref{pricing_cr_edge_const}),\\
+the constraints on $\beta$ (\ref{pricing_sr_beta_const}) correspond to $e$ (\ref{pricing_cr_e}),\\
+the constraints on $\gamma$ (\ref{pricing_sr_gamma_const}) correspond to $x$ (\ref{pricing_cr_x}),\\
+$\alpha$ does not correspond to anything, and it can be shown to be reduntant:
+to have this LP correspond 1 to 1 to the LP from the continuous relaxation,
+you would have to remove $\alpha$ and rewrite (\ref{pricing_sr_beta_const}) as $\forall (u,v) \in E' \quad \beta_{u,c(v)} + \beta_{v,c(u)} \ge w(u,v)$.
 
 That said, solving a linear program at each node in the BnB was slow,
 so I opted to just use the following heuristic for the surrogate coefficients:
 $\alpha_{(u,v)} = \frac{1 - \sigma_u + \max(\sigma_u,\sigma_v)}{2 - \sigma_u - \sigma_v + 2 \cdot \max(\sigma_u,\sigma_v)}$.
 
-I also tried to compute the optimal coefficients at the root of the BnB,
+I also tried to compute the optimal surrogate coefficients at the root of the BnB,
 and use them for the other nodes too, but it did not perform as well.
 
 \subsection{Heuristic pricing}
@@ -415,7 +440,7 @@ I would have expected \textit{bnb nhp} to also use less BnB nodes on average, bu
 
 \subsection{Datasets from previous works}
 \label{dfpw}
-I tested this solution on \parencite{mop2012}, also used in \parencite{ccc2025}. These instances have been generated from the BAliBASE 3.0 benchmark \parencite{balibase},
+I tested this solution on the dataset from \parencite{mop2012}, also used in \parencite{ccc2025}. These instances have been generated from the BAliBASE 3.0 benchmark \parencite{balibase},
 a benchmark for multiple sequence alignment.
 
 It contains 135 graphs, each with several connected components.
@@ -448,7 +473,7 @@ Compared to the clique partitioning based solution in \parencite{mop2013},
 this BnP solution seems to have a harder time handling larger $c$, and an easier time handling larger $p_x$.
 
 
-\section{Conclusions} %% TODO: update
+\section{Conclusions}
 I presented an approach based on column generation for the MOP problem.
 
 It should be possible to adapt this approach to the MEC and MCC problems too,
