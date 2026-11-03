@@ -19,6 +19,7 @@ struct epbnb_state {
 	bitvec untakeable; // nodes discarded or taken or with uncompatible colors
 	double score;	   // score achieved until now
 	epbnb_state(const pricing_problem &p) : nodes(p.g.n()), untakeable(p.g.n()), score(0) {}
+	/// add a node to the taken set of nodes
 	void take(const int u, const pricing_problem &p) {
 		score -= p.cost[u];
 		for(auto &[v, w] : p.g.g[u])
@@ -28,13 +29,16 @@ struct epbnb_state {
 		for(const auto v : ~untakeable)
 			if(!compatible(p.g.c[u], p.g.c[v])) untakeable.set1(v);
 	}
+	/// forbid a node from being taken
 	void forbid(const int u) { untakeable.set1(u); }
+	/// returns 0 if in a base case
 	bool can_branch(const pricing_problem &p) const {
 		for(const auto u : nodes)
 			for(const auto &[v, w] : p.g.g[u])
 				if(!untakeable[v]) return 1;
 		return 0;
 	}
+	/// returns what node to branch on
 	int branch_node(const pricing_problem &p) const {
 		int minv = p.g.n();
 		double bv = -std::numeric_limits<double>::infinity();
@@ -59,6 +63,7 @@ struct epbnb_state {
 		assert(minv!=p.g.n());
 		return minv;
 	}
+	/// branch on a node, returns (taken,forbidden)
 	std::array<epbnb_state, 2> branch(const pricing_problem &p, const int minv) const {
 		epbnb_state take_node(*this);
 		epbnb_state forbid_node(*this);
@@ -66,6 +71,7 @@ struct epbnb_state {
 		forbid_node.forbid(minv);
 		return {take_node, forbid_node};
 	}
+	/// update the set of untakeable nodes, for efficiency purposes it might not find all of them
 	void update_untakeable_reach(const pricing_problem &p) {
 		if(untakeable.count_ones()==0) return;
 		bitvec reach(p.g.n());
@@ -92,7 +98,7 @@ struct epbnb_state {
 		while(!q.empty()) {
 			auto [u, d] = q.front();
 			q.pop();
-			if(d==cl) continue;
+			if(d==cl) continue; // stop at |C'|
 			for(auto &[v, w] : p.g.g[u])
 				if(!untakeable[v] && !reach[v] && w>0) {
 					q.push({v, d+1});
@@ -110,10 +116,11 @@ struct epbnb_state {
 					if(wsum>=p.cost[u]) break;
 				}
 			}
-			if(wsum<p.cost[u]) reach.set0(u);
+			if(wsum<p.cost[u]) reach.set0(u); // node is useless, discard it
 		}
 		untakeable |= ~reach;
 	}
+	/// dual bound with surrogate relaxation, using heuristic surrogate coefficients
 	double upper_bound(const pricing_problem &p, const std::vector<int> &msigma) {
 		update_untakeable_reach(p);
 		std::vector<double> bbc(p.g.C(), 0); // best reachable value by color
@@ -143,7 +150,7 @@ struct epbnb_state {
 
 		return ans;
 	}
-	// linearize the thing
+	/// dual bound with cr
 	double upper_bound_lp(const pricing_problem &p) const {
 		// update_untakeable_reach(p);
 		const double inf = kHighsInf;
@@ -245,7 +252,7 @@ struct epbnb_state {
 		assert(h.getModelStatus()==HighsModelStatus::kOptimal);
 		return h.getObjectiveValue()+score;
 	}
-	// solve the surrogate with lp
+	/// dual bound with the sr
 	double upper_bound_surrogate_lp(const pricing_problem &p) const {
 		// update_untakeable_reach(p);
 		const double inf = kHighsInf;
@@ -337,6 +344,7 @@ struct epbnb_state {
 		assert(h.getModelStatus()==HighsModelStatus::kOptimal);
 		return h.getObjectiveValue()+score;
 	}
+	/// greedily finds a primal from the current state, unused
 	void update_primal_greedy(const pricing_problem &p, double &primal, bitvec &ans) const {
 		bitvec nnodes = nodes;
 		bitvec nuntakeable = untakeable;
@@ -405,7 +413,7 @@ struct epbnb_state {
 			}
 	}
 };
-
+/// main body of the bnb
 void epbnb(const pricing_problem &p, const epbnb_state state, std::vector<int> &msigma, const double dual,
 		   double &primal, bitvec &ans) {
 	pricing_bnb_nodes += 1;
@@ -436,6 +444,7 @@ void epbnb(const pricing_problem &p, const epbnb_state state, std::vector<int> &
 		epbnb(p, s2, msigma, d2, primal, ans);
 	}
 }
+/// first node of the bnb needs to split differently in order to get decent bounds on reachable nodes
 void epbnb0(const pricing_problem &p, epbnb_state state, double &primal, bitvec &ans) {
 	pricing_bnb_nodes += 1;
 	std::vector<int> ord(p.g.n(), 0);
@@ -452,7 +461,7 @@ void epbnb0(const pricing_problem &p, epbnb_state state, double &primal, bitvec 
 		for(const auto &[v, w] : p.g.g[u]) msigma[v] += w;
 	}
 }
-
+/// exact pricing with the fast bnb
 std::vector<mcolumn> exact_pricing_bnb(pricing_problem p) {
 	pricing_bnb_runs += 1;
 	epbnb_state s0(p);

@@ -1,8 +1,10 @@
+#pragma once
+
 #include "common.cpp"
 #include "scorer.cpp"
 #include <Highs.h>
 #include <map>
-
+/// upper bound on Q
 int max_useful_partitions(const problem &p) {
 	// compute bound on max useful number of partitions
 	vector<int> nc;
@@ -14,7 +16,7 @@ int max_useful_partitions(const problem &p) {
 	for(auto &c : nc) { max_edges += c*(c-1)/2; }
 	return std::min((int)p.n(), int(sqrt(max_edges*2+0.25)+0.5+0.001));
 }
-
+/// solves MOP with ILP
 std::vector<std::vector<int>> ilp(problem p) {
 	std::vector<std::vector<int>> g(p.n());
 	std::map<std::array<int, 2>, int> eis;

@@ -5,7 +5,7 @@ COMMAND="timeout 180s ./main.out"
 for var in "$@"
 do
 	echo "startgraph $var"
-	for mode in "stats npp" "stats" "bnp" "bnp npp" "bnp nhp" "bnp nhs"
+	for mode in "test"
 	do
 		echo "start $mode"
 		$COMMAND "$var" $mode

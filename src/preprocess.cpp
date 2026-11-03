@@ -240,7 +240,7 @@ void update_finished(const problem &p, const std::vector<std::vector<int>> &g, s
 				for(auto &u : q) finished[u] = 1;
 		}
 }
-
+/// returns some of edges on the boundary of a component that can be removed
 std::vector<std::array<int, 2>> can_remove(const problem &p, const std::vector<std::vector<int>> &g,
 										   const std::vector<int> comp, const std::vector<int> &col_node,
 										   const std::vector<bool> &incomp) {
@@ -268,6 +268,7 @@ std::vector<std::array<int, 2>> can_remove(const problem &p, const std::vector<s
 	}
 	return ans;
 }
+/// tries to remove edges going out of components constructed greedily starting from each node
 int try_with_greedy(problem &p, std::vector<std::vector<int>> &g, const std::vector<bool> &ignore) {
 	const int C = *std::max_element(p.color.begin(), p.color.end())+1;
 	std::vector<bool> incomp(p.n());
@@ -347,7 +348,8 @@ int try_with_greedy(problem &p, std::vector<std::vector<int>> &g, const std::vec
 	return removed.size();
 }
 
-// try with both heuristics, if fail try greedily constructed sets (like before change)
+// try with both heuristics and greedy
+/// removes some useless edges from the problem
 void preprocess(problem &p) {
 	std::vector<bool> finished(p.n());
 	std::vector<std::vector<int>> g(p.n());

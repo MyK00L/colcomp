@@ -10,6 +10,7 @@
 #include <queue>
 #include <set>
 
+/// total number of bnp nodes visited
 int bnp_nodes = 0;
 /// global set of columns, only insert sorted vectors of nodes with indeces in the original graph
 std::set<std::vector<int>> columns;
@@ -104,7 +105,7 @@ std::pair<int, std::vector<std::vector<int>>> primal_with_all_columns(const mgra
 
 	return {obj, ans};
 }
-
+/// utility function, used in the bnp
 std::vector<int> intersect(const std::vector<std::array<int, 2>> gu, const std::vector<int> ci, const int exupto) {
 	auto i = gu.begin();
 	auto ie = gu.end();
@@ -132,6 +133,7 @@ struct BnpNode {
 	int depth;
 	bool operator<(const BnpNode &o) const { return std::make_pair(dual, -depth)<std::make_pair(o.dual, -o.depth); }
 };
+/// main body of the bnp
 void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best) {
 	if(mg0.is_trivial()) { // base case: all components are colorful
 		int pv = mg0.m();
@@ -147,16 +149,16 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 	std::priority_queue<BnpNode> maxheap;
 	maxheap.push(n0);
 	while(!maxheap.empty()) {
-		bnp_nodes += 1;
 		auto [mg, base, dual, depth] = maxheap.top();
 		maxheap.pop();
 		std::cerr<<"BNPNODE "<<bnp_nodes<<": depth="<<depth<<" base="<<base<<" dual="<<dual
-				 <<" primal="<<primal<<std::endl;
-		if(primal>=dual) {
+		<<" primal="<<primal<<std::endl;
+		if(primal>=dual) { // fathom with a better primal that could have been computed in the meantime
 			std::cerr<<"prune1"<<std::endl;
 			continue;
 		}
-		if(mg.is_trivial()) {
+		bnp_nodes += 1; // only count nodes that have computed a dual bound
+		if(mg.is_trivial()) { // base case: all components are colorful
 			int pv = base+mg.m();
 			if(pv>primal) {
 				primal = pv;
@@ -174,7 +176,7 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 		double dv = base+m.run(primal-base);
 		dual = std::min(dual, int(dv+1e-4));
 		for(auto col : m.get_columns()) { columns.insert(col); }
-		if(bnp_nodes%16==1) {
+		if(bnp_nodes%16==1) { // compute a primal bound every 16 nodes (even if it would be fathomable after the dual bound)
 			auto [pv, pcols] = primal_with_all_columns(mg0, primal);
 			if(pv>primal) {
 				primal = pv;
@@ -182,14 +184,14 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 				std::cerr<<"NEW PRIMAL: "<<primal<<std::endl;
 			}
 		}
-		if(primal>=dual) {
+		if(primal>=dual) { // fathom
 			std::cerr<<"prune2"<<std::endl;
 			continue;
 		}
 
 		const std::vector<double> cv = m.highs.getSolution().col_value;
 		assert(cv.size()==m.columns.size());
-		// find where to split
+		// find what edge to branch on
 		std::array<int, 2> split = {-1, -1};
 		{
 			std::map<std::array<int, 2>, double> tmp;
@@ -210,7 +212,7 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 		}
 		assert(split[0]!=-1);
 		std::cerr<<"branch on ("<<split[0]<<","<<split[1]<<")"<<std::endl;
-		// TODO: split components
+		// could have considered splitting components, but it would probably become a mess
 		{ // merge edge
 			mgraph mg1(mg);
 			int w = mg1.merge_edge(split[0], split[1]);
@@ -225,7 +227,7 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 		}
 	}
 }
-
+/// for each connected component in the instance, starts a bnp
 std::vector<std::vector<int>> bnp_main(problem p, bool hot_start = 1) {
 	columns = std::set<std::vector<int>>(); // reset columns
 	// single-element columns for feasibility are not needed

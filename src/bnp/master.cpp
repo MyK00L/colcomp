@@ -26,6 +26,7 @@ enum ExactPricingMode {
 Master::Master(mgraph _mg, std::vector<mcolumn> _columns)
 	: g(_mg), columns(_columns), stab(g.n(), 0), lagrange(std::numeric_limits<double>::infinity()) {}
 
+/// setup the RLMP
 void Master::setup_highs() {
 	highs.clear();
 	highs.setOptionValue("output_flag", false);
@@ -41,7 +42,7 @@ void Master::setup_highs() {
 	// could also use -inf for lower
 	for(size_t i = 0; i<rows.size(); ++i) { highs.addRow(0, 1, (int)rows[i].size(), rows[i].data(), ones.data()); }
 }
-
+/// solve the RLMP
 void Master::update_lp() {
 	HighsStatus hs = highs.run();
 	if(hs!=HighsStatus::kOk) { std::cerr<<"Highs status: "<<highsStatusToString(hs)<<std::endl; }
@@ -57,13 +58,13 @@ bool Master::generate_columns() {
 
 	bool is_exact = 0;
 	std::vector<mcolumn> pricing_columns;
-	if(use_heuristic_pricing) {
+	if(use_heuristic_pricing) { // heuristic pricing
 		pricing_problem pp(g, duals);
 		pricing_columns = heuristic_pricing_beamsearch(pp);
 	}
-	if(pricing_columns.empty()) {
+	if(pricing_columns.empty()) { // exact pricing
 		for(int i = 0; i<g.n(); ++i) { // single parameter stabilization
-			duals[i] = duals[i]*0.8+stab[i]*0.2;
+			duals[i] = duals[i]*0.8+stab[i]*0.2; // value of 0.2 was found empirically
 		}
 		pricing_problem pp(g, duals);
 		if(exact_pricing_mode==ExactPricingMode::ILP) {
@@ -76,25 +77,25 @@ bool Master::generate_columns() {
 		is_exact = 1;
 	}
 
-	double dual_sum = 0;
+	double dual_sum = 0; // sum(lambda)
 	for(auto &i : duals) dual_sum += i;
 
 	vector<double> ones(g.n(), 1);
 	if(pricing_columns.size()) {
-		for(auto &col : pricing_columns) {
+		for(auto &col : pricing_columns) { // as of now, only 1 new column per run is generated, so this only runs for one iteration
 			if(is_exact) {
-				const int n_partitions = g.n(); // could use a better bound
+				const int n_partitions = g.n(); // could use a better bound, but it would not matter
 				// LR obj: max sum_{i}{lambda_i}+|P|*( sum_{ei}{e(ei)}-sum_{i}{lamda_i*x_i} )
 				double tmp = col.value;
 				for(auto &i : col.nodes) tmp -= duals[i];
 				tmp *= n_partitions;
 				tmp += dual_sum;
-				if(tmp<lagrange) {
+				if(tmp<lagrange) { // found a new lagrangean dual bound
 					lagrange = tmp;
-					stab = duals;
+					stab = duals; // update single parameter stabilization vector
 				}
 			}
-			columns.push_back(col);
+			columns.push_back(col); // add the new column
 			highs.addCol((double)col.value, 0, 1, (int)col.nodes.size(), col.nodes.data(), ones.data());
 		}
 		return true;

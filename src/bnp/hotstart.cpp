@@ -21,7 +21,7 @@ void gen_with_greedy(const problem &p, const std::vector<std::vector<int>> &g, s
 		}
 		for(;;) {
 			int minn = p.n()*2;
-			int minu = -1;
+			int minu = -1; // compatible node that minimizes the cut with the rest of the graph
 			for(const auto u : neigh)
 				if(col_node[p.color[u]]==-1) {
 					int unn = 0;

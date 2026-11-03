@@ -21,7 +21,7 @@ std::vector<mcolumn> exact_pricing_ilp(const pricing_problem &p) {
 	h.changeObjectiveSense(ObjSense::kMaximize);
 	int coli = 0;
 	for(size_t i = 0; (int)i<p.g.n(); ++i) {
-		h.addVar(0, 1);
+		h.addVar(0, 1); // x_i
 		h.changeColIntegrality(coli, HighsVarType::kInteger);
 		++coli;
 	}
@@ -40,33 +40,16 @@ std::vector<mcolumn> exact_pricing_ilp(const pricing_problem &p) {
 				val.push_back(1);
 			}
 		}
+		// forall k: sum_{u: k in c(u)}{x_u}<=1
 		if(ind.size()) h.addRow(-inf, 1, ind.size(), ind.data(), val.data());
 	}
 
-	// old edge constraints
-	/*
-	for(int i = 0; i<int(p.g.n()); ++i) {
-		for(auto [j, w] : p.g.g[i])
-			if(j>i && w>0) {
-				h.addVar(0, 1);
-				// h.changeColIntegrality(coli, HighsVarType::kImplicitInteger);
-				int nz[2] = {i, coli};
-				double val[2] = {-1, 1};
-				h.addRow(-inf, 0, 2, nz, val);
-				nz[0] = j;
-				h.addRow(-inf, 0, 2, nz, val);
-				h.changeColCost(coli, w);
-				++coli;
-			}
-	}
-	*/
-
-	// tighter edge constraints
+	// edge constraints
 	std::map<std::array<int, 2>, int> eis;
 	for(int i = 0; i<int(p.g.n()); ++i) {
 		for(auto [j, w] : p.g.g[i])
 			if(j>i && w>0) {
-				h.addVar(0, 1);
+				h.addVar(0, 1); // e_(u,v)
 				eis[{i, j}] = coli;
 				eis[{j, i}] = coli;
 				h.changeColCost(coli, w);
@@ -84,7 +67,8 @@ std::vector<mcolumn> exact_pricing_ilp(const pricing_problem &p) {
 						vals.push_back(1.0);
 					}
 				}
-			if(inds.size()>1) { h.addRow(-inf, 0, inds.size(), inds.data(), vals.data()); }
+			// forall u,k: sum_{v:k in c(v)}{e_(u,v)}<=x_u
+			if(inds.size()>1) h.addRow(-inf, 0, inds.size(), inds.data(), vals.data());
 		}
 	}
 

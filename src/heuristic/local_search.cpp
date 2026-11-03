@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "common.cpp"
-
+/// if there is one, returns a cycle of the functional graph pre
 std::vector<int> detect_cycle(const std::vector<std::vector<std::array<int, 2>>> &g, const std::vector<int> pre) {
 	std::vector<int> stk;
 	std::vector<bool> instk(g.size());
@@ -36,7 +36,8 @@ std::vector<int> detect_cycle(const std::vector<std::vector<std::array<int, 2>>>
 	return {};
 }
 
-// https://konaeakira.github.io/posts/using-the-shortest-path-faster-algorithm-to-find-negative-cycles.html
+// idea from: https://konaeakira.github.io/posts/using-the-shortest-path-faster-algorithm-to-find-negative-cycles.html
+/// finds a negative weight cycle in g in O(nm)
 std::vector<int> find_negative_cycle_spfa(const std::vector<std::vector<std::array<int, 2>>> &g) {
 	std::vector<int> len(g.size()), dist(g.size()), pre(g.size(), -1);
 	std::queue<int> q;
@@ -66,8 +67,7 @@ std::vector<int> find_negative_cycle_spfa(const std::vector<std::vector<std::arr
 	return detect_cycle(g, pre);
 }
 
-// large scale neighbourhood search with improvement graph/cyclic exchanges
-
+/// large scale neighbourhood search with improvement graph/cyclic exchanges for a MOP instance and solution
 int local_search_color(const problem &p, const std::vector<std::vector<int>> og, std::vector<int> &compof,
 					   const int color, std::vector<std::vector<int>> &comps) {
 	std::vector<std::vector<std::array<int, 2>>> g(comps.size()+1);

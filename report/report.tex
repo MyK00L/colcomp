@@ -89,17 +89,15 @@ Thus a minimal solution always has at most $Q = \lfloor \sqrt{2K + \frac{1}{4}} 
 \subsection{Master and Pricing problems}
 In the ILP formulation, (\ref{ilp1}) are linking constraints, we can separate these from the others obtaining a Dantzig-Wolfe decomposition \parencite{dwd} with identical subproblems.
 
-We convexify constraints (\ref{ilp2}) and (\ref{ilp3}), and do column generation, where constrains in (\ref{ilp1}) remain in the master problem and the other go in the pricing subproblem.
+We convexify constraints (\ref{ilp2}) and (\ref{ilp3}), and do column generation, where constraints in (\ref{ilp1}) remain in the master problem and the other go in the pricing subproblem.
 
 The restricted linear master problem is:
-\[
-\begin{cases}
-	\max \sum_{i=1}^{p} \sum_{q=1}^{Q} \sum_{(u,v) \in E} e^{(i)}_{q, (u,v)} \cdot \theta_i \quad \text{s.t.}\\
-	\theta \in [0,1]^{p}\\
-	\sum_{i=1}^{p} \theta_i = 1\\
-	\forall u \in V \quad \sum_{i=1}^{p} \sum_{q=1}^{Q} x_{q,u}^{(i)} \cdot \theta_i \le 1\\
-\end{cases}
-\]
+\begin{numcases}{}
+	\max \sum_{i=1}^{p} \sum_{q=1}^{Q} \sum_{(u,v) \in E} e^{(i)}_{q, (u,v)} \cdot \theta_i \quad \text{s.t.} \nonumber\\
+	\theta \in [0,1]^{p} \nonumber\\
+	\sum_{i=1}^{p} \theta_i = 1 \label{rlmp_1_conv}\\
+	\forall u \in V \quad \sum_{i=1}^{p} \sum_{q=1}^{Q} x_{q,u}^{(i)} \cdot \theta_i \le 1 \label{rlmp_1_part}
+\end{numcases}
 Where $p$ is the number of generated columns.
 
 And the pricing subproblem is:
@@ -112,9 +110,9 @@ And the pricing subproblem is:
 	\forall q \in Q \forall (u,v) \in E \quad e_{q,(u,v)} \le x_{q,u} \land e_{q,(u,v)} \le x_v\\
 \end{cases}
 \]
-Where $\mu$ is the dual variable of the convexity constraint, and $\lambda$ is the dual variable of the other constraints.
+Where $\mu$ is the dual variable of the convexity constraint (\ref{rlmp_1_conv}), and $\lambda$ is the dual variable of the partition constraints (\ref{rlmp_1_part}).
 
-Of course, since the subproblems are independent and identical, they can be separated,
+Of course, since the subproblems are independent (and identical), they can be separated,
 so the $Q$ dimension is now superfluous and the problem can be rewritten as:
 \[
 \begin{cases}
@@ -372,6 +370,7 @@ the constraints on $\gamma$ (\ref{pricing_sr_gamma_const}) correspond to $x$ (\r
 $\alpha$ does not correspond to anything, and it can be shown to be reduntant:
 to have this LP correspond 1 to 1 to the LP from the continuous relaxation,
 you would have to remove $\alpha$ and rewrite (\ref{pricing_sr_beta_const}) as $\forall (u,v) \in E' \quad \beta_{u,c(v)} + \beta_{v,c(u)} \ge w(u,v)$.
+The upper bound for $e$ is also superflous.
 
 That said, solving a linear program at each node in the BnB was slow,
 so I opted to just use the following heuristic for the surrogate coefficients:

@@ -8,7 +8,7 @@
 #include <queue>
 #include <vector>
 
-/// graph where nodes can be merged and have colors
+/// graph representation where nodes can be merged
 struct mgraph {
 	/// original number of nodes in the whole graph
 	int orig_n;
@@ -257,6 +257,7 @@ struct mgraph {
 
 		return wsum;
 	}
+	/// bound on Q
 	int tight_partition_bound() const {
 		std::vector<int> nc;
 		for(auto &cs : c)
