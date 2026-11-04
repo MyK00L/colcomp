@@ -444,6 +444,15 @@ void epbnb(const pricing_problem &p, const epbnb_state state, std::vector<int> &
 		epbnb(p, s2, msigma, d2, primal, ans);
 	}
 }
+mcolumn make_mcolumn(const pricing_problem &p, const bitvec &ans, double primal) {
+	mcolumn c;
+	for(auto i : ans) {
+		c.nodes.push_back(i);
+		primal += p.cost[i];
+	}
+	c.value = int(round(primal));
+	return c;
+}
 /// first node of the bnb needs to split differently in order to get decent bounds on reachable nodes
 void epbnb0(const pricing_problem &p, epbnb_state state, double &primal, bitvec &ans) {
 	pricing_bnb_nodes += 1;
@@ -465,19 +474,36 @@ void epbnb0(const pricing_problem &p, epbnb_state state, double &primal, bitvec 
 std::vector<mcolumn> exact_pricing_bnb(pricing_problem p) {
 	pricing_bnb_runs += 1;
 	epbnb_state s0(p);
-	double primal = 0;
+	double best_primal = 1e-7; // same as highs default tolerance
 	bitvec ans = s0.nodes;
-	epbnb0(p, s0, primal, ans);
-	if(primal>1e-6) {
-		mcolumn c;
-		double val = primal;
-		for(int i = 0; i<p.g.n(); ++i)
-			if(ans[i]) {
-				c.nodes.push_back(i);
-				val += p.cost[i];
+
+	std::vector<mcolumn> columns;
+
+	pricing_bnb_nodes += 1;
+	std::vector<int> ord(p.g.n(), 0);
+	std::iota(ord.begin(), ord.end(), 0);
+	std::vector<int> msigma(p.g.n(), 0);
+	// std::sort(ord.begin(),ord.end(),[&](int i, int j){return p.cost[i]<p.cost[j];});
+	for(auto &u : ord) {
+		const double p0 = std::min(0.1, best_primal/2); // TODO: maybe better limits?
+		double primal = p0;
+		epbnb_state si = s0;
+		si.take(u, p);
+		for(const auto &[v, w] : p.g.g[u]) msigma[v] -= w;
+		const double d1 = si.upper_bound(p, msigma);
+		epbnb(p, si, msigma, d1, primal, ans);
+		s0.forbid(u);
+		for(const auto &[v, w] : p.g.g[u]) msigma[v] += w;
+
+		if(primal>p0) {
+			columns.push_back(make_mcolumn(p, ans, primal));
+			if(primal>best_primal) {
+				std::swap(columns[0], columns.back());
+				best_primal = primal;
 			}
-		c.value = int(round(val));
-		return {c};
+		}
 	}
-	return {};
+	// TODO: filter by>best_primal/2
+	// std::cerr<<"epb |columns|="<<columns.size()<<" obj="<<best_primal<<std::endl;
+	return columns;
 }

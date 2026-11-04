@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstdint>
@@ -167,6 +168,8 @@ struct bitvec {
 bool compatible(const std::vector<int> &a, const std::vector<int> &b) {
 	if(a.size()==1 && b.size()==1) return a[0]!=b[0]; // fastpath
 	if(a.size()>b.size()) return compatible(b, a);
+	// assert(std::is_sorted(a.begin(), a.end()));
+	// assert(std::is_sorted(b.begin(), b.end()));
 	auto bb = b.begin();
 	for(auto &x : a) {
 		bb = std::lower_bound(bb, b.end(), x);

@@ -187,14 +187,13 @@ struct mgraph {
 	/// returns the number of edges between u and v
 	int merge_edge(int u, int v) {
 		if(u>v) std::swap(u, v);
+		// assert(std::is_sorted(g[u].begin(), g[u].end()));
+		// assert(std::is_sorted(g[v].begin(), g[v].end()));
 		const int ret = edge_val(u, v);
-
-		std::sort(g[u].begin(), g[u].end());
-		std::sort(g[v].begin(), g[v].end());
-		auto pu = std::move_iterator(g[u].begin());
-		const auto eu = std::move_iterator(g[u].end());
-		auto pv = std::move_iterator(g[v].begin());
-		const auto ev = std::move_iterator(g[v].end());
+		auto pu = g[u].begin();
+		const auto eu = g[u].end();
+		auto pv = g[v].begin();
+		const auto ev = g[v].end();
 		std::vector<std::array<int, 2>> ngi;
 		ngi.reserve(g[u].size()+g[v].size());
 		while(pu!=eu || pv!=ev) {
@@ -210,21 +209,19 @@ struct mgraph {
 				++pv;
 			}
 		}
-		g.push_back(std::move(ngi));
+		g.push_back(ngi);
 		for(auto [j, w] : g.back()) g[j].push_back({(int)g.size()-1, w});
 
 		std::vector<int> nc;
 		nc.reserve(c[u].size()+c[v].size());
-		std::merge(std::move_iterator(c[u].begin()), std::move_iterator(c[u].end()), std::move_iterator(c[v].begin()),
-				   std::move_iterator(c[v].end()), std::back_insert_iterator(nc));
-		c.push_back(std::move(nc));
+		std::merge(c[u].begin(), c[u].end(), c[v].begin(), c[v].end(), std::back_insert_iterator(nc));
+		c.push_back(nc);
 
 		std::vector<int> ng;
 		ng.reserve(groups[u].size()+groups[v].size());
-		std::merge(std::move_iterator(groups[u].begin()), std::move_iterator(groups[u].end()),
-				   std::move_iterator(groups[v].begin()), std::move_iterator(groups[v].end()),
+		std::merge(groups[u].begin(), groups[u].end(), groups[v].begin(), groups[v].end(),
 				   std::back_insert_iterator(ng));
-		groups.push_back(std::move(ng));
+		groups.push_back(ng);
 
 		delete_nodes({u, v});
 
@@ -234,6 +231,9 @@ struct mgraph {
 	}
 	/// remove edge (u,v) and returns its weight
 	int remove_edge(int u, int v) {
+		if(u>v) std::swap(u, v);
+		// assert(std::is_sorted(g[u].begin(), g[u].end()));
+		// assert(std::is_sorted(g[v].begin(), g[v].end()));
 		int ret = edge_val(u, v);
 		auto ituv = std::lower_bound(g[u].begin(), g[u].end(), std::array<int, 2>({v, 0}),
 									 [](const auto &a, const auto &b) { return a[0]<b[0]; });

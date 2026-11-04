@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.cpp"
 #include "pricing.hpp"
 #include <algorithm>
 #include <array>
@@ -128,8 +129,9 @@ std::vector<mcolumn> heuristic_pricing_beamsearch(const pricing_problem &pp) {
 	singles.reserve(pp.g.n());
 	for(int i = 0; i<int(pp.g.n()); ++i) { singles.push_back(single_node_subgraph(pp, duals, i)); }
 	std::vector<subgraph> beam = singles;
-	double max_v = 0;
-	std::vector<int> max_nz;
+	// double max_v = 0;
+	// std::vector<int> max_nz;
+	std::vector<std::pair<double, std::vector<int>>> nzs;
 	do {
 		// std::cerr<<beam.size()<<' '<<m.n()<<std::endl;
 		maxheap<double> heap(beam.size());
@@ -140,10 +142,7 @@ std::vector<mcolumn> heuristic_pricing_beamsearch(const pricing_problem &pp) {
 			auto [i, v] = heap.top();
 			subgraph nb = merge(beam[i], singles[beam[i].nxt_ind()], duals);
 			nb.value = v;
-			if(v>max_v) {
-				max_v = v;
-				max_nz = nb.nodes;
-			}
+			if(v>1e-2) nzs.push_back({v, nb.nodes});
 			beam[i].edges.pop_back();
 			beam[i].upd_nxt(pp);
 			heap.update(i, beam[i].nxt_val(duals));
@@ -158,6 +157,11 @@ std::vector<mcolumn> heuristic_pricing_beamsearch(const pricing_problem &pp) {
 	// std::cerr<<std::endl;
 	// for(size_t i=0; i<max_nz.size(); ++i) std::cerr<<duals[max_nz[i]]<<' ';
 	// std::cerr<<std::endl;
-	if(max_v>1e-3) return {mcolumn{pp.g.value_for_col(max_nz), max_nz}};
+	sort(nzs.begin(), nzs.end(), [](const auto &c1, const auto &c2) { return c1.first>c2.first; });
+	std::vector<mcolumn> columns;
+	// TODO: limit the number of columns?
+	for(int i = 0; i<(int)nzs.size(); ++i)
+		columns.push_back(mcolumn{pp.g.value_for_col(nzs[i].second), nzs[i].second});
+
 	return {};
 }

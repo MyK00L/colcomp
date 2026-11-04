@@ -6,6 +6,8 @@
 #include "mgraph.cpp"
 #include "scorer.cpp"
 #include <iostream>
+#include <lp_data/HConst.h>
+#include <lp_data/HighsStatus.h>
 #include <map>
 #include <queue>
 #include <set>
@@ -71,7 +73,7 @@ std::pair<int, std::vector<std::vector<int>>> primal_with_all_columns(const mgra
 	for(int i = 0; i<(int)columns.size(); ++i) {
 		inds[i] = i;
 		vals[i] = columns[i].value;
-		highs.addVar(0.0, 1.0);
+		highs.addVar(0.0, kHighsInf);
 		highs.changeColCost(i, columns[i].value);
 		highs.changeColIntegrality(i, HighsVarType::kInteger);
 		for(auto &j : columns[i].nodes) rows[j].push_back(i);
@@ -82,7 +84,7 @@ std::pair<int, std::vector<std::vector<int>>> primal_with_all_columns(const mgra
 	// cut out solutions with the same or lower primal as before
 	highs.addRow(primal+1, kHighsInf, columns.size(), inds.data(), vals.data());
 
-	highs.run();
+	assert(highs.run()==HighsStatus::kOk);
 	assert(highs.getModelStatus()==HighsModelStatus::kOptimal ||
 		   highs.getModelStatus()==HighsModelStatus::kInfeasible);
 	int obj = highs.getModelStatus()==HighsModelStatus::kOptimal ? int(highs.getObjectiveValue()+0.1) : -1;
@@ -133,8 +135,10 @@ struct BnpNode {
 	int depth;
 	bool operator<(const BnpNode &o) const { return std::make_pair(dual, -depth)<std::make_pair(o.dual, -o.depth); }
 };
+// TODO: setup initial primal from the heuristic solution when hotstarting
 /// main body of the bnp
 void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best) {
+	// TODO: keep highs setup here
 	if(mg0.is_trivial()) { // base case: all components are colorful
 		int pv = mg0.m();
 		if(pv>primal) {
@@ -145,20 +149,22 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 		}
 		return;
 	}
+	clock_t time_before_last_primal_search = 0;
+	clock_t time_after_last_primal_search = 0;
 	BnpNode n0 = BnpNode{mg0, 0, mg0.m(), 0};
 	std::priority_queue<BnpNode> maxheap;
 	maxheap.push(n0);
-	int it_for_primal=0;
 	while(!maxheap.empty()) {
 		auto [mg, base, dual, depth] = maxheap.top();
 		maxheap.pop();
 		std::cerr<<"BNPNODE "<<bnp_nodes<<": depth="<<depth<<" base="<<base<<" dual="<<dual
-		<<" primal="<<primal<<std::endl;
+				 <<" primal="<<primal<<" |columns|="<<columns.size()<<" |heap|="<<maxheap.size()
+				 <<std::endl;
 		if(primal>=dual) { // fathom with a better primal that could have been computed in the meantime
-			std::cerr<<"prune1"<<std::endl;
+			std::cerr<<"prune1 ("<<dual<<")"<<std::endl;
 			continue;
 		}
-		bnp_nodes += 1; // only count nodes that have computed a dual bound
+		bnp_nodes += 1;		  // only count nodes that have computed a dual bound
 		if(mg.is_trivial()) { // base case: all components are colorful
 			int pv = base+mg.m();
 			if(pv>primal) {
@@ -177,16 +183,20 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 		double dv = base+m.run(primal-base);
 		dual = std::min(dual, int(dv+1e-4));
 		for(auto col : m.get_columns()) { columns.insert(col); }
-		if((it_for_primal++)%16==0) { // compute a primal bound every 16 nodes (even if it would be fathomable after the dual bound)
+		if(clock()-time_after_last_primal_search >=
+		   time_after_last_primal_search-time_before_last_primal_search) { // compute a primal bound, match the time
+																			 // taken to that of the dual search
+			time_before_last_primal_search = clock();
 			auto [pv, pcols] = primal_with_all_columns(mg0, primal);
 			if(pv>primal) {
 				primal = pv;
 				best = pcols;
 				std::cerr<<"NEW PRIMAL: "<<primal<<std::endl;
 			}
+			time_after_last_primal_search = clock();
 		}
 		if(primal>=dual) { // fathom
-			std::cerr<<"prune2"<<std::endl;
+			std::cerr<<"prune2 ("<<dual<<")"<<std::endl;
 			continue;
 		}
 
@@ -217,13 +227,14 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 		{ // merge edge
 			mgraph mg1(mg);
 			int w = mg1.merge_edge(split[0], split[1]);
-			assert(w);
+			assert(w>0);
 			maxheap.push({mg1, base+w, dual, depth+1});
 		}
 
 		{ // remove edge
 			mgraph mg2(mg);
-			assert(mg2.remove_edge(split[0], split[1]));
+			int w = mg2.remove_edge(split[0], split[1]);
+			assert(w>0);
 			maxheap.push({mg2, base, dual, depth+1});
 		}
 	}

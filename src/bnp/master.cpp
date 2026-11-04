@@ -2,6 +2,7 @@
 
 #include "bnp/master.hpp"
 #include <Highs.h>
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <limits>
@@ -17,6 +18,13 @@
 
 #include "pricing/pricing.hpp"
 
+/*
+MYSTERY:
+If I set columns to be in [0,1] (where 1 is redundant),
+Highs thinks it solved the rlmp optimally when it didn't (has positive col_duals),
+and I generate duplicate columns :(
+*/
+
 enum ExactPricingMode {
 	ILP,
 	BNB,
@@ -30,22 +38,34 @@ Master::Master(mgraph _mg, std::vector<mcolumn> _columns)
 void Master::setup_highs() {
 	highs.clear();
 	highs.setOptionValue("output_flag", false);
+	highs.setOptionValue("solver", "simplex");
+	highs.setOptionValue("simplex_strategy", "primal");
 	highs.changeObjectiveSense(ObjSense::kMaximize);
 
 	vector<vector<int>> rows(g.n());
 	for(int i = 0; i<(int)columns.size(); ++i) {
-		highs.addVar(0.0, 1.0);
+		highs.addVar(0.0, kHighsInf);
 		highs.changeColCost(int(i), columns[i].value);
 		for(auto &j : columns[i].nodes) rows[j].push_back(i);
 	}
 	vector<double> ones(columns.size(), 1);
-	// could also use -inf for lower
-	for(size_t i = 0; i<rows.size(); ++i) { highs.addRow(0, 1, (int)rows[i].size(), rows[i].data(), ones.data()); }
+	for(size_t i = 0; i<rows.size(); ++i) {
+		highs.addRow(-kHighsInf, 1, (int)rows[i].size(), rows[i].data(), ones.data());
+	}
 }
 /// solve the RLMP
 void Master::update_lp() {
 	HighsStatus hs = highs.run();
-	if(hs!=HighsStatus::kOk) { std::cerr<<"Highs status: "<<highsStatusToString(hs)<<std::endl; }
+	if(hs!=HighsStatus::kOk) std::cerr<<"Highs status: "<<highsStatusToString(hs)<<std::endl;
+	if(highs.getModelStatus()!=HighsModelStatus::kOptimal)
+		std::cerr<<"Highs model status: "<<highs.modelStatusToString(highs.getModelStatus())
+				 <<" isEmpty:"<<highs.getModel().isEmpty()<<std::endl;
+	assert(highs.getModelStatus()==HighsModelStatus::kOptimal);
+	assert(hs==HighsStatus::kOk);
+	// const auto &dc = highs.getSolution().col_dual;
+	// double dcm = *std::max_element(dc.begin(), dc.end());
+	// if(dcm>=1e-5) std::cerr<<"WARNING: dcm="<<dcm<<std::endl;
+	// assert(dcm<1e-5);
 }
 
 int pricing_steps = 0;
@@ -62,8 +82,8 @@ bool Master::generate_columns() {
 		pricing_problem pp(g, duals);
 		pricing_columns = heuristic_pricing_beamsearch(pp);
 	}
-	if(pricing_columns.empty()) { // exact pricing
-		for(int i = 0; i<g.n(); ++i) { // single parameter stabilization
+	if(pricing_columns.empty()) {					   // exact pricing
+		for(int i = 0; i<g.n(); ++i) {			   // single parameter stabilization
 			duals[i] = duals[i]*0.8+stab[i]*0.2; // value of 0.2 was found empirically
 		}
 		pricing_problem pp(g, duals);
@@ -80,24 +100,25 @@ bool Master::generate_columns() {
 	double dual_sum = 0; // sum(lambda)
 	for(auto &i : duals) dual_sum += i;
 
-	vector<double> ones(g.n(), 1);
+	const vector<double> ones(g.n(), 1);
 	if(pricing_columns.size()) {
-		for(auto &col : pricing_columns) { // as of now, only 1 new column per run is generated, so this only runs for one iteration
-			if(is_exact) {
-				const int n_partitions = g.n(); // could use a better bound, but it would not matter
-				// LR obj: max sum_{i}{lambda_i}+|P|*( sum_{ei}{e(ei)}-sum_{i}{lamda_i*x_i} )
-				double tmp = col.value;
-				for(auto &i : col.nodes) tmp -= duals[i];
-				tmp *= n_partitions;
-				tmp += dual_sum;
-				if(tmp<lagrange) { // found a new lagrangean dual bound
-					lagrange = tmp;
-					stab = duals; // update single parameter stabilization vector
-				}
+		if(is_exact) {						// try updating lagrangean dual
+			const int n_partitions = g.n(); // could use a better bound, but it would not matter
+			// LR obj: max sum_{i}{lambda_i}+|P|*( sum_{ei}{e(ei)}-sum_{i}{lamda_i*x_i} )
+			double tmp = pricing_columns[0].value; // first column has to be the optimal one
+			for(auto &i : pricing_columns[0].nodes) tmp -= duals[i];
+			tmp *= n_partitions;
+			tmp += dual_sum;
+			if(tmp<lagrange) { // found a new lagrangean dual bound
+				lagrange = tmp;
+				stab = duals; // update single parameter stabilization vector
 			}
-			columns.push_back(col); // add the new column
-			highs.addCol((double)col.value, 0, 1, (int)col.nodes.size(), col.nodes.data(), ones.data());
 		}
+		for(const auto &col : pricing_columns) { // add all generated columns to the rlmp
+			columns.push_back(col); // TODO: check if they have positive rc when using single parameter stabilization
+			highs.addCol((double)col.value, 0, kHighsInf, (int)col.nodes.size(), col.nodes.data(), ones.data());
+		}
+
 		return true;
 	}
 
@@ -111,14 +132,20 @@ double Master::run(int global_primal) {
 		assert(highs.getObjectiveValue()<=lagrange+1e-7);
 		if(it%16==0) std::cerr<<it<<": "<<highs.getObjectiveValue()<<" ~ "<<lagrange<<std::endl;
 		if(std::isfinite(lagrange)) {
-			if(int(lagrange)==int(highs.getObjectiveValue()+1e-6)) break;
-			if(int(lagrange)<=global_primal) break;
+			if(int(lagrange)==int(highs.getObjectiveValue()+1e-6)) {
+				std::cerr<<it<<": "<<highs.getObjectiveValue()<<" ~ "<<lagrange<<" (exit1)"<<std::endl;
+				return lagrange;
+			}
+			if(int(lagrange)<=global_primal) {
+				std::cerr<<it<<": "<<highs.getObjectiveValue()<<" ~ "<<lagrange<<" (exit2)"<<std::endl;
+				return lagrange;
+			}
 		}
 		++it;
 	} while(generate_columns());
-	std::cerr<<it<<": "<<highs.getObjectiveValue()<<" ~ "<<lagrange<<std::endl;
-	// return highs.getObjectiveValue()+g.value;
-	return lagrange;
+	std::cerr<<it<<": "<<highs.getObjectiveValue()<<" ~ "<<lagrange<<" (exit3)"<<std::endl;
+	// return lagrange;
+	return highs.getObjectiveValue();
 }
 /// computes primal by solving integer restricted master problem for this master instance (not global primal, need to
 /// add base)
@@ -164,6 +191,7 @@ std::pair<int, std::vector<std::vector<int>>> Master::primal_ilp(int primal) {
 }
 /// returns the columns generated by this master instance
 std::vector<std::vector<int>> Master::get_columns() const {
+	// TODO: throw away "bad" columns
 	std::vector<std::vector<int>> ans;
 	for(auto &[_v, col] : columns) {
 		std::vector<int> ocol;
