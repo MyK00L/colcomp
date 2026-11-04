@@ -503,6 +503,6 @@ std::vector<mcolumn> exact_pricing_bnb(pricing_problem p) {
 		}
 	}
 	// TODO: filter by>best_primal/2
-	// std::cerr<<"epb |columns|="<<columns.size()<<" obj="<<best_primal<<std::endl;
+	std::cerr<<"epb |columns|="<<columns.size()<<" obj="<<best_primal<<std::endl;
 	return columns;
 }

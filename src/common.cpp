@@ -8,6 +8,19 @@
 #include <limits>
 #include <vector>
 
+
+enum ExactPricingMode {
+	ILP,
+	BNB,
+	BNB_LPS,
+};
+struct Options {
+	bool heuristic_pricing = 1;
+	bool hotstart = 1;
+	bool preprocessing = 1;
+	ExactPricingMode exact_pricing_mode = ExactPricingMode::BNB;
+} options;
+
 struct problem {
 	std::vector<uint32_t> color;
 	std::vector<std::array<uint32_t, 2>> edges;

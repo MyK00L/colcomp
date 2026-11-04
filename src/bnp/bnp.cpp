@@ -239,10 +239,10 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 	}
 }
 /// for each connected component in the instance, starts a bnp
-std::vector<std::vector<int>> bnp_main(problem p, bool hot_start = 1) {
+std::vector<std::vector<int>> bnp_main(problem p) {
 	// single-element columns for feasibility are not needed
 	// hot start columns
-	if(hot_start) { // TODO: do this for each cc instead...
+	if(options.hotstart) { // TODO: do this for each cc instead...
 		for(auto col : gen_hotstart_columns(p)) columns.insert(col);
 	}
 	mgraph mg0(p);

@@ -96,8 +96,7 @@ void reset_globals() {
 	pricing_bnb2_nodes = 0;
 	pricing_bnb2_runs = 0;
 	bnp_nodes = 0;
-	use_heuristic_pricing = 0;
-	exact_pricing_mode = ExactPricingMode::BNB;
+	options = Options();
 }
 
 void print_stats(const problem &p) {
@@ -116,7 +115,6 @@ void print_stats(const problem &p) {
 	std::cout<<"maxN "<<maxn<<std::endl;
 	std::cout<<"maxM "<<maxm<<std::endl;
 }
-// TODO: put all global options in common.cpp
 int main(int argc, char **argv) {
 	cin.tie(0);
 	ios_base::sync_with_stdio(0);
@@ -144,17 +142,14 @@ int main(int argc, char **argv) {
 	string filename(argv[1]);
 	problem p = input(filename);
 	string mode(argv[2]);
-	bool nhs = 0; // no hotstart
-	bool npp = 0; // no preprocess
-	use_heuristic_pricing = 1;
 	for(int i = 3; i<argc; ++i) {
 		std::string arg(argv[i]);
-		if(arg=="nhs") nhs = 1;
-		else if(arg=="nhp") use_heuristic_pricing = 0;
-		else if(arg=="npp") npp = 1;
-		else if(arg=="ilp") exact_pricing_mode = ExactPricingMode::ILP;
-		else if(arg=="bnb") exact_pricing_mode = ExactPricingMode::BNB;
-		else if(arg=="bnb_lps") exact_pricing_mode = ExactPricingMode::BNB_LPS;
+		if(arg=="nhs") options.hotstart = 0;
+		else if(arg=="nhp") options.heuristic_pricing = 0;
+		else if(arg=="npp") options.preprocessing = 0;
+		else if(arg=="ilp") options.exact_pricing_mode = ExactPricingMode::ILP;
+		else if(arg=="bnb") options.exact_pricing_mode = ExactPricingMode::BNB;
+		else if(arg=="bnb_lps") options.exact_pricing_mode = ExactPricingMode::BNB_LPS;
 		else {
 			std::cerr<<"unknown option "<<arg<<std::endl;
 			exit(1);
@@ -162,23 +157,23 @@ int main(int argc, char **argv) {
 	}
 	clock_t t0 = clock();
 	if(mode=="stats") {
-		if(!npp) preprocess(p);
+		if(options.preprocessing) preprocess(p);
 		print_stats(p);
 	} else if(mode=="merge") {
-		if(!npp) preprocess(p);
+		if(options.preprocessing) preprocess(p);
 		auto sol = heuristic_merge(p);
 		std::cout<<"score "<<score(p, sol)<<std::endl;
 	} else if(mode=="karger") {
-		if(!npp) preprocess(p);
+		if(options.preprocessing) preprocess(p);
 		auto sol = heuristic_karger(p);
 		std::cout<<"score "<<score(p, sol)<<std::endl;
 	} else if(mode=="ilp") {
-		if(!npp) preprocess(p);
+		if(options.preprocessing) preprocess(p);
 		auto sol = ilp(p);
 		std::cout<<"score "<<score(p, sol)<<std::endl;
 	} else if(mode=="bnp") {
-		if(!npp) preprocess(p);
-		auto sol = bnp_main(p, !nhs);
+		if(options.preprocessing) preprocess(p);
+		auto sol = bnp_main(p);
 		std::cout<<"score "<<score(p, sol)<<std::endl;
 		std::cout<<"bnp_nodes "<<bnp_nodes<<std::endl;
 		std::cout<<"pricing_steps "<<pricing_steps<<std::endl;

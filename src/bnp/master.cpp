@@ -23,12 +23,6 @@ Highs thinks it solved the rlmp optimally when it didn't (has positive col_duals
 and I generate duplicate columns :(
 */
 
-enum ExactPricingMode {
-	ILP,
-	BNB,
-	BNB_LPS,
-} exact_pricing_mode = ExactPricingMode::BNB;
-
 Master::Master(mgraph _mg, std::vector<mcolumn> _columns)
 	: g(_mg), columns(_columns), stab(g.n(), 0), lagrange(std::numeric_limits<double>::infinity()) {}
 
@@ -65,7 +59,6 @@ void Master::update_lp() {
 }
 
 int pricing_steps = 0;
-bool use_heuristic_pricing = 0;
 /// tries to generate new columns
 /// returns true if new columns were generated
 bool Master::generate_columns() {
@@ -74,7 +67,7 @@ bool Master::generate_columns() {
 
 	bool is_exact = 0;
 	std::vector<mcolumn> pricing_columns;
-	if(use_heuristic_pricing) { // heuristic pricing
+	if(options.heuristic_pricing) { // heuristic pricing
 		pricing_problem pp(g, duals);
 		pricing_columns = heuristic_pricing_beamsearch(pp);
 	}
@@ -83,11 +76,11 @@ bool Master::generate_columns() {
 			// duals[i] = duals[i]*0.8+stab[i]*0.2; // value of 0.2 was found empirically
 		}
 		pricing_problem pp(g, duals);
-		if(exact_pricing_mode==ExactPricingMode::ILP) {
+		if(options.exact_pricing_mode==ExactPricingMode::ILP) {
 			pricing_columns = exact_pricing_ilp(pp);
-		} else if(exact_pricing_mode==ExactPricingMode::BNB) {
+		} else if(options.exact_pricing_mode==ExactPricingMode::BNB) {
 			pricing_columns = exact_pricing_bnb(pp);
-		} else if(exact_pricing_mode==ExactPricingMode::BNB_LPS) {
+		} else if(options.exact_pricing_mode==ExactPricingMode::BNB_LPS) {
 			pricing_columns = exact_pricing_bnb2(pp);
 		}
 		is_exact = 1;
