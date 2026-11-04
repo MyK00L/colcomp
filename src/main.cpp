@@ -116,7 +116,7 @@ void print_stats(const problem &p) {
 	std::cout<<"maxN "<<maxn<<std::endl;
 	std::cout<<"maxM "<<maxm<<std::endl;
 }
-
+// TODO: put all global options in common.cpp
 int main(int argc, char **argv) {
 	cin.tie(0);
 	ios_base::sync_with_stdio(0);

@@ -7,8 +7,6 @@
 #include <iostream>
 #include <limits>
 #include <lp_data/HConst.h>
-#include <lp_data/HighsOptions.h>
-#include <lp_data/HighsStatus.h>
 #include <vector>
 
 #include "bnp/pricing/heuristic_pricing_beamsearch.cpp"
@@ -56,16 +54,14 @@ void Master::setup_highs() {
 /// solve the RLMP
 void Master::update_lp() {
 	HighsStatus hs = highs.run();
-	if(hs!=HighsStatus::kOk) std::cerr<<"Highs status: "<<highsStatusToString(hs)<<std::endl;
-	if(highs.getModelStatus()!=HighsModelStatus::kOptimal)
-		std::cerr<<"Highs model status: "<<highs.modelStatusToString(highs.getModelStatus())
-				 <<" isEmpty:"<<highs.getModel().isEmpty()<<std::endl;
-	assert(highs.getModelStatus()==HighsModelStatus::kOptimal);
+	assert(highs.getModelStatus()==HighsModelStatus::kOptimal || highs.getModelStatus()==HighsModelStatus::kModelEmpty);
 	assert(hs==HighsStatus::kOk);
-	// const auto &dc = highs.getSolution().col_dual;
-	// double dcm = *std::max_element(dc.begin(), dc.end());
-	// if(dcm>=1e-5) std::cerr<<"WARNING: dcm="<<dcm<<std::endl;
-	// assert(dcm<1e-5);
+	const auto &dc = highs.getSolution().col_dual;
+	if(!dc.empty()) {
+		double dcm = *std::max_element(dc.begin(), dc.end());
+		if(dcm>=1e-5) std::cerr<<"WARNING: dcm="<<dcm<<std::endl;
+		assert(dcm<1e-5);
+	}
 }
 
 int pricing_steps = 0;
@@ -84,7 +80,7 @@ bool Master::generate_columns() {
 	}
 	if(pricing_columns.empty()) {					   // exact pricing
 		for(int i = 0; i<g.n(); ++i) {			   // single parameter stabilization
-			duals[i] = duals[i]*0.8+stab[i]*0.2; // value of 0.2 was found empirically
+			// duals[i] = duals[i]*0.8+stab[i]*0.2; // value of 0.2 was found empirically
 		}
 		pricing_problem pp(g, duals);
 		if(exact_pricing_mode==ExactPricingMode::ILP) {

@@ -96,12 +96,8 @@ struct mgraph {
 			gi.erase(gi.begin()+ni, gi.end());
 		}
 	}
-	/// remaps colors in [0,#colors)
+	/// remaps colors to [0,#colors)
 	void simplify_colors() {
-		// TODO
-	}
-	/// applies rule 2 to remove edges of some cuts
-	void rule2() {
 		// TODO
 	}
 	bool is_colorful() const {

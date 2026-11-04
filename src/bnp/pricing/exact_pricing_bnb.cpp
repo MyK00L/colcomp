@@ -7,7 +7,6 @@
 #include <array>
 #include <cmath>
 #include <limits>
-#include <lp_data/HConst.h>
 #include <numeric>
 #include <queue>
 #include <vector>
@@ -78,16 +77,17 @@ struct epbnb_state {
 		std::vector<int> bc(p.g.C(), 0);
 		std::queue<std::array<int, 2>> q;
 		int cl = p.g.C(); // colors left to take
-		/*{
+		for(auto i : nodes) cl -= p.g.c[i].size();
+		/*int cl = 0;
+		{
 			bitvec cvis(p.g.C());
 			cvis.zero();
-			for(int i = 0; i<p.g.n(); ++i)
-				if(!untakeable[i] && !cvis[p.g.c[i][0]]) {
+			for(auto i: ~untakeable)
+				if(!cvis[p.g.c[i][0]]) {
 					cl += 1;
 					cvis.set1(p.g.c[i][0]);
 				}
 		}*/
-		for(auto i : nodes) cl -= p.g.c[i].size();
 		for(auto u : nodes) {
 			for(auto &[v, w] : p.g.g[u])
 				if(!untakeable[v] && !reach[v] && w>0) { // w<=0 means it's useless in pricing preprocessing
@@ -98,10 +98,9 @@ struct epbnb_state {
 		while(!q.empty()) {
 			auto [u, d] = q.front();
 			q.pop();
-			if(d==cl) continue; // stop at |C'|
 			for(auto &[v, w] : p.g.g[u])
 				if(!untakeable[v] && !reach[v] && w>0) {
-					q.push({v, d+1});
+					if(d+1<cl) q.push({v, d+1}); // stop at |C'|
 					reach.set1(v);
 				}
 		}

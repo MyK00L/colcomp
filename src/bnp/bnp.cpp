@@ -6,8 +6,6 @@
 #include "mgraph.cpp"
 #include "scorer.cpp"
 #include <iostream>
-#include <lp_data/HConst.h>
-#include <lp_data/HighsStatus.h>
 #include <map>
 #include <queue>
 #include <set>
@@ -84,7 +82,8 @@ std::pair<int, std::vector<std::vector<int>>> primal_with_all_columns(const mgra
 	// cut out solutions with the same or lower primal as before
 	highs.addRow(primal+1, kHighsInf, columns.size(), inds.data(), vals.data());
 
-	assert(highs.run()==HighsStatus::kOk);
+	auto hstatus = highs.run();
+	assert(hstatus==HighsStatus::kOk);
 	assert(highs.getModelStatus()==HighsModelStatus::kOptimal ||
 		   highs.getModelStatus()==HighsModelStatus::kInfeasible);
 	int obj = highs.getModelStatus()==HighsModelStatus::kOptimal ? int(highs.getObjectiveValue()+0.1) : -1;
@@ -241,10 +240,9 @@ void bnp_bfs(const mgraph mg0, int &primal, std::vector<std::vector<int>> &best)
 }
 /// for each connected component in the instance, starts a bnp
 std::vector<std::vector<int>> bnp_main(problem p, bool hot_start = 1) {
-	columns = std::set<std::vector<int>>(); // reset columns
 	// single-element columns for feasibility are not needed
 	// hot start columns
-	if(hot_start) {
+	if(hot_start) { // TODO: do this for each cc instead...
 		for(auto col : gen_hotstart_columns(p)) columns.insert(col);
 	}
 	mgraph mg0(p);
