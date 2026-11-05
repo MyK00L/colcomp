@@ -1,6 +1,7 @@
 #pragma once
 
-#include "heuristic_merge.cpp"
+#include "heuristic/heuristic_merge.cpp"
+#include "heuristic/local_search.cpp"
 #include "mgraph.cpp"
 #include <array>
 #include <numeric>
@@ -98,6 +99,7 @@ std::vector<std::vector<int>> heuristic_karger(const problem &p, int nit = 2000)
 		score += sc;
 		std::move(sol.begin(), sol.end(), std::back_inserter(ans));
 	}
+	score += local_search(p, ans);
 	std::cerr<<"karger_heuristic_score "<<score<<std::endl;
 	return ans;
 }

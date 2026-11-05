@@ -152,16 +152,21 @@ std::vector<mcolumn> heuristic_pricing_beamsearch(const pricing_problem &pp) {
 		beam = next_beam;
 	} while(!beam.empty());
 
+	if(nzs.empty()) return {};
 	// std::cerr<<"max_v: "<<max_v<<" generated column: ";
 	// for(size_t i=0; i<max_nz.size(); ++i) std::cerr<<max_nz[i]<<' ';
 	// std::cerr<<std::endl;
 	// for(size_t i=0; i<max_nz.size(); ++i) std::cerr<<duals[max_nz[i]]<<' ';
 	// std::cerr<<std::endl;
 	sort(nzs.begin(), nzs.end(), [](const auto &c1, const auto &c2) { return c1.first>c2.first; });
+	int nn = 0;
+	for(; nn<(int)nzs.size(); ++nn)
+		if(nzs[nn].first<1e-7 || nzs[nn].first<nzs[0].first/2.0) break;
+	nzs.resize(nn);
+
 	std::vector<mcolumn> columns;
-	// TODO: limit the number of columns?
 	for(int i = 0; i<(int)nzs.size(); ++i)
 		columns.push_back(mcolumn{pp.g.value_for_col(nzs[i].second), nzs[i].second});
 
-	return {};
+	return columns;
 }

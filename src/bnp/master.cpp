@@ -71,10 +71,10 @@ bool Master::generate_columns() {
 		pricing_problem pp(g, duals);
 		pricing_columns = heuristic_pricing_beamsearch(pp);
 	}
-	if(pricing_columns.empty()) {					   // exact pricing
-		for(int i = 0; i<g.n(); ++i) {			   // single parameter stabilization
-			// duals[i] = duals[i]*0.8+stab[i]*0.2; // value of 0.2 was found empirically
-		}
+	if(pricing_columns.empty()) {  // exact pricing
+		if(options.single_parameter_stabilization) // single parameter stabilization
+			for(int i = 0; i<g.n(); ++i)
+				duals[i] = duals[i]*0.8+stab[i]*0.2; // value of 0.2 was found empirically
 		pricing_problem pp(g, duals);
 		if(options.exact_pricing_mode==ExactPricingMode::ILP) {
 			pricing_columns = exact_pricing_ilp(pp);
@@ -103,9 +103,18 @@ bool Master::generate_columns() {
 				stab = duals; // update single parameter stabilization vector
 			}
 		}
+		if(options.single_parameter_stabilization) duals = highs.getSolution().row_dual;
 		for(const auto &col : pricing_columns) { // add all generated columns to the rlmp
-			columns.push_back(col); // TODO: check if they have positive rc when using single parameter stabilization
-			highs.addCol((double)col.value, 0, kHighsInf, (int)col.nodes.size(), col.nodes.data(), ones.data());
+			bool positive = 1;
+			if(options.single_parameter_stabilization) {
+				double tmp = col.value;
+				for(auto &i: col.nodes) tmp -= duals[i];
+				if(tmp<1e-7) positive=0;
+			}
+			if(positive) {
+				columns.push_back(col); // TODO: check if they have positive rc when using single parameter stabilization
+				highs.addCol((double)col.value, 0, kHighsInf, (int)col.nodes.size(), col.nodes.data(), ones.data());
+			}
 		}
 
 		return true;

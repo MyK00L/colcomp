@@ -8,16 +8,16 @@
 #include <limits>
 #include <vector>
 
-
 enum ExactPricingMode {
 	ILP,
 	BNB,
 	BNB_LPS,
 };
 struct Options {
-	bool heuristic_pricing = 1;
+	bool heuristic_pricing = 0;
 	bool hotstart = 1;
 	bool preprocessing = 1;
+	bool single_parameter_stabilization = 1;
 	ExactPricingMode exact_pricing_mode = ExactPricingMode::BNB;
 } options;
 

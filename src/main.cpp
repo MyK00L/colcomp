@@ -130,9 +130,10 @@ int main(int argc, char **argv) {
 					 "bnp : solve MOP with BNP\n"
 					 "preprocess : preprocess and stop\n"
 					 "possible options:\n"
-					 "nhs : no hotstart\n"
-					 "nhp : no heuristic pricing\n"
-					 "npp : no preprocessing before stats/merge/karger/ilp/bnp\n"
+					 "hp : enable heuristic pricing\n"
+					 "nhs : disable hotstart\n"
+					 "npp : disable preprocessing before stats/merge/karger/ilp/bnp\n"
+					 "nsps : disable single parameter stabilization\n"
 					 "ilp : use ilp for exact pricing\n"
 					 "bnb : use default bnb for exact pricing\n"
 					 "bnb_lps : use bnb with lp based dual bound for exact pricing"
@@ -145,8 +146,9 @@ int main(int argc, char **argv) {
 	for(int i = 3; i<argc; ++i) {
 		std::string arg(argv[i]);
 		if(arg=="nhs") options.hotstart = 0;
-		else if(arg=="nhp") options.heuristic_pricing = 0;
+		else if(arg=="hp") options.heuristic_pricing = 1;
 		else if(arg=="npp") options.preprocessing = 0;
+		else if(arg=="nsps") options.single_parameter_stabilization = 0;
 		else if(arg=="ilp") options.exact_pricing_mode = ExactPricingMode::ILP;
 		else if(arg=="bnb") options.exact_pricing_mode = ExactPricingMode::BNB;
 		else if(arg=="bnb_lps") options.exact_pricing_mode = ExactPricingMode::BNB_LPS;

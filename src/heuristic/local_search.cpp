@@ -179,5 +179,6 @@ int local_search(const problem &p, std::vector<std::vector<int>> &comps) {
 			} while(good1);
 		}
 	} while(good0);
+	std::cerr<<"local_search_imp "<<imp<<std::endl;
 	return imp;
 }

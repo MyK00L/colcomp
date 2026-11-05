@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "common.cpp"
+#include "heuristic/local_search.cpp"
 #include "mgraph.cpp"
 
 int merge_cost(const mgraph &mg, int u, int v) {
@@ -63,6 +64,7 @@ std::vector<std::vector<int>> heuristic_merge(const problem &p) {
 		score += heuristic_merge_comp(cc);
 		std::move(cc.groups.begin(), cc.groups.end(), std::back_inserter(ans));
 	}
-	std::cerr<<"heuristic merge: "<<score<<std::endl;
+	score += local_search(p, ans);
+	std::cerr<<"heuristic_merge_score "<<score<<std::endl;
 	return ans;
 }
