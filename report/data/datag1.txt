@@ -1,0 +1,940 @@
+startgraph ./graphs/group1/gen1seed10n100c6d0.1.graph
+start bnp
+score 111
+bnp_nodes 1
+pricing_steps 20
+pricing_bnb_nodes 81764
+pricing_bnb_runs 20
+time_millis 1946
+exit_code 0
+end bnp
+start bnp hp
+score 111
+bnp_nodes 1
+pricing_steps 22
+pricing_bnb_nodes 62843
+pricing_bnb_runs 15
+time_millis 1893
+exit_code 0
+end bnp hp
+start bnp nhs
+score 111
+bnp_nodes 1
+pricing_steps 19
+pricing_bnb_nodes 72201
+pricing_bnb_runs 19
+time_millis 1632
+exit_code 0
+end bnp nhs
+start bnp npp
+score 111
+bnp_nodes 1
+pricing_steps 20
+pricing_bnb_nodes 81764
+pricing_bnb_runs 20
+time_millis 1916
+exit_code 0
+end bnp npp
+start bnp nsps
+score 111
+bnp_nodes 1
+pricing_steps 18
+pricing_bnb_nodes 76608
+pricing_bnb_runs 18
+time_millis 1252
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed10n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed11n100c6d0.1.graph
+start bnp
+score 119
+bnp_nodes 14
+pricing_steps 98
+pricing_bnb_nodes 447464
+pricing_bnb_runs 98
+time_millis 7373
+exit_code 0
+end bnp
+start bnp hp
+score 119
+bnp_nodes 23
+pricing_steps 176
+pricing_bnb_nodes 606776
+pricing_bnb_runs 137
+time_millis 12251
+exit_code 0
+end bnp hp
+start bnp nhs
+score 119
+bnp_nodes 5
+pricing_steps 53
+pricing_bnb_nodes 230840
+pricing_bnb_runs 53
+time_millis 3415
+exit_code 0
+end bnp nhs
+start bnp npp
+score 119
+bnp_nodes 14
+pricing_steps 98
+pricing_bnb_nodes 447464
+pricing_bnb_runs 98
+time_millis 7280
+exit_code 0
+end bnp npp
+start bnp nsps
+score 119
+bnp_nodes 1
+pricing_steps 23
+pricing_bnb_nodes 100935
+pricing_bnb_runs 23
+time_millis 1298
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed11n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed12n100c6d0.1.graph
+start bnp
+score 124
+bnp_nodes 18
+pricing_steps 124
+pricing_bnb_nodes 525182
+pricing_bnb_runs 124
+time_millis 10586
+exit_code 0
+end bnp
+start bnp hp
+score 124
+bnp_nodes 34
+pricing_steps 248
+pricing_bnb_nodes 918163
+pricing_bnb_runs 216
+time_millis 19544
+exit_code 0
+end bnp hp
+start bnp nhs
+score 124
+bnp_nodes 75
+pricing_steps 468
+pricing_bnb_nodes 1907265
+pricing_bnb_runs 468
+time_millis 34068
+exit_code 0
+end bnp nhs
+start bnp npp
+score 124
+bnp_nodes 17
+pricing_steps 119
+pricing_bnb_nodes 504601
+pricing_bnb_runs 119
+time_millis 10034
+exit_code 0
+end bnp npp
+start bnp nsps
+score 124
+bnp_nodes 25
+pricing_steps 111
+pricing_bnb_nodes 444158
+pricing_bnb_runs 111
+time_millis 10140
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed12n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed13n100c6d0.1.graph
+start bnp
+score 119
+bnp_nodes 1
+pricing_steps 21
+pricing_bnb_nodes 91797
+pricing_bnb_runs 21
+time_millis 2144
+exit_code 0
+end bnp
+start bnp hp
+score 119
+bnp_nodes 1
+pricing_steps 35
+pricing_bnb_nodes 50915
+pricing_bnb_runs 11
+time_millis 1958
+exit_code 0
+end bnp hp
+start bnp nhs
+score 119
+bnp_nodes 21
+pricing_steps 145
+pricing_bnb_nodes 704630
+pricing_bnb_runs 145
+time_millis 11960
+exit_code 0
+end bnp nhs
+start bnp npp
+score 119
+bnp_nodes 1
+pricing_steps 21
+pricing_bnb_nodes 91797
+pricing_bnb_runs 21
+time_millis 2115
+exit_code 0
+end bnp npp
+start bnp nsps
+score 119
+bnp_nodes 1
+pricing_steps 18
+pricing_bnb_nodes 83272
+pricing_bnb_runs 18
+time_millis 2312
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed13n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed14n100c6d0.1.graph
+start bnp
+score 114
+bnp_nodes 7
+pricing_steps 48
+pricing_bnb_nodes 203158
+pricing_bnb_runs 48
+time_millis 4386
+exit_code 0
+end bnp
+start bnp hp
+score 114
+bnp_nodes 9
+pricing_steps 84
+pricing_bnb_nodes 214908
+pricing_bnb_runs 50
+time_millis 6158
+exit_code 0
+end bnp hp
+start bnp nhs
+score 114
+bnp_nodes 10
+pricing_steps 71
+pricing_bnb_nodes 302192
+pricing_bnb_runs 71
+time_millis 5465
+exit_code 0
+end bnp nhs
+start bnp npp
+score 114
+bnp_nodes 7
+pricing_steps 48
+pricing_bnb_nodes 203158
+pricing_bnb_runs 48
+time_millis 4438
+exit_code 0
+end bnp npp
+start bnp nsps
+score 114
+bnp_nodes 11
+pricing_steps 48
+pricing_bnb_nodes 187605
+pricing_bnb_runs 48
+time_millis 4819
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed14n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed15n100c6d0.1.graph
+start bnp
+score 117
+bnp_nodes 20
+pricing_steps 122
+pricing_bnb_nodes 584453
+pricing_bnb_runs 122
+time_millis 10739
+exit_code 0
+end bnp
+start bnp hp
+score 117
+bnp_nodes 26
+pricing_steps 188
+pricing_bnb_nodes 749000
+pricing_bnb_runs 156
+time_millis 16295
+exit_code 0
+end bnp hp
+start bnp nhs
+score 117
+bnp_nodes 82
+pricing_steps 489
+pricing_bnb_nodes 2288773
+pricing_bnb_runs 489
+time_millis 39487
+exit_code 0
+end bnp nhs
+start bnp npp
+score 117
+bnp_nodes 20
+pricing_steps 122
+pricing_bnb_nodes 584453
+pricing_bnb_runs 122
+time_millis 10625
+exit_code 0
+end bnp npp
+start bnp nsps
+score 117
+bnp_nodes 67
+pricing_steps 200
+pricing_bnb_nodes 815722
+pricing_bnb_runs 200
+time_millis 18890
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed15n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed16n100c6d0.1.graph
+start bnp
+score 115
+bnp_nodes 27
+pricing_steps 183
+pricing_bnb_nodes 801890
+pricing_bnb_runs 183
+time_millis 15060
+exit_code 0
+end bnp
+start bnp hp
+score 115
+bnp_nodes 29
+pricing_steps 216
+pricing_bnb_nodes 808935
+pricing_bnb_runs 187
+time_millis 18166
+exit_code 0
+end bnp hp
+start bnp nhs
+score 115
+bnp_nodes 35
+pricing_steps 231
+pricing_bnb_nodes 1025993
+pricing_bnb_runs 231
+time_millis 18986
+exit_code 0
+end bnp nhs
+start bnp npp
+score 115
+bnp_nodes 27
+pricing_steps 183
+pricing_bnb_nodes 801890
+pricing_bnb_runs 183
+time_millis 15081
+exit_code 0
+end bnp npp
+start bnp nsps
+score 115
+bnp_nodes 73
+pricing_steps 207
+pricing_bnb_nodes 810926
+pricing_bnb_runs 207
+time_millis 18221
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed16n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed17n100c6d0.1.graph
+start bnp
+score 119
+bnp_nodes 18
+pricing_steps 128
+pricing_bnb_nodes 541100
+pricing_bnb_runs 128
+time_millis 11576
+exit_code 0
+end bnp
+start bnp hp
+score 119
+bnp_nodes 20
+pricing_steps 162
+pricing_bnb_nodes 574419
+pricing_bnb_runs 134
+time_millis 11807
+exit_code 0
+end bnp hp
+start bnp nhs
+score 119
+bnp_nodes 26
+pricing_steps 174
+pricing_bnb_nodes 749804
+pricing_bnb_runs 174
+time_millis 14341
+exit_code 0
+end bnp nhs
+start bnp npp
+score 119
+bnp_nodes 19
+pricing_steps 134
+pricing_bnb_nodes 563648
+pricing_bnb_runs 134
+time_millis 12589
+exit_code 0
+end bnp npp
+start bnp nsps
+score 119
+bnp_nodes 7
+pricing_steps 43
+pricing_bnb_nodes 165845
+pricing_bnb_runs 43
+time_millis 2961
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed17n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed18n100c6d0.1.graph
+start bnp
+score 119
+bnp_nodes 5
+pricing_steps 44
+pricing_bnb_nodes 185436
+pricing_bnb_runs 44
+time_millis 2784
+exit_code 0
+end bnp
+start bnp hp
+score 119
+bnp_nodes 7
+pricing_steps 81
+pricing_bnb_nodes 229635
+pricing_bnb_runs 52
+time_millis 4025
+exit_code 0
+end bnp hp
+start bnp nhs
+score 119
+bnp_nodes 20
+pricing_steps 145
+pricing_bnb_nodes 615622
+pricing_bnb_runs 145
+time_millis 10785
+exit_code 0
+end bnp nhs
+start bnp npp
+score 119
+bnp_nodes 5
+pricing_steps 44
+pricing_bnb_nodes 185436
+pricing_bnb_runs 44
+time_millis 2795
+exit_code 0
+end bnp npp
+start bnp nsps
+score 119
+bnp_nodes 39
+pricing_steps 120
+pricing_bnb_nodes 454755
+pricing_bnb_runs 120
+time_millis 10001
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed18n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed19n100c6d0.1.graph
+start bnp
+score 115
+bnp_nodes 17
+pricing_steps 116
+pricing_bnb_nodes 505563
+pricing_bnb_runs 116
+time_millis 10649
+exit_code 0
+end bnp
+start bnp hp
+score 115
+bnp_nodes 19
+pricing_steps 160
+pricing_bnb_nodes 511546
+pricing_bnb_runs 123
+time_millis 10743
+exit_code 0
+end bnp hp
+start bnp nhs
+score 115
+bnp_nodes 16
+pricing_steps 117
+pricing_bnb_nodes 495318
+pricing_bnb_runs 117
+time_millis 9314
+exit_code 0
+end bnp nhs
+start bnp npp
+score 115
+bnp_nodes 18
+pricing_steps 121
+pricing_bnb_nodes 528789
+pricing_bnb_runs 121
+time_millis 10520
+exit_code 0
+end bnp npp
+start bnp nsps
+score 115
+bnp_nodes 45
+pricing_steps 146
+pricing_bnb_nodes 534645
+pricing_bnb_runs 146
+time_millis 14013
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed19n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed1n100c6d0.1.graph
+start bnp
+score 121
+bnp_nodes 8
+pricing_steps 64
+pricing_bnb_nodes 263259
+pricing_bnb_runs 64
+time_millis 5323
+exit_code 0
+end bnp
+start bnp hp
+score 121
+bnp_nodes 1
+pricing_steps 30
+pricing_bnb_nodes 64028
+pricing_bnb_runs 16
+time_millis 1874
+exit_code 0
+end bnp hp
+start bnp nhs
+score 121
+bnp_nodes 7
+pricing_steps 60
+pricing_bnb_nodes 251402
+pricing_bnb_runs 60
+time_millis 4473
+exit_code 0
+end bnp nhs
+start bnp npp
+score 121
+bnp_nodes 8
+pricing_steps 64
+pricing_bnb_nodes 263259
+pricing_bnb_runs 64
+time_millis 5284
+exit_code 0
+end bnp npp
+start bnp nsps
+score 121
+bnp_nodes 1
+pricing_steps 18
+pricing_bnb_nodes 73396
+pricing_bnb_runs 18
+time_millis 1760
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed1n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed20n100c6d0.1.graph
+start bnp
+score 119
+bnp_nodes 1
+pricing_steps 17
+pricing_bnb_nodes 66745
+pricing_bnb_runs 17
+time_millis 1570
+exit_code 0
+end bnp
+start bnp hp
+score 119
+bnp_nodes 1
+pricing_steps 35
+pricing_bnb_nodes 51937
+pricing_bnb_runs 13
+time_millis 2952
+exit_code 0
+end bnp hp
+start bnp nhs
+score 119
+bnp_nodes 1
+pricing_steps 22
+pricing_bnb_nodes 87384
+pricing_bnb_runs 22
+time_millis 1928
+exit_code 0
+end bnp nhs
+start bnp npp
+score 119
+bnp_nodes 1
+pricing_steps 17
+pricing_bnb_nodes 66745
+pricing_bnb_runs 17
+time_millis 1461
+exit_code 0
+end bnp npp
+start bnp nsps
+score 119
+bnp_nodes 1
+pricing_steps 17
+pricing_bnb_nodes 70157
+pricing_bnb_runs 17
+time_millis 1685
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed20n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed2n100c6d0.1.graph
+start bnp
+score 116
+bnp_nodes 3
+pricing_steps 35
+pricing_bnb_nodes 151084
+pricing_bnb_runs 35
+time_millis 2148
+exit_code 0
+end bnp
+start bnp hp
+score 116
+bnp_nodes 1
+pricing_steps 29
+pricing_bnb_nodes 28302
+pricing_bnb_runs 6
+time_millis 1139
+exit_code 0
+end bnp hp
+start bnp nhs
+score 116
+bnp_nodes 19
+pricing_steps 133
+pricing_bnb_nodes 596248
+pricing_bnb_runs 133
+time_millis 10108
+exit_code 0
+end bnp nhs
+start bnp npp
+score 116
+bnp_nodes 3
+pricing_steps 35
+pricing_bnb_nodes 151084
+pricing_bnb_runs 35
+time_millis 2170
+exit_code 0
+end bnp npp
+start bnp nsps
+score 116
+bnp_nodes 8
+pricing_steps 46
+pricing_bnb_nodes 190686
+pricing_bnb_runs 46
+time_millis 3988
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed2n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed3n100c6d0.1.graph
+start bnp
+score 120
+bnp_nodes 21
+pricing_steps 145
+pricing_bnb_nodes 716743
+pricing_bnb_runs 145
+time_millis 14085
+exit_code 0
+end bnp
+start bnp hp
+score 120
+bnp_nodes 19
+pricing_steps 160
+pricing_bnb_nodes 614911
+pricing_bnb_runs 123
+time_millis 15732
+exit_code 0
+end bnp hp
+start bnp nhs
+score 120
+bnp_nodes 13
+pricing_steps 106
+pricing_bnb_nodes 524743
+pricing_bnb_runs 106
+time_millis 11852
+exit_code 0
+end bnp nhs
+start bnp npp
+score 120
+bnp_nodes 21
+pricing_steps 145
+pricing_bnb_nodes 716743
+pricing_bnb_runs 145
+time_millis 14161
+exit_code 0
+end bnp npp
+start bnp nsps
+score 120
+bnp_nodes 13
+pricing_steps 70
+pricing_bnb_nodes 327679
+pricing_bnb_runs 70
+time_millis 15669
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed3n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed4n100c6d0.1.graph
+start bnp
+score 120
+bnp_nodes 1
+pricing_steps 19
+pricing_bnb_nodes 69941
+pricing_bnb_runs 19
+time_millis 1605
+exit_code 0
+end bnp
+start bnp hp
+score 120
+bnp_nodes 1
+pricing_steps 25
+pricing_bnb_nodes 52443
+pricing_bnb_runs 15
+time_millis 1749
+exit_code 0
+end bnp hp
+start bnp nhs
+score 120
+bnp_nodes 8
+pricing_steps 64
+pricing_bnb_nodes 246580
+pricing_bnb_runs 64
+time_millis 4001
+exit_code 0
+end bnp nhs
+start bnp npp
+score 120
+bnp_nodes 1
+pricing_steps 19
+pricing_bnb_nodes 69941
+pricing_bnb_runs 19
+time_millis 1593
+exit_code 0
+end bnp npp
+start bnp nsps
+score 120
+bnp_nodes 10
+pricing_steps 51
+pricing_bnb_nodes 184853
+pricing_bnb_runs 51
+time_millis 3533
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed4n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed5n100c6d0.1.graph
+start bnp
+score 118
+bnp_nodes 15
+pricing_steps 111
+pricing_bnb_nodes 512711
+pricing_bnb_runs 111
+time_millis 9573
+exit_code 0
+end bnp
+start bnp hp
+score 118
+bnp_nodes 16
+pricing_steps 137
+pricing_bnb_nodes 519779
+pricing_bnb_runs 106
+time_millis 10988
+exit_code 0
+end bnp hp
+start bnp nhs
+score 118
+bnp_nodes 22
+pricing_steps 159
+pricing_bnb_nodes 757790
+pricing_bnb_runs 159
+time_millis 14712
+exit_code 0
+end bnp nhs
+start bnp npp
+score 118
+bnp_nodes 14
+pricing_steps 105
+pricing_bnb_nodes 482965
+pricing_bnb_runs 105
+time_millis 9264
+exit_code 0
+end bnp npp
+start bnp nsps
+score 118
+bnp_nodes 15
+pricing_steps 73
+pricing_bnb_nodes 308850
+pricing_bnb_runs 73
+time_millis 5291
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed5n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed6n100c6d0.1.graph
+start bnp
+score 112
+bnp_nodes 14
+pricing_steps 92
+pricing_bnb_nodes 375851
+pricing_bnb_runs 92
+time_millis 7835
+exit_code 0
+end bnp
+start bnp hp
+score 112
+bnp_nodes 13
+pricing_steps 116
+pricing_bnb_nodes 383177
+pricing_bnb_runs 95
+time_millis 8878
+exit_code 0
+end bnp hp
+start bnp nhs
+score 112
+bnp_nodes 5
+pricing_steps 47
+pricing_bnb_nodes 191099
+pricing_bnb_runs 47
+time_millis 2582
+exit_code 0
+end bnp nhs
+start bnp npp
+score 112
+bnp_nodes 14
+pricing_steps 92
+pricing_bnb_nodes 375851
+pricing_bnb_runs 92
+time_millis 8562
+exit_code 0
+end bnp npp
+start bnp nsps
+score 112
+bnp_nodes 25
+pricing_steps 91
+pricing_bnb_nodes 353735
+pricing_bnb_runs 91
+time_millis 7938
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed6n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed7n100c6d0.1.graph
+start bnp
+score 114
+bnp_nodes 39
+pricing_steps 239
+pricing_bnb_nodes 1030568
+pricing_bnb_runs 239
+time_millis 18285
+exit_code 0
+end bnp
+start bnp hp
+score 114
+bnp_nodes 103
+pricing_steps 623
+pricing_bnb_nodes 2516456
+pricing_bnb_runs 594
+time_millis 50635
+exit_code 0
+end bnp hp
+start bnp nhs
+score 114
+bnp_nodes 249
+pricing_steps 1435
+pricing_bnb_nodes 6132521
+pricing_bnb_runs 1435
+time_millis 105371
+exit_code 0
+end bnp nhs
+start bnp npp
+score 114
+bnp_nodes 39
+pricing_steps 239
+pricing_bnb_nodes 1030568
+pricing_bnb_runs 239
+time_millis 18255
+exit_code 0
+end bnp npp
+start bnp nsps
+score 114
+bnp_nodes 91
+pricing_steps 240
+pricing_bnb_nodes 926651
+pricing_bnb_runs 240
+time_millis 22045
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed7n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed8n100c6d0.1.graph
+start bnp
+score 119
+bnp_nodes 27
+pricing_steps 179
+pricing_bnb_nodes 831557
+pricing_bnb_runs 179
+time_millis 17791
+exit_code 0
+end bnp
+start bnp hp
+score 119
+bnp_nodes 41
+pricing_steps 290
+pricing_bnb_nodes 1171354
+pricing_bnb_runs 260
+time_millis 22937
+exit_code 0
+end bnp hp
+start bnp nhs
+score 119
+bnp_nodes 29
+pricing_steps 211
+pricing_bnb_nodes 970495
+pricing_bnb_runs 211
+time_millis 18519
+exit_code 0
+end bnp nhs
+start bnp npp
+score 119
+bnp_nodes 27
+pricing_steps 179
+pricing_bnb_nodes 831557
+pricing_bnb_runs 179
+time_millis 17744
+exit_code 0
+end bnp npp
+start bnp nsps
+score 119
+bnp_nodes 55
+pricing_steps 203
+pricing_bnb_nodes 843094
+pricing_bnb_runs 203
+time_millis 21470
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed8n100c6d0.1.graph
+startgraph ./graphs/group1/gen1seed9n100c6d0.1.graph
+start bnp
+score 109
+bnp_nodes 9
+pricing_steps 61
+pricing_bnb_nodes 251542
+pricing_bnb_runs 61
+time_millis 5258
+exit_code 0
+end bnp
+start bnp hp
+score 109
+bnp_nodes 1
+pricing_steps 26
+pricing_bnb_nodes 37407
+pricing_bnb_runs 9
+time_millis 2205
+exit_code 0
+end bnp hp
+start bnp nhs
+score 109
+bnp_nodes 8
+pricing_steps 60
+pricing_bnb_nodes 248881
+pricing_bnb_runs 60
+time_millis 4699
+exit_code 0
+end bnp nhs
+start bnp npp
+score 109
+bnp_nodes 9
+pricing_steps 61
+pricing_bnb_nodes 251542
+pricing_bnb_runs 61
+time_millis 5236
+exit_code 0
+end bnp npp
+start bnp nsps
+score 109
+bnp_nodes 20
+pricing_steps 68
+pricing_bnb_nodes 249208
+pricing_bnb_runs 68
+time_millis 5019
+exit_code 0
+end bnp nsps
+endgraph ./graphs/group1/gen1seed9n100c6d0.1.graph

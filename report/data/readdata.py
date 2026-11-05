@@ -15,6 +15,7 @@ def printstats_multi(names, stats, data):
 	for name in names:
 		for stat in stats:
 			printstats(name+" "+stat, list(int(item[1][name][stat]) for item in data))
+		print()
 
 
 def process_dataheur(data):
@@ -25,12 +26,8 @@ def process_data2012(data):
 	print("total: ", len(data))
 	print("bnp solved: ", nsolved(data,"bnp"))
 	byall = list(filter(lambda item: (item[1]["bnp"]["exit_code"] == 0), data.items() ))
-	printstats_multi(["stats npp", "stats"], ["N", "M", "maxN", "maxM", "ccs"], data.items())
-	printstats_multi(["bnp"], ["time_millis", "bnp_nodes", "pricing_bnb_nodes"], byall)
-
-def process_data2024(data):
-	smallish = list(filter(lambda item: (item[1]["stats npp"]["N"] >= 10 and item[1]["stats npp"]["N"] <= 210), data.items() ))
-	print(len(smallish))
+	# printstats_multi(["stats npp", "stats"], ["N", "M", "maxN", "maxM", "ccs"], data.items())
+	printstats_multi(["bnp", "bnp hp", "bnp nhs", "bnp npp", "bnp nsps"], ["time_millis", "bnp_nodes", "pricing_steps", "pricing_bnb_runs", "pricing_bnb_nodes"], byall)
 
 
 def process_datag(data):
@@ -43,7 +40,7 @@ def process_data_by_fnp(ax, data, fnp, stat, fun):
 	print("total: ", len(data))
 	print("bnp solved: ", nsolved(data,"bnp"))
 	byall = list(filter(lambda item: (item[1]["bnp"]["exit_code"] == 0), data.items() ))
-	printstats_multi(["stats npp", "stats"], ["N", "M", "maxN", "maxM", "ccs"], data.items())
+	# printstats_multi(["stats npp", "stats"], ["N", "M", "maxN", "maxM", "ccs"], data.items())
 	printstats_multi(["bnp"], ["time_millis", "bnp_nodes", "pricing_bnb_nodes"], byall)
 	stats = list(item[1] for item in data.items())
 	stats = sorted(stats, key=lambda x: float(x["fnp"][fnp]))
@@ -90,6 +87,25 @@ def get_filename_params(name):
 				pass
 	return res
 
+def is_exact(mode):
+	mode = mode.split(" ", 1)
+	return mode == "bnp" or mode == "ilp" or mode == "bnb"
+
+def consintency_check(data):
+	for (k,v) in data.items():
+		exact_score = -1
+		best_score = -1
+		for (mode,stats) in v.items():
+			if "score" in stats:
+				sc = int(stats["score"])
+				if is_exact(mode):
+					assert(exact_score==-1 or sc==exact_score)
+					assert(sc >= best_score)
+					exact_score = sc
+				else:
+					assert(exact_score==-1 or sc<=exact_score)
+				if sc>best_score:
+					best_score = sc
 
 def read_data(filename):
 	file = open(filename, "r")
@@ -119,12 +135,15 @@ def read_data(filename):
 			if not mode in data[graph]:
 				data[graph][mode] = {}
 			data[graph][mode][sp[0]]=float(sp[1])
+	consintency_check(data)
 	return data
 
 def main():
-	data = read_data("data_group1.txt")
-	process_datag(data)
-	#process_data_bys()
+	data = read_data("datag1.txt")
+	# process_datag(data)
+	# consintency_check(data)
+	process_data2012(data)
+	# process_data_bys()
 
 if __name__ == "__main__":
 	plt.rcParams['font.size'] = 12
