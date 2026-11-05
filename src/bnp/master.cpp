@@ -23,8 +23,23 @@ Highs thinks it solved the rlmp optimally when it didn't (has positive col_duals
 and I generate duplicate columns :(
 */
 
+/*
+#include <set>
+std::set<std::vector<int>> colis;
+void check_duplicate_cols(std::vector<int> col) {
+	std::sort(col.begin(),col.end());
+	assert(!colis.count(col));
+	colis.insert(col);
+}
+*/
+
 Master::Master(mgraph _mg, std::vector<mcolumn> _columns)
-	: g(_mg), columns(_columns), stab(g.n(), 0), lagrange(std::numeric_limits<double>::infinity()) {}
+	: g(_mg), columns(_columns), stab(g.n(), 0), lagrange(std::numeric_limits<double>::infinity()) {
+		/*
+		colis.clear();
+		for(auto &col: columns) tei(col.nodes);
+		*/
+	}
 
 /// setup the RLMP
 void Master::setup_highs() {
@@ -114,6 +129,7 @@ bool Master::generate_columns() {
 			if(positive) {
 				columns.push_back(col); // TODO: check if they have positive rc when using single parameter stabilization
 				highs.addCol((double)col.value, 0, kHighsInf, (int)col.nodes.size(), col.nodes.data(), ones.data());
+				// check_duplicate_cols(col.nodes);
 			}
 		}
 
