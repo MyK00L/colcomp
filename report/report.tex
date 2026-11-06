@@ -479,6 +479,7 @@ In \textit{bnp npp} preprocessing the actual value is slightly above $1$, but fo
 the search was closed at the root node of the BnP.
 
 \subsection{Other random graphs}
+\label{org}
 
 In \parencite{mop2013}, random graphs were generated starting from observations on Wikipedia interlanguage link graphs.
 There are five parameters:
@@ -511,10 +512,21 @@ I presented an approach based on column generation for the MOP problem.
 It should be possible to adapt this approach to the MEC and MCC problems too,
 where there will be a different objective for the pricing subproblem.
 
-Things that could improve this results are:
-better heuristics for the surrogate coefficient in the pricing steps,
-faster ways to obtain good primal values,
-smarter branching strategy in the BnP.
+On graphs with higher density (like in those with high $p_x$ in section \ref{org}),
+the dual bounds achieved by column generation are not very tight,
+and the BnP might need to branch a lot.
+These cases could benefit by adding cuts to the algorithm (e.g. odd cycle inequalities or clique inequalities for the SPP).
+Also, the choice of edge to branch on has not been explored in depth and definitely leaves room for improvement.
+
+On graphs with higher number of colors,
+the BnB solution to the pricing problem appears to be the main bottleneck,
+better heuristic pricing solutions,
+better heuristics for the surrogate coefficients,
+or different solutions altogether, could improve the algorithm.
+
+Faster ways to obtain good primal values,
+for example heuristic solutions to the set packing,
+could also help improve the overall speed.
 
 The code is available at \url{https://github.com/MyK00L/colcomp}, and can be compiled with \texttt{make}, HiGHS needs to be installed.
 
