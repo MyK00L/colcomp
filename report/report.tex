@@ -34,12 +34,13 @@ so that the remaining graph consists only of colorful components.
 In \parencite{ccc2025} is given an introduction to MOP, "Maximum Edges in transitive Closure" (MEC) and "Minimum Colorful Components" (MCC) problems,
 with their applications (mainly in biology and networks) and solutions based on branch and cut.
 
-In particular, MOP was introduced in \parencite{he2000}, where an approximation algorithm was given, and an exact approach was first given in \parencite{mop2012}
+In particular, MOP was introduced in \parencite{he2000}, where an approximation algorithm was given, and an exact approach was first given in \parencite{mop2012},
+where it is also shown to be NP-hard even for graphs with $3$ colors and a maximum degree of $6$, or for trees with diameter $4$.
 
 \section{Mathematical formulation}
 \subsection{Definitions}
 In the MOP problem there is a graph
-$G = (V,E,C)$ where $V$ is the set of nodes, $E$ the set of edges, and $C$ the set of colors.
+$G = (V,E,C)$ where $V$ is the set of nodes, $E$ is the set of edges, and $C$ is the set of colors.
 
 $c : V \to C$ is a function giving the color of each node: for a node $u \in V$ its color is $c(u)$.
 
@@ -68,7 +69,7 @@ For the edge $(u,v)$, $e_{q,(u,v)}$ is $\min(x_{q,u},x_{q,v})$, which is $1$ if 
 (\ref{ilp2}) Are the color constraints.\\
 (\ref{ilp3}) Are to make $e_{q,(u,v)} \le \min(x_{q,u},x_{q,v})$ for the objective.
 
-And $Q$ is a bound on the number of subgraphs for an optimal solution, since the exact number is hard to know.
+And $Q$ is a bound on the number of subgraphs in an optimal solution, since the exact number is hard to know.
 
 The bounds for the edges (\ref{ilp3}) can be made tighter, as will be seen in (\ref{pricing_cr_edge_const}).
 
@@ -77,7 +78,7 @@ A simple upper bound to $Q$ would be $|V|$, in \parencite{ccc2025} better bounds
 
 If, like in the above formulation, the subgraphs don't need to be connected, we can do better:\\
 Define $nc : C \to N$ such that $nc(k) = | u \in V : c(u) = k |$.\\
-Call a partitioning to be minimal if all pairs of subgraphs have at least one color in common.\\
+Call a partitioning \textit{minimal} if all pairs of subgraphs have at least one color in common.\\
 There is always an optimal solution that is minimal: if it is not, you can keep merging subgraphs that have no color in common, until it is minimal.\\
 Consider the graph of a partition, where each node is a subgraph and there is an edge between two subgraphs if they have at least one color in common.\\
 In a minimal solution, such graph is a clique, so it has $q = \frac{s \cdot (s-1)}{2}$ edges if $s$ is the number of subgraphs, and $s = \sqrt{2q + \frac{1}{4}} + \frac{1}{2}$ .\\
@@ -89,7 +90,7 @@ Thus a minimal solution always has at most $Q = \lfloor \sqrt{2K + \frac{1}{4}} 
 \subsection{Master and Pricing problems}
 In the ILP formulation, (\ref{ilp1}) are linking constraints, we can separate these from the others obtaining a Dantzig-Wolfe decomposition \parencite{dwd} with identical subproblems.
 
-We convexify constraints (\ref{ilp2}) and (\ref{ilp3}), and do column generation, where constraints in (\ref{ilp1}) remain in the master problem and the other go in the pricing subproblem.
+We convexify constraints (\ref{ilp2}) and (\ref{ilp3}), and do column generation, where constraints in (\ref{ilp1}) remain in the master problem and the others go in the pricing subproblem.
 
 The restricted linear master problem is:
 \begin{numcases}{}
@@ -124,7 +125,7 @@ so the $Q$ dimension is now superfluous and the problem can be rewritten as:
 \end{cases}
 \]
 
-We can to get rid of $Q$ in the master problem by having $\theta$ sum to $Q$ instead of $1$:
+We can to get rid of $Q$ in the master problem by having $\theta$ sum up to the number of subgraphs instead of $1$:
 \[
 \begin{cases}
 	\max \sum_{i=1}^{p} \sum_{(u,v) \in E} e^{(i)}_{(u,v)} \cdot \theta_i \quad \text{s.t.}\\
@@ -142,7 +143,7 @@ Any solution to the pricing subproblem also solves the Lagrangean relaxation ass
 	x \in \{0,1\} ^{V} \nonumber \\
 	e \in [0,1]^{E} \nonumber \\
 	\forall k \in C \quad \sum_{u \in V : c(u) = k} x_{u} \le 1 \nonumber \\
-	\forall (u,v) \in E \quad e_{(u,v)} \le x_{u} \land e_{(u,v)} \le x_v \nonumber \\
+	\forall (u,v) \in E \quad e_{(u,v)} \le x_{u} \land e_{(u,v)} \le x_v \nonumber
 \end{numcases}
 So, whenever we solve a pricing subproblem optimally,
 we also obtain a dual bound for free by applying $\lambda^*$ to (\ref{lr_obj}).
@@ -153,7 +154,6 @@ On one side of the branch, the chosen edge will be deleted, on the other side it
 This means that in the pricing problem, the edges will now be weighted, and each node can have multiple colors associated to it.
 
 Branching is done on the edge $(u,v)$ whose $\sum_{i=1}^{p} e^{(i)}_{(u,v)} \cdot \theta_i$ is closest to $0.5$ in the RLMP solution.
-I first explore the branch where the edge is merged, this was somewhat of an arbitrary decision.
 
 Exploration is done best first:
 at each step I explore the node with the best dual value as computed by its parent node,
@@ -162,7 +162,7 @@ exploring the shallowest one when multiple nodes have the same dual value.
 Once in a while, so as to match the time spent lowering the dual bound, after solving the LMP,
 I solve the Restricted Master Problem (which is a weighted set packing problem) with ILP on all columns generated so far,
 which usually gives good primal bounds, often good enough to close the BnP on the first node.
-I don't do it at each step since at each BnP node other than the root, only a few columns are generated, and searching for the primal bound would take up most of the time.
+I don't do it at each step, since, at each BnP node other than the root, only a few columns are generated, and searching for the primal bound would take up most of the time.
 
 I always keep all generated columns, and feed all compatible ones into each instance of the master problem.
 
@@ -255,7 +255,7 @@ and adds nodes trying to keep the cut to the rest of the graph as small as possi
 The pricing subproblem consists in finding the colorful subgraph maximizing edge weight sum minus node costs.
 Where each node has multiple colors and a real cost, and each edge has an integer weight.
 
-For each edge $(u,v)$, define $w(u,v)$ to be equal to its weight, or $0$ if there is no such edge.
+Define $w(u,v)$ to be equal to the weight assoctiated to edge $(u,v)$, or $0$ if there is no such edge.
 
 For each node $u$, call $\lambda_u$ its cost.
 
@@ -279,9 +279,12 @@ We can iteratively delete useless nodes and edges to obtain a smaller problem.
 	\max \sum_{(u,v) \in E}{e_{(u,v)} \cdot w(u,v)} - \sum_{u \in V} \lambda_u \quad \text{s.t.} \nonumber \\
 	x \in \{0,1\}^{V} \nonumber \\
 	e \in [0,1]^{E} \nonumber \\
-	\forall k \in C \quad \sum_{u \in V : k \in c(u)} x_{u} \le 1 \nonumber \\
+	\forall k \in C \quad \sum_{u \in V : k \in c(u)} x_{u} \le 1 \label{pricing_ilp_color} \\
 	\forall (u,v) \in E \quad e_{(u,v)} \le x_u \land e_{(u,v)} \le x_v \label{pricing_ilp_edge}
 \end{numcases}
+Where (\ref{pricing_ilp_color}) are the color constraints,
+and (\ref{pricing_ilp_edge}) are the edge constraints that,
+as mentioned earlier, can be made tighter (as will be seen in (\ref{pricing_cr_edge_const})).
 
 \subsection{Branch and Bound solution}
 I only consider connected components in this solution, which has the advantage that it restricts the search, especially for sparse graphs,
@@ -415,7 +418,7 @@ In the following table, I list the average values of some statistics for six dif
 \textit{bnp nhs} is without hot-start columns,\\
 \textit{bnp npp} is without preprocessing,\\
 \textit{bnp nsps} is without single parameter stabilization,\\
-\textit{bnp sc} is the best solution that generates only one column per pricing (with heuristic pricing).
+\textit{bnp sc} is the best solution among those that generate only one column per pricing (with heuristic pricing).
 
 \begin{center}
 \begin{tabular}{ |c|c|c|c|c|c|c| }
@@ -435,21 +438,16 @@ In the following table, I list the average values of some statistics for six dif
 \end{tabular}
 \end{center}
 
-\textit{bnp npp} results almost the same as \textit{bnp},
+\textit{bnp npp} results are very similar to those of \textit{bnp},
 this is because the preprocessing described is good for sparse graphs,
 and not so good on random graphs, the preprocessing could not exclude any edge in these 20 instances.
 
-\textit{bnp nhs} uses less BnB nodes on average in the pricing,
-this is to be expected as without hot-start,
-some of those easier columns have to be generated by pricing,
-although, most of the extra pricing steps seem to be solved by heuristic pricing.
-
 \textit{bnp sc} uses less BnB nodes in each pricing step,
-this is to be expected as it can prune more by searching only for the best column.
+this is because it can prune more by searching only for the best column.
 
 \textit{bnp sc}, \textit{bnp nhs} and \textit{bnp hp} requiring more pricing steps in total is to be expected,
 as \textit{bnp sc} generates only one column at the time, \textit{bnp nhs} starts with fewer columns,
-and column generated by \textit{bnp hp} are not as good.
+and columns generated by \textit{bnp hp} are not as good.
 
 \subsection{Datasets from previous works}
 \label{dfpw}
@@ -475,8 +473,9 @@ It contains 445 graphs, The BnP solves all of them to optimality.
 \end{center}
 
 The avg BnP nodes being $\le 1$ is because most istances were solved by preprocessing alone.
-In \textit{bnp npp} preprocessing the actual value is slightly above $1$, but for almost all components,
-the search was closed at the root node of the BnP.
+In \textit{bnp npp} (without preprocessing) the actual value is slightly above $1$,
+but for almost all components the search was closed at the root node of the BnP.
+The solution generating only one column at the time (not reported in this table) ran out of time for 3 of the instances.
 
 \subsection{Other random graphs}
 \label{org}
@@ -503,7 +502,7 @@ With increasing $n$, as expected, we can clearly see an exponential growth of th
 The time also increases with $p_x$ and $c$, while $p_e$ and $p_v$ don't seem to affect it too much.
 
 Compared to the clique partitioning based solution from \parencite{mop2013},
-this BnP solution seems to have a harder time handling larger $c$, and an easier time handling larger $p_x$.
+this BnP solution seems to have a harder time handling larger $c$, and an easier time with larger $p_x$.
 
 
 \section{Conclusions}
@@ -514,7 +513,7 @@ where there will be a different objective for the pricing subproblem.
 
 On graphs with higher density (like in those with high $p_x$ in section \ref{org}),
 the dual bounds achieved by column generation are not very tight,
-and the BnP might need to branch a lot.
+and the BnP often needs to branch a lot.
 These cases could benefit by adding cuts to the algorithm (e.g. odd cycle inequalities or clique inequalities for the SPP).
 Also, the choice of edge to branch on has not been explored in depth and definitely leaves room for improvement.
 
@@ -535,6 +534,7 @@ The code is available at \url{https://github.com/MyK00L/colcomp}, and can be com
 For solving all LP and ILP instances, HiGHS \parencite{highs} was used.
 
 Graphs for section \ref{dfpw} have been taken from \parencite{ccc2025}, and in the repository are included also graphs from \parencite{mop2012}.
+For generating graphs in section \ref{org}, the generator from \parencite{mop2013} has been used.
 
 \printbibliography
 
