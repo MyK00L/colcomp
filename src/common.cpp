@@ -31,7 +31,7 @@ struct problem {
 		for(const auto [u, v] : edges) { std::cerr<<u<<'('<<color[u]<<") "<<v<<'('<<color[v]<<")\n"; }
 	}
 };
-
+/// Column for a master instance, value is the number of edges in it
 struct mcolumn {
 	int value = 0;
 	std::vector<int> nodes;
@@ -177,7 +177,7 @@ struct bitvec {
 	const_iterator end() const { return const_iterator{data, n, 0, data.size()}; }
 };
 
-/// returns true if there's no element in common between a and b
+/// returns true if there's no element in common between sorted vectors a and b
 bool compatible(const std::vector<int> &a, const std::vector<int> &b) {
 	if(a.size()==1 && b.size()==1) return a[0]!=b[0]; // fastpath
 	if(a.size()>b.size()) return compatible(b, a);

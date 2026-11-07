@@ -30,7 +30,7 @@ struct bnbstate {
 	}
 	bool over() const { return mg.n()==0; }
 };
-
+/// solves MOP with a very simple BnB
 void bnb(problem p) {
 	int primal_bound = 0;
 	mgraph best(p);

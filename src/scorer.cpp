@@ -34,6 +34,7 @@ bool check(const problem &p, const std::vector<std::vector<int>> &sol) {
 	return 1;
 }
 
+/// returns the objective achieved by a solution (a partition of the nodes), or -1 if it is not valid
 int score(const problem &p, const std::vector<std::vector<int>> &sol) {
 	if(!check(p, sol)) return -1;
 	std::vector<int> part(p.n(), -1);

@@ -50,7 +50,7 @@ std::vector<std::vector<int>> ilp(problem p) {
 	// add constraints
 	for(int parti = 0; parti<P; ++parti) {
 		/*
-		for(int i=0; i<n; ++i) for(int j=i+1; j<n; ++j) if(p.color[i]==p.color[j]) { // color constraints
+		for(int i=0; i<n; ++i) for(int j=i+1; j<n; ++j) if(p.color[i]==p.color[j]) { // old color constraints
 			int ind[2] = {parti*nvar_part+i,parti*nvar_part+j};
 			double val[2] = {1,1};
 			highs.addRow(-inf,1,2,ind,val); // (-inf <=) i+j<=1
@@ -64,11 +64,11 @@ std::vector<std::vector<int>> ilp(problem p) {
 					ind.push_back(parti*nvar_part+i);
 					val.push_back(1);
 				}
-			if(ind.size()<=1) continue;
-			highs.addRow(-inf, 1, ind.size(), ind.data(), val.data()); // (-inf <=) i+j+k+...<=1
+			if(ind.size()>1)
+				highs.addRow(-inf, 1, ind.size(), ind.data(), val.data()); // (-inf <=) i+j+k+...<=1
 		}
 		/*
-		for(int ei = 0; ei<m; ++ei) { // edge objective constraints
+		for(int ei = 0; ei<m; ++ei) { // old edge constraints
 			int i = p.edges[ei][0];
 			int j = p.edges[ei][1];
 			int nz[2] = {parti*nvar_part+i, nvar_part*parti+n+ei};
@@ -78,7 +78,7 @@ std::vector<std::vector<int>> ilp(problem p) {
 			highs.addRow(-inf, 0, 2, nz, val); // (-inf <=) e-j<=0
 		}
 		*/
-		for(int i = 0; i<n; ++i) { // tighter edge constraints
+		for(int i = 0; i<n; ++i) { // edge constraints
 			for(int c = 0; c<C; ++c) {
 				std::vector<int> inds = {parti*nvar_part+i};
 				std::vector<double> vals = {-1.0};
@@ -88,7 +88,8 @@ std::vector<std::vector<int>> ilp(problem p) {
 						inds.push_back(nvar_part*parti+n+ei);
 						vals.push_back(1.0);
 					}
-				if(inds.size()>1) { highs.addRow(-inf, 0, inds.size(), inds.data(), vals.data()); }
+				if(inds.size()>1)
+					highs.addRow(-inf, 0, inds.size(), inds.data(), vals.data());
 			}
 		}
 	}

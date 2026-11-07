@@ -25,6 +25,7 @@ using namespace std;
  *
  */
 
+/// Input from a .graph file
 problem input(string filename) {
 	ifstream fin(filename);
 	vector<uint32_t> col;
@@ -67,27 +68,6 @@ problem input(string filename) {
 	return problem{col, edg};
 }
 
-int ccs(mgraph mg) {
-	vector<bool> vis(mg.n(), 0);
-	int res = 0;
-	for(int i = 0; i<mg.n(); ++i)
-		if(!vis[i]) {
-			res += 1;
-			queue<int> q;
-			q.push(i);
-			vis[i] = 1;
-			while(!q.empty()) {
-				int u = q.front();
-				q.pop();
-				for(auto &[v, _w] : mg.g[u])
-					if(!vis[v]) {
-						vis[v] = 1;
-						q.push(v);
-					}
-			}
-		}
-	return res;
-}
 void reset_globals() {
 	columns.clear();
 	pricing_steps = 0;
