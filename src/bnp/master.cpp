@@ -35,6 +35,7 @@ void check_duplicate_cols(std::vector<int> col) {
 
 Master::Master(mgraph _mg, std::vector<mcolumn> _columns)
 	: g(_mg), columns(_columns), stab(g.n(), 0), lagrange(std::numeric_limits<double>::infinity()) {
+		highs.setOptionValue("output_flag", false);
 		/*
 		colis.clear();
 		for(auto &col: columns) tei(col.nodes);

@@ -73,9 +73,11 @@ int local_search_color(const problem &p, const std::vector<std::vector<int>> og,
 	std::vector<std::vector<std::array<int, 2>>> g(comps.size()+1);
 	std::vector<int> tocomp(comps.size());
 	// edge weights are negated bc I want to find negative cycles
-	for(auto &cmp : comps)
+	for(auto &cmp : comps) {
+		bool has_color = 0;
 		for(auto &u : cmp)
 			if((int)p.color[u]==color) {
+				has_color = 1;
 				for(auto &v : og[u]) tocomp[compof[v]] += 1;
 				for(auto &v : og[u])
 					if(compof[v]!=compof[u] && tocomp[compof[v]]!=0) {
@@ -87,6 +89,11 @@ int local_search_color(const problem &p, const std::vector<std::vector<int>> og,
 				tocomp[compof[u]] = 0; // reset tocomp for next cycle
 				break;				   // only one node with a color for component
 			}
+		if(!has_color) {
+			// g[g.size()-1].push_back({compof[u], 0}); // <- should not be necessary
+			g[compof[cmp[0]]].push_back({int(g.size()-1), 0}); // to allow pushing into a component without that color
+		}
+	}
 	auto cycle = find_negative_cycle_spfa(g);
 	int imp = 0;
 	for(int i = 0; i<(int)cycle.size(); ++i) {
